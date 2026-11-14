@@ -72,4 +72,5 @@ Bu varsayım proje sahibinin geri bildirimiyle değiştirilebilir.
 - OSDR veri envanterinin MVP için gerekli ilk incelemesi tamamlandı; ayrıntılı
   veri doğrulaması geliştirme boyunca sürecek.
 - MVP sağlık ve çevre göstergeleri onaylandı (Onay Kapısı A tamamlandı).
-- Sıradaki ortak karar: backend teknoloji yığınının seçimi (Onay Kapısı B).
+- Python/FastAPI backend teknoloji yığını onaylandı (Onay Kapısı B tamamlandı).
+- Sıradaki ortak karar: açıklanabilir alarm kuralları (Onay Kapısı C).

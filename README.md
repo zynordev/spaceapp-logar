@@ -8,6 +8,28 @@ kişisel ve görev bağlamına göre dikkat gerektirip gerektirmediğini belirle
 doğrulanmış eylem kartları sunmaktır. Sistem tıbbi teşhis koymaz ve serbest metin
 tedavi üretmez.
 
+## Backend'i çalıştırma
+
+Gereksinimler: Python 3.12 ve [uv](https://docs.astral.sh/uv/).
+
+```bash
+uv sync
+uv run uvicorn spaceapp_logar.main:app --reload
+```
+
+API `http://127.0.0.1:8000` adresinde, etkileşimli dokümantasyon ise
+`http://127.0.0.1:8000/docs` adresinde açılır. Operasyon kontrolü:
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+Testleri çalıştırmak için:
+
+```bash
+uv run pytest
+```
+
 ## Araştırma
 
 - [Araştırma ve geliştirme planı](docs/RESEARCH_PLAN.md)
