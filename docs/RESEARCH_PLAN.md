@@ -65,7 +65,7 @@ veri kaynakları doğrulanır.
 
 Çıktı: `docs/DATA_AUDIT.md` içindeki challenge özeti ve kaynak listesi.
 
-### 2. Veri envanteri — devam ediyor
+### 2. Veri envanteri — ilk MVP incelemesi tamamlandı
 
 OSDR'deki doğrudan astronot verileri; hücre, organoid ve model organizma
 çalışmalarından ayrılır. Her çalışma için katılımcı sayısı, zaman noktaları, ölçüm
@@ -77,9 +77,9 @@ Tamamlanma ölçütü:
 - doğrudan insan verisi ile deneysel insan hücresi verisinin ayrılması;
 - sürekli sensör verisi boşluğunun belgelenmesi.
 
-### 3. MVP sağlık göstergelerinin seçimi — sırada
+### 3. MVP sağlık göstergelerinin seçimi — tamamlandı
 
-İlk sürüm için 8–12 gösterge seçilir. Adaylar:
+İlk sürüm için 12 gösterge seçildi:
 
 - kalp hızı ve kalp hızı eğilimi;
 - SpO2;
@@ -91,8 +91,9 @@ Tamamlanma ölçütü:
 - kabin CO2, O2, basınç ve radyasyon;
 - periyodik glukoz ve temel metabolik panel değerleri.
 
-Seçim ölçütleri: görevle ilgisi, uzayda ölçülebilirlik, veri bulunabilirliği,
-yorumlanabilirlik ve demo uygulanabilirliği.
+Seçim ölçütleri görevle ilgisi, uzayda ölçülebilirlik, veri bulunabilirliği,
+yorumlanabilirlik ve demo uygulanabilirliğidir. Kesin liste ve onay kaydı
+`docs/MVP_INDICATORS.md` içindedir.
 
 ### 4. Ölçüm sözlüğü ve veri sözleşmesi
 
