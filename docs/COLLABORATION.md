@@ -69,5 +69,7 @@ Bu varsayım proje sahibinin geri bildirimiyle değiştirilebilir.
 ## Güncel durum
 
 - Challenge ve kaynak doğrulaması tamamlandı.
-- OSDR veri envanteri devam ediyor.
-- Sıradaki ortak karar: MVP sağlık göstergelerinin seçimi (Onay Kapısı A).
+- OSDR veri envanterinin MVP için gerekli ilk incelemesi tamamlandı; ayrıntılı
+  veri doğrulaması geliştirme boyunca sürecek.
+- MVP sağlık ve çevre göstergeleri onaylandı (Onay Kapısı A tamamlandı).
+- Sıradaki ortak karar: backend teknoloji yığınının seçimi (Onay Kapısı B).
