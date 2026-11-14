@@ -45,6 +45,13 @@ Panelin üst şeridinden:
      yoktur, genel durum "Bilinmiyor" görünür (kötü veri ≠ normal sağlık).
    - `chest-pain-red-flag`: ölçümler normalken göğüs ağrısı bildirilir; sistem
      beklemeden Kritik seviyeye çıkar ve acil kartı açar. Teşhis konmaz.
+   - `cabin-o2-drop`: kabin O₂ ve basınç düşer; O₂ kısmi basıncı Uyarı, ekibin
+     SpO₂'si İzle.
+   - `radiation-spe`: güneş parçacık olayı; doz hızı İzle → Uyarı, korunaklı
+     bölüm kartı ve kümülatif doz.
+   - `sleep-debt`: üç gece kısa uyku ve yüksek yorgunluk; Uyarı.
+   - `gravity-adaptation`: yerçekimi geçişi sonrası bulantı, baş dönmesi ve görme
+     değişikliği; hareket hastalığı ve SANS izlemi İzle.
 2. **Gerçek OSDR lab verisi.** NASA OSDR OSD-569 (CBC) ve OSD-575 (CMP)
    dosyalarından Inspiration4 mürettebatının gerçek laboratuvar değerlerini yükler
    ([veri notu](data/osdr/README.md)).
@@ -69,6 +76,10 @@ uv run python -m spaceapp_logar.services.osdr_import
 | `ENV_CO2_NOMINAL_V1` — kabin CO₂, NASA-STD-3001 nominal sınırı | Onaylı |
 | `VITAL_SPO2_SUSTAINED_V1`, `VITAL_TEMP_TREND_V1`, `MULTI_CARDIO_RESP_V1`, `DATA_HR_JUMP_V1` | **DEMO**, uzman doğrulaması bekliyor ([DEMO kuralları](docs/DEMO_RULES.md)) |
 | `RED_FLAG_SYMPTOM_V1` — göğüs ağrısı, ciddi nefes darlığı, bayılma vb. bildirilince anında Kritik | **DEMO**; ölçümlerle kapanmaz, ekip üyesi kapatır |
+| `ENV_CABIN_ATMOSPHERE_V1`, `ENV_RADIATION_V1`, `BEHAV_SLEEP_V1`, `SENS_MOTION_SICKNESS_V1`, `SANS_VISION_SYMPTOM_V1` | **DEMO** ([kapsam genişletmesi](docs/DEMO_RULES.md)) |
+
+NASA'nın beş tehlikesine göre risk kapsamı: `GET /v1/risk-coverage` ve paneldeki
+"Risk kapsamı" bölümü (kural var / sadece veri / boşluk).
 
 11 metrik toplanıp grafiklenir: kalp hızı, SpO₂, solunum, vücut sıcaklığı,
 sistolik/diyastolik tansiyon, uyku, kabin CO₂/O₂/basınç ve radyasyon doz hızı.

@@ -67,6 +67,40 @@ uygulamasıdır.
 Tansiyon, uyku, kabin O₂, kabin basıncı ve radyasyon toplanır ve grafikte
 gösterilir. Bunlar için kural yoktur; eşikleri biyoloji ekibinden beklenir.
 
+## Kapsam genişletmesi (14 Kasım 2026)
+
+Kurallar NASA'nın beş uzay uçuşu tehlikesine yayıldı. Hangi riskin nasıl
+kapsandığı `GET /v1/risk-coverage` ve paneldeki "Risk kapsamı" bölümünde
+gösterilir: kural var / sadece veri / boşluk. Harita kural kataloğundan
+hesaplanır; var olmayan bir kural kapsanmış gibi gösterilemez.
+
+| Kural | Tehlike | Girdi | Sonuç |
+|---|---|---|---|
+| `ENV_CABIN_ATMOSPHERE_V1` | Kapalı ortam | Kabin O₂ % × toplam basınç → O₂ kısmi basıncı (15 dk) | <18 kPa İzle, <16 kPa Uyarı |
+| `ENV_RADIATION_V1` | Radyasyon | Doz hızı (15 dk) / modülün kendi başlangıcı; kümülatif doz | ≥3× İzle, ≥10× Uyarı |
+| `BEHAV_SLEEP_V1` | İzolasyon | Son 3 gecenin uyku süresi + yorgunluk/ruh hali | ort. <6 sa İzle; <5 sa ve belirti ≥3/4 Uyarı |
+| `SENS_MOTION_SICKNESS_V1` | Yerçekimi | Bulantı ve baş dönmesi (öznel) | ikisi de ≥2/4 İzle |
+| `SANS_VISION_SYMPTOM_V1` | Yerçekimi | Görme değişikliği (öznel) | ≥2/4 İzle |
+
+Notlar:
+
+- **O₂ kısmi basıncı:** Kural oran yerine kısmi basınç kullanır. Böylece toplam
+  basıncı farklı habitatlar adil karşılaştırılır. Örneğin ISS benzeri ~101 kPa /
+  %21 ile düşük basınçlı keşif atmosferi ~56 kPa / %34 ikisi de "Normal" çıkar
+  (testle doğrulanır).
+- **Kümülatif doz:** Değerlendirme açıklamasında NASA'nın 600 mSv kariyer sınırı
+  bağlamıyla gösterilir; uzun dönem sağlık riski tahmini yapılmaz.
+- **Belirtiye dayalı kurallar:** Hareket hastalığı ve görme kuralları yalnızca
+  öznel girişe dayanır ve İzle seviyesine kadar çıkabilir. Bu, önceki "öznel
+  giriş tek başına alarm üretmez" sınırının bilinçli bir genişletmesidir.
+  Uyarı/Kritik seviyesi yine yalnızca ölçüm veya kırmızı bayrakla oluşur.
+- **İsteğe bağlı girdiler "Bilinmiyor" üretmez:** Görme sorusu yanıtlanmadıysa
+  veya iki geceden az uyku kaydı varsa ilgili kural çalışmaz. Böylece
+  sorulmamış bir soru genel durumu "Bilinmiyor"a çekmez.
+- Öznel forma isteğe bağlı üç alan eklendi: görme değişikliği, sırt ağrısı,
+  burun tıkanıklığı / yüz şişkinliği (migration 0010). Sırt ağrısı ve burun
+  tıkanıklığı yalnızca kaydedilir.
+
 ## Eylem kartları (sürüm 2)
 
 14 Kasım 2026'da kartlar genel "ölçümü doğrula, bildir" metinlerinden somut ve
