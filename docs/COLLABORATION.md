@@ -76,3 +76,18 @@ Bu varsayım proje sahibinin geri bildirimiyle değiştirilebilir.
 - Hibrit ve açıklanabilir alarm yaklaşımı onaylandı (Onay Kapısı C tamamlandı).
 - Hibrit API ve veri modeli onaylandı (Onay Kapısı D tamamlandı).
 - Sıradaki ortak karar: uçtan uca demo hikâyesi (Onay Kapısı E).
+
+## Hızlandırılmış backend yetkisi
+
+14 Kasım 2026 tarihinde proje sahibi backend geliştirmesi için onay seviyesini
+yükseltti. Codex, onaylanmış mimari ve ürün kapsamı içinde model, servis, endpoint,
+migration, test, küçük refactor ve commit kararlarında ayrıca onay beklemeden
+ilerleyebilir.
+
+Aşağıdaki konularda kullanıcı onayı hâlâ zorunludur:
+
+- yeni tıbbi eşik, teşhis iddiası veya eylem kartı içeriği;
+- ürün kapsamını değiştiren karar;
+- dış servis, hesap, ücret veya kimlik bilgisi gerektiren entegrasyon;
+- veri silen/destrüktif migration;
+- push, deploy veya harici sistemde durum değişikliği.

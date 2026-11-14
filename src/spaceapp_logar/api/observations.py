@@ -5,20 +5,27 @@ from sqlalchemy.orm import Session
 
 from spaceapp_logar.db.models import Observation
 from spaceapp_logar.db.session import get_session
-from spaceapp_logar.schemas import CO2ObservationCreate, CO2ObservationRead
+from spaceapp_logar.schemas import (
+    CO2ObservationAccepted,
+    CO2ObservationCreate,
+    CO2ObservationRead,
+    CO2WindowRead,
+    RuleEvaluationRead,
+)
+from spaceapp_logar.services.co2_monitoring import assess_persisted_co2_window
 
 router = APIRouter(prefix="/v1/observations", tags=["observations"])
 
 
 @router.post(
     "",
-    response_model=CO2ObservationRead,
+    response_model=CO2ObservationAccepted,
     status_code=status.HTTP_201_CREATED,
 )
 def create_observation(
     payload: CO2ObservationCreate,
     session: Annotated[Session, Depends(get_session)],
-) -> CO2ObservationRead:
+) -> CO2ObservationAccepted:
     """Append one validated cabin ppCO2 observation."""
 
     observation = Observation(
@@ -37,5 +44,15 @@ def create_observation(
     session.add(observation)
     session.commit()
 
-    return CO2ObservationRead.model_validate(observation)
+    assessment = assess_persisted_co2_window(
+        session,
+        mission_id=observation.mission_id,
+        target_id=observation.target_id,
+        as_of=observation.observed_at,
+    )
+    return CO2ObservationAccepted(
+        observation=CO2ObservationRead.model_validate(observation),
+        window=CO2WindowRead.model_validate(assessment.window),
+        evaluation=RuleEvaluationRead.model_validate(assessment.evaluation),
+    )
 
