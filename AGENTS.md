@@ -19,3 +19,4 @@ Ekip çalışma düzeni ve teknik belgeler:
 - SQLite eşzamanlı okuma/yazma kilitlenmesini önlemek için WAL modu ve busy_timeout yapılandırıldı.
 - 195 testin tamamı (195 passed) doğrulandı.
 - Canlı dağıtım için Dockerfile ve Render Blueprint (`render.yaml`) yapılandırması eklendi.
+- NASA Space Apps resmi teslim paketi hazırlandı (`docs/SUBMISSION.md`): 7 slaytlık İngilizce Pitch Deck, Proje Başvuru Metni, AI Şeffaflık Beyanı ve 30 saniyelik video senaryosu.
