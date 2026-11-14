@@ -103,7 +103,7 @@ class RuleEvaluationRecord(Base):
     longest_missing_run_minutes: Mapped[int] = mapped_column(Integer)
     ignored_observations: Mapped[int] = mapped_column(Integer)
     explanation: Mapped[str] = mapped_column(Text)
-    source: Mapped[str] = mapped_column(String(255))
+    source: Mapped[str] = mapped_column(Text)
     source_uri: Mapped[str] = mapped_column(String(500))
     action_card_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     action_card_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
