@@ -16,6 +16,7 @@ from spaceapp_logar.rules.models import (
     HealthAttention,
     RuleEvaluation,
 )
+from spaceapp_logar.rules.red_flags import RED_FLAG_RULE_ID
 from spaceapp_logar.rules.vitals import (
     CARDIO_RESP_RULE_ID,
     HR_JUMP_RULE_ID,
@@ -327,6 +328,48 @@ DATA_HR_SENSOR_CHECK_CARD_V1 = ActionCard(
     validation_status=DEMO_PENDING_REVIEW,
 )
 
+RED_FLAG_EMERGENCY_CARD_V1 = ActionCard(
+    card_id="RED_FLAG_EMERGENCY_CARD_V1",
+    version=1,
+    attention=HealthAttention.CRITICAL,
+    rule_id=RED_FLAG_RULE_ID,
+    title_key="red_flag.title",
+    reason_key="red_flag.reason",
+    title_tr="Acil belirti: hemen ekip sağlık sorumlusuna ve yer ekibine bildir",
+    reason_tr=(
+        "Kırmızı bayrak belirtisi bildirildi. Normal ölçümler bu durumu dışlamaz; "
+        "değerlendirmeyi beklemeden acil prosedüre geç."
+    ),
+    steps=(
+        ActionCardStep(
+            key="stop_and_safe_position",
+            text_tr="İşi hemen durdur ve güvenli bir pozisyona geç.",
+        ),
+        ActionCardStep(
+            key="alert_crew_now",
+            text_tr=(
+                "Ekip sağlık sorumlusuna ve yer ekibine hemen bildir; yanında bir "
+                "ekip arkadaşı kalsın."
+            ),
+        ),
+        ActionCardStep(
+            key="open_emergency_procedure",
+            text_tr=(
+                "Göreve özel acil tıbbi prosedürü aç ve ekip sağlık sorumlusunun "
+                "yönlendirmesini izle."
+            ),
+        ),
+    ),
+    footer_note_tr=(
+        "DEMO kartı: kırmızı bayrak listesi uçuş tıbbı doğrulaması bekliyor. "
+        "Teşhis koymaz, ilaç veya tedavi önermez. Bu alarm ölçümlerle kendiliğinden "
+        "kapanmaz; ekip üyesi değerlendirip kapatır."
+    ),
+    requires_mission_procedure=True,
+    allows_automatic_vehicle_command=False,
+    validation_status=DEMO_PENDING_REVIEW,
+)
+
 _ALL_CARDS: tuple[ActionCard, ...] = (
     ENV_CO2_WATCH_CARD_V1,
     VITAL_SPO2_WATCH_CARD_V1,
@@ -336,6 +379,7 @@ _ALL_CARDS: tuple[ActionCard, ...] = (
     MULTI_CARDIO_RESP_WATCH_CARD_V1,
     MULTI_CARDIO_RESP_ALERT_CARD_V1,
     DATA_HR_SENSOR_CHECK_CARD_V1,
+    RED_FLAG_EMERGENCY_CARD_V1,
 )
 
 _CARDS_BY_ID_AND_VERSION: dict[tuple[str, int], ActionCard] = {

@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from spaceapp_logar.rules.co2 import RULE_ID as CO2_RULE_ID
+from spaceapp_logar.rules.red_flags import RED_FLAG_RULE_ID
 from spaceapp_logar.rules.vitals import (
     CARDIO_RESP_RULE_ID,
     HR_JUMP_RULE_ID,
@@ -63,6 +64,16 @@ RULES: dict[str, RuleInfo] = {
             related_metrics=("RESPIRATION_RATE",),
             target_type="CREW_MEMBER",
             time_scale="subacute",
+            evidence_level="F",
+            validation_status="DEMO_PENDING_REVIEW",
+        ),
+        RuleInfo(
+            rule_id=RED_FLAG_RULE_ID,
+            title="Kırmızı bayrak belirtisi",
+            metric="RED_FLAG",
+            related_metrics=(),
+            target_type="CREW_MEMBER",
+            time_scale="acute",
             evidence_level="F",
             validation_status="DEMO_PENDING_REVIEW",
         ),

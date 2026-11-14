@@ -44,6 +44,7 @@ def test_first_migration_upgrades_and_downgrades_cleanly(tmp_path: Path) -> None
         "subjective_check_ins",
         "alert_events",
         "lab_results",
+        "red_flag_reports",
     }.issubset(inspector.get_table_names())
     assert {
         index["name"] for index in inspector.get_indexes("alert_events")

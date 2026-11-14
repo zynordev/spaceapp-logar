@@ -10,6 +10,7 @@ from spaceapp_logar.db.models import AlertEvent, RuleEvaluationRecord
 from spaceapp_logar.db.session import get_session
 from spaceapp_logar.rules import AlertStatus, get_action_card
 from spaceapp_logar.schemas import ActionCardRead, AlertAcknowledge, AlertRead
+from spaceapp_logar.services.red_flags import MANUAL_RESOLUTION_RULES, resolve_manually
 
 router = APIRouter(prefix="/v1/alerts", tags=["alerts"])
 
@@ -21,6 +22,7 @@ def _to_read(
     read = AlertRead.model_validate(alert)
     # The latest evaluation explains the alert's current level.
     read.explanation = explanations.get(alert.last_evaluation_id)
+    read.manual_resolution = alert.rule_id in MANUAL_RESOLUTION_RULES
     if alert.action_card_id is not None and alert.action_card_version is not None:
         card = get_action_card(alert.action_card_id, alert.action_card_version)
         if card is not None:
@@ -90,4 +92,36 @@ def acknowledge_alert(
         alert.acknowledged_at = datetime.now(timezone.utc)
         alert.acknowledged_by = payload.crew_member_id
         session.commit()
+    return _to_read(alert, _explanations(session, [alert]))
+
+
+@router.post("/{alert_id}/resolve", response_model=AlertRead)
+def resolve_alert(
+    alert_id: UUID,
+    payload: AlertAcknowledge,
+    session: Annotated[Session, Depends(get_session)],
+) -> AlertRead:
+    """Close an alert that only a person can close (red flags).
+
+    Measurement-based alerts close automatically when a full valid window is
+    back to NORMAL, so they cannot be closed by hand (409).
+    """
+
+    alert = session.get(AlertEvent, alert_id)
+    if alert is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Alert not found")
+    if alert.rule_id not in MANUAL_RESOLUTION_RULES:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "This alert closes automatically when measurements return to normal",
+        )
+    if alert.status == AlertStatus.RESOLVED.value:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Alert is already resolved")
+    resolve_manually(
+        session,
+        alert,
+        resolved_by=payload.crew_member_id,
+        now=datetime.now(timezone.utc),
+    )
+    session.commit()
     return _to_read(alert, _explanations(session, [alert]))

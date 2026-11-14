@@ -17,7 +17,9 @@ from sqlalchemy.orm import Session
 from spaceapp_logar.db.models import LabResult, SubjectiveCheckIn
 from spaceapp_logar.schemas.lab_results import LabResultCreate
 from spaceapp_logar.schemas.measurements import METRIC_SPECS, MeasurementCreate, Metric
+from spaceapp_logar.rules.red_flags import RedFlag
 from spaceapp_logar.services.ingest import store_measurement
+from spaceapp_logar.services.red_flags import record_red_flags
 from spaceapp_logar.services.rule_engine import evaluate_check_in, evaluate_observation
 
 CREW = "crew-01"
@@ -32,6 +34,7 @@ class Plan:
     measurements: list[dict] = field(default_factory=list)
     check_ins: list[dict] = field(default_factory=list)
     labs: list[dict] = field(default_factory=list)
+    red_flags: list[dict] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -264,6 +267,27 @@ def build_sensor_fault(start: datetime, rng: Random) -> Plan:
     return plan
 
 
+def build_chest_pain(start: datetime, rng: Random) -> Plan:
+    minutes = 90
+    plan = Plan()
+    _environment(plan, start, minutes, rng, co2=lambda m: 2.2)
+    _vitals(
+        plan,
+        start,
+        minutes,
+        rng,
+        hr=lambda m: 74,
+        rr=lambda m: 15,
+        spo2=lambda m: 98.0,
+        temp=lambda m: 36.7,
+    )
+    plan.red_flags.append(
+        {"observed_at": start + timedelta(minutes=80), "flags": [RedFlag.CHEST_PAIN]}
+    )
+    _standard_labs(plan, start + timedelta(minutes=minutes))
+    return plan
+
+
 SCENARIOS: dict[str, Scenario] = {
     scenario.scenario_id: scenario
     for scenario in (
@@ -333,6 +357,24 @@ SCENARIOS: dict[str, Scenario] = {
             duration_minutes=120,
             build=build_sensor_fault,
         ),
+        Scenario(
+            scenario_id="chest-pain-red-flag",
+            title="Kırmızı bayrak: ölçümler normalken göğüs ağrısı",
+            time_scale="acute",
+            description=(
+                "Tüm ölçümler normal seyrederken astronot göğüs ağrısı bildirir. "
+                "Normal ölçümler ciddi bir olayı dışlamadığı için sistem hiçbir "
+                "ortalamayı beklemeden en üst seviyeye çıkar ve acil kartı açar. "
+                "Teşhis konmaz; alarmı ekip üyesi değerlendirip kapatır."
+            ),
+            expected=(
+                "Kırmızı bayrak kuralı CRITICAL + acil eylem kartı",
+                "Vital kurallar normal kalırken genel durum Kritik",
+                "Alarm ölçümlerle kendiliğinden kapanmaz; 'Değerlendirildi, kapat' gerekir",
+            ),
+            duration_minutes=90,
+            build=build_chest_pain,
+        ),
     )
 }
 
@@ -364,7 +406,9 @@ def run_scenario(
 
     events: list[tuple[datetime, int, dict]] = [
         (item["observed_at"], 0, item) for item in plan.measurements
-    ] + [(item["observed_at"], 1, item) for item in plan.check_ins]
+    ] + [(item["observed_at"], 1, item) for item in plan.check_ins] + [
+        (item["observed_at"], 2, item) for item in plan.red_flags
+    ]
     events.sort(key=lambda event: (event[0], event[1]))
 
     for _, kind, item in events:
@@ -378,6 +422,17 @@ def run_scenario(
             )
             observation = store_measurement(session, payload)
             evaluate_observation(session, observation)
+        elif kind == 2:
+            record_red_flags(
+                session,
+                mission_id=mission_id,
+                crew_member_id=CREW,
+                flags=item["flags"],
+                observed_at=item["observed_at"],
+                source_type="SYNTHETIC",
+                source_id=SOURCE_ID,
+                scenario_id=scenario_id,
+            )
         else:
             check_in = SubjectiveCheckIn(
                 mission_id=mission_id,

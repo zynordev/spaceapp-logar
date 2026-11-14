@@ -35,7 +35,7 @@ def alerts_of(client: TestClient, run_result: dict) -> list[dict]:
     ).json()
 
 
-def test_scenario_catalog_lists_four_scenarios(
+def test_scenario_catalog_lists_all_scenarios(
     api_client: tuple[TestClient, Engine],
 ) -> None:
     client, _ = api_client
@@ -47,6 +47,7 @@ def test_scenario_catalog_lists_four_scenarios(
         "fever-trend",
         "spo2-drop",
         "sensor-fault",
+        "chest-pain-red-flag",
     }
     assert all(s["expected"] for s in scenarios)
 
