@@ -36,7 +36,11 @@ def test_first_migration_upgrades_and_downgrades_cleanly(tmp_path: Path) -> None
 
     engine = create_engine(f"sqlite:///{database_path}")
     inspector = inspect(engine)
-    assert "observations" in inspector.get_table_names()
+    assert {
+        "observations",
+        "rule_evaluations",
+        "rule_evaluation_evidence",
+    }.issubset(inspector.get_table_names())
     assert {column["name"] for column in inspector.get_columns("observations")} == (
         EXPECTED_COLUMNS
     )

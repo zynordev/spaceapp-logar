@@ -12,7 +12,10 @@ from spaceapp_logar.schemas import (
     CO2WindowRead,
     RuleEvaluationRead,
 )
-from spaceapp_logar.services.co2_monitoring import assess_persisted_co2_window
+from spaceapp_logar.services.co2_monitoring import (
+    assess_persisted_co2_window,
+    persist_co2_evaluation,
+)
 
 router = APIRouter(prefix="/v1/observations", tags=["observations"])
 
@@ -42,14 +45,23 @@ def create_observation(
         reported_quality=payload.reported_quality.value,
     )
     session.add(observation)
-    session.commit()
+    session.flush()
 
-    assessment = assess_persisted_co2_window(
+    persisted_input = assess_persisted_co2_window(
         session,
         mission_id=observation.mission_id,
         target_id=observation.target_id,
         as_of=observation.observed_at,
     )
+    persist_co2_evaluation(
+        session,
+        mission_id=observation.mission_id,
+        target_id=observation.target_id,
+        evaluated_at=observation.observed_at,
+        persisted_input=persisted_input,
+    )
+    session.commit()
+    assessment = persisted_input.assessment
     return CO2ObservationAccepted(
         observation=CO2ObservationRead.model_validate(observation),
         window=CO2WindowRead.model_validate(assessment.window),

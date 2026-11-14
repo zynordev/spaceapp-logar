@@ -8,7 +8,11 @@ import pytest
 from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from spaceapp_logar.db.models import Observation
+from spaceapp_logar.db.models import (
+    Observation,
+    RuleEvaluationEvidence,
+    RuleEvaluationRecord,
+)
 from spaceapp_logar.db.session import create_database_engine, get_session
 from spaceapp_logar.main import app
 
@@ -72,11 +76,18 @@ def test_post_observation_persists_immutable_raw_record(
 
     with Session(engine) as session:
         stored = session.scalar(select(Observation))
+        evaluation = session.scalar(select(RuleEvaluationRecord))
+        evidence = session.scalar(select(RuleEvaluationEvidence))
 
     assert stored is not None
     assert str(stored.id) == observation["id"]
     assert stored.observed_at.isoformat() == "2026-11-14T08:00:00+00:00"
     assert stored.source_type == "SYNTHETIC"
+    assert evaluation is not None
+    assert evaluation.health_attention == "UNKNOWN"
+    assert evidence is not None
+    assert evidence.evaluation_id == evaluation.id
+    assert evidence.observation_id == stored.id
 
 
 def test_invalid_observation_returns_422_without_writing_record(
@@ -91,7 +102,11 @@ def test_invalid_observation_returns_422_without_writing_record(
     assert response.status_code == 422
     with Session(engine) as session:
         stored_count = session.scalar(select(func.count()).select_from(Observation))
+        evaluation_count = session.scalar(
+            select(func.count()).select_from(RuleEvaluationRecord)
+        )
     assert stored_count == 0
+    assert evaluation_count == 0
 
 
 def test_sixty_balanced_minutes_produce_explainable_watch(
