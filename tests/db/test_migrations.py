@@ -18,6 +18,7 @@ EXPECTED_COLUMNS = {
     "source_id",
     "scenario_id",
     "reported_quality",
+    "activity_state",
     "ingested_at",
 }
 

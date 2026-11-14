@@ -58,10 +58,13 @@ class Observation(Base):
     source_id: Mapped[str] = mapped_column(String(100))
     scenario_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     reported_quality: Mapped[str] = mapped_column(String(32))
+    activity_state: Mapped[str | None] = mapped_column(String(32), nullable=True)
     ingested_at: Mapped[datetime] = mapped_column(
         UTCDateTime(),
         default=utc_now,
     )
+
+
 class RuleEvaluationRecord(Base):
     """Persisted, versioned explanation produced by one rule execution."""
 

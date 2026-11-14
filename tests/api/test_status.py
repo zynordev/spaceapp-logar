@@ -87,7 +87,10 @@ def test_status_without_data_is_explicitly_empty(
     body = response.json()
     assert body["co2"] is None
     assert body["latest_check_in"] is None
-    assert len(body["limitations"]) == 2
+    assert body["rules"] == []
+    assert body["overall_attention"] == "UNKNOWN"
+    assert len(body["limitations"]) == 3
+    assert any("DEMO" in item for item in body["limitations"])
 
 
 def test_status_combines_co2_watch_with_raw_subjective_context(

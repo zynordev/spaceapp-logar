@@ -1,13 +1,20 @@
+from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from spaceapp_logar.api.alerts import router as alerts_router
 from spaceapp_logar.api.check_ins import router as check_ins_router
+from spaceapp_logar.api.demo import router as demo_router
 from spaceapp_logar.api.lab_results import router as lab_results_router
+from spaceapp_logar.api.measurements import router as measurements_router
 from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.status import router as status_router
+
+WEB_DIR = Path(__file__).parent / "web"
 
 
 class ServiceHealth(BaseModel):
@@ -15,17 +22,19 @@ class ServiceHealth(BaseModel):
 
     status: Literal["ok"] = "ok"
     service: str = "spaceapp-logar-api"
-    api_version: str = "0.1.0"
+    api_version: str = "0.2.0"
 
 
 app = FastAPI(
     title="SpaceApp Logar API",
-    version="0.1.0",
+    version="0.2.0",
     description="Explainable astronaut health decision-support backend.",
 )
 app.include_router(alerts_router)
 app.include_router(check_ins_router)
+app.include_router(demo_router)
 app.include_router(lab_results_router)
+app.include_router(measurements_router)
 app.include_router(observations_router)
 app.include_router(status_router)
 
@@ -36,3 +45,15 @@ def get_service_health() -> ServiceHealth:
 
     return ServiceHealth()
 
+
+@app.get("/", include_in_schema=False)
+def open_dashboard() -> RedirectResponse:
+    return RedirectResponse(url="/ui/")
+
+
+# Offline dashboard: plain static files, no CDN or build step.
+app.mount(
+    "/ui",
+    StaticFiles(directory=WEB_DIR, html=True, check_dir=False),
+    name="ui",
+)

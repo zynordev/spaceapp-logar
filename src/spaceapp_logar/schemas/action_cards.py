@@ -26,6 +26,7 @@ class ActionCardRead(BaseModel):
     footer_note_tr: str
     requires_mission_procedure: bool
     allows_automatic_vehicle_command: bool
+    validation_status: str
 
     @classmethod
     def from_card(cls, card: ActionCard) -> "ActionCardRead":
@@ -46,4 +47,5 @@ class ActionCardRead(BaseModel):
             footer_note_tr=card.footer_note_tr,
             requires_mission_procedure=card.requires_mission_procedure,
             allows_automatic_vehicle_command=card.allows_automatic_vehicle_command,
+            validation_status=card.validation_status,
         )
