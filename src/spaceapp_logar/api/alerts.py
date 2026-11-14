@@ -2,10 +2,11 @@ from datetime import datetime, timezone
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from spaceapp_logar.auth import Role, User, acting_crew_member, current_user, require_role
 from spaceapp_logar.db.models import ActionStepLog, AlertEvent, RuleEvaluationRecord
 from spaceapp_logar.db.session import get_session
 from spaceapp_logar.rules import AlertStatus, get_action_card
@@ -97,15 +98,19 @@ def list_alerts(
 @router.post("/{alert_id}/acknowledge", response_model=AlertRead)
 def acknowledge_alert(
     alert_id: UUID,
-    payload: AlertAcknowledge,
     session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(current_user)],
+    payload: Annotated[AlertAcknowledge | None, Body()] = None,
 ) -> AlertRead:
     """Record that a crew member has seen an alert.
 
-    Acknowledging an already acknowledged alert is idempotent. A resolved
-    alert can no longer be acknowledged.
+    The acknowledging crew member is the token's user; without a token (demo
+    mode) it is the body's crew_member_id (422 if missing). Acknowledging an
+    already acknowledged alert is idempotent. A resolved alert can no longer
+    be acknowledged.
     """
 
+    actor = acting_crew_member(user, payload.crew_member_id if payload else None)
     alert = session.get(AlertEvent, alert_id)
     if alert is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Alert not found")
@@ -117,7 +122,7 @@ def acknowledge_alert(
     if alert.status == AlertStatus.OPEN.value:
         alert.status = AlertStatus.ACKNOWLEDGED.value
         alert.acknowledged_at = datetime.now(timezone.utc)
-        alert.acknowledged_by = payload.crew_member_id
+        alert.acknowledged_by = actor
         session.commit()
     _attach_step_logs(session, [alert])
     return _to_read(alert, _explanations(session, [alert]))
@@ -126,15 +131,20 @@ def acknowledge_alert(
 @router.post("/{alert_id}/resolve", response_model=AlertRead)
 def resolve_alert(
     alert_id: UUID,
-    payload: AlertAcknowledge,
     session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(current_user)],
+    payload: Annotated[AlertAcknowledge | None, Body()] = None,
 ) -> AlertRead:
     """Close an alert that only a person can close (red flags).
 
-    Measurement-based alerts close automatically when a full valid window is
-    back to NORMAL, so they cannot be closed by hand (409).
+    With a token only a CREW_MEDICAL_OFFICER may close it (403 otherwise) and
+    resolved_by is the token's user; anonymous demo access (auth flag off)
+    stays open and uses the body's crew_member_id. Measurement-based alerts
+    close automatically when a full valid window is back to NORMAL, so they
+    cannot be closed by hand (409).
     """
 
+    actor = acting_crew_member(user, payload.crew_member_id if payload else None)
     alert = session.get(AlertEvent, alert_id)
     if alert is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Alert not found")
@@ -143,12 +153,13 @@ def resolve_alert(
             status.HTTP_409_CONFLICT,
             "This alert closes automatically when measurements return to normal",
         )
+    require_role(user, Role.CREW_MEDICAL_OFFICER)
     if alert.status == AlertStatus.RESOLVED.value:
         raise HTTPException(status.HTTP_409_CONFLICT, "Alert is already resolved")
     resolve_manually(
         session,
         alert,
-        resolved_by=payload.crew_member_id,
+        resolved_by=actor,
         now=datetime.now(timezone.utc),
     )
     session.commit()
@@ -161,13 +172,16 @@ def mark_step_done(
     alert_id: UUID,
     payload: AlertStepDone,
     session: Annotated[Session, Depends(get_session)],
+    user: Annotated[User, Depends(current_user)],
 ) -> AlertRead:
     """Record that a step of the alert's current action card was done.
 
-    Marking the same step again keeps the first record (idempotent). Steps of a
+    The crew member is the token's user, or the body's crew_member_id without
+    a token (demo mode; 422 if missing). Marking the same step again keeps the first record (idempotent). Steps of a
     resolved alert, or keys not on the current card, are rejected.
     """
 
+    actor = acting_crew_member(user, payload.crew_member_id)
     alert = session.get(AlertEvent, alert_id)
     if alert is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Alert not found")
@@ -198,7 +212,7 @@ def mark_step_done(
                 card_id=card.card_id,
                 card_version=card.version,
                 step_key=payload.step_key,
-                crew_member_id=payload.crew_member_id,
+                crew_member_id=actor,
                 done_at=datetime.now(timezone.utc),
             )
         )

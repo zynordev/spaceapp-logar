@@ -9,19 +9,26 @@ from spaceapp_logar.schemas.observations import Identifier
 
 
 class AlertAcknowledge(BaseModel):
-    """Crew member confirming they have seen an alert."""
+    """Crew member confirming they have seen (or closing) an alert.
+
+    With a bearer token the actor is the token's user and crew_member_id is
+    ignored; without one (demo mode) crew_member_id is required.
+    """
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    crew_member_id: Identifier
+    crew_member_id: Identifier | None = None
 
 
 class AlertStepDone(BaseModel):
-    """Crew member marking one step of the alert's current card as done."""
+    """Crew member marking one step of the alert's current card as done.
+
+    crew_member_id follows the same rule as AlertAcknowledge.
+    """
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    crew_member_id: Identifier
+    crew_member_id: Identifier | None = None
     step_key: Identifier
 
 

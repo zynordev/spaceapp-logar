@@ -2,13 +2,14 @@ import os
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from spaceapp_logar.api.alerts import router as alerts_router
+from spaceapp_logar.api.auth import router as auth_router
 from spaceapp_logar.api.check_ins import router as check_ins_router
 from spaceapp_logar.api.coverage import router as coverage_router
 from spaceapp_logar.api.demo import router as demo_router
@@ -18,6 +19,7 @@ from spaceapp_logar.api.measurements import router as measurements_router
 from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.red_flags import router as red_flags_router
 from spaceapp_logar.api.status import router as status_router
+from spaceapp_logar.auth import current_user
 from spaceapp_logar.db import session as db_session
 from spaceapp_logar.observability import REQUEST_ID_HEADER, install_observability
 
@@ -67,21 +69,32 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", REQUEST_ID_HEADER],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        REQUEST_ID_HEADER,
+    ],
     expose_headers=[REQUEST_ID_HEADER],
     allow_credentials=False,
 )
 
-app.include_router(alerts_router)
-app.include_router(check_ins_router)
-app.include_router(coverage_router)
-app.include_router(demo_router)
-app.include_router(environment_router)
-app.include_router(lab_results_router)
-app.include_router(measurements_router)
-app.include_router(observations_router)
-app.include_router(red_flags_router)
-app.include_router(status_router)
+# Token issuing is the only /v1 endpoint that never needs a token.
+app.include_router(auth_router)
+
+# Every other /v1 router resolves the caller. With SPACEAPP_AUTH_REQUIRED off
+# (default) a request without a token runs as an anonymous demo user, so the
+# offline dashboard and demo scenarios keep working; see spaceapp_logar.auth.
+AUTHENTICATED = [Depends(current_user)]
+app.include_router(alerts_router, dependencies=AUTHENTICATED)
+app.include_router(check_ins_router, dependencies=AUTHENTICATED)
+app.include_router(coverage_router, dependencies=AUTHENTICATED)
+app.include_router(demo_router, dependencies=AUTHENTICATED)
+app.include_router(environment_router, dependencies=AUTHENTICATED)
+app.include_router(lab_results_router, dependencies=AUTHENTICATED)
+app.include_router(measurements_router, dependencies=AUTHENTICATED)
+app.include_router(observations_router, dependencies=AUTHENTICATED)
+app.include_router(red_flags_router, dependencies=AUTHENTICATED)
+app.include_router(status_router, dependencies=AUTHENTICATED)
 
 
 @app.get("/health", response_model=ServiceHealth, tags=["operations"])
