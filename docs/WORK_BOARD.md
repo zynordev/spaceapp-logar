@@ -11,14 +11,16 @@ kanalında `MAIN BENDE` diyerek yazma sırasını alır. Ayrıntılı Git kurall
 
 | İş | Sahip | Dosya/sınır | Durum |
 |---|---|---|---|
-| Ortak `main` işbirliği düzeni | Codex | Yalnız işbirliği belgeleri | İncelemede |
-| Sıradaki backend parçası | Atanmadı | Başlamadan önce sınır belirlenecek | Planlandı |
+| Sentetik CO2 demo çalıştırıcısı | Sonraki geliştirici | Mevcut API ve onaylı CO2 davranışı; yeni eşik yok | Planlandı |
+| Push tabanlı test kontrolü | Sonraki geliştirici | CI yapılandırması; uygulama davranışı değişmez | Sonraki |
 
 ## Tamamlanan işler
 
 | İş | Sahip | Birleşen commit | Doğrulama |
 |---|---|---|---|
+| Ortak `main` işbirliği düzeni | Codex | `5d2acf7` | Belge denetimi geçti |
 | CO2 WATCH eylem kartı | piebio | `3ebb073`, `f1fc478` | 72 test geçti |
+| CO2 biyoloji senaryo testleri | piebio | `b704e59` | Tam paket 86 test geçti |
 
 ## İş devri şablonu
 

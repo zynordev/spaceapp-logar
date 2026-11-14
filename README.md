@@ -38,6 +38,7 @@ uv run pytest
 - [Birlikte çalışma biçimi ve onay noktaları](docs/COLLABORATION.md)
 - [Git ile ortak çalışma düzeni](docs/GIT_WORKFLOW.md)
 - [Ortak iş panosu](docs/WORK_BOARD.md)
+- [Backend devir notu ve sıradaki işler](docs/HANDOFF.md)
 - [MVP gösterge kısa listesi](docs/MVP_INDICATORS.md)
 - [Backend teknoloji yığını seçenekleri](docs/BACKEND_STACK_OPTIONS.md)
 - [Açıklanabilir alarm kuralları](docs/ALARM_RULES.md)
