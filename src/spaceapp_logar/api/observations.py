@@ -14,6 +14,7 @@ from spaceapp_logar.schemas import (
     CO2WindowRead,
     RuleEvaluationRead,
 )
+from spaceapp_logar.services.alerts import update_alert_lifecycle
 from spaceapp_logar.services.co2_monitoring import (
     assess_persisted_co2_window,
     persist_co2_evaluation,
@@ -62,6 +63,7 @@ def create_observation(
         evaluated_at=observation.observed_at,
         persisted_input=persisted_input,
     )
+    update_alert_lifecycle(session, evaluation_record)
     session.commit()
     assessment = persisted_input.assessment
     action_card = (

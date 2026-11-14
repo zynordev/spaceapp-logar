@@ -3,7 +3,9 @@ from typing import Literal
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from spaceapp_logar.api.alerts import router as alerts_router
 from spaceapp_logar.api.check_ins import router as check_ins_router
+from spaceapp_logar.api.lab_results import router as lab_results_router
 from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.status import router as status_router
 
@@ -21,7 +23,9 @@ app = FastAPI(
     version="0.1.0",
     description="Explainable astronaut health decision-support backend.",
 )
+app.include_router(alerts_router)
 app.include_router(check_ins_router)
+app.include_router(lab_results_router)
 app.include_router(observations_router)
 app.include_router(status_router)
 

@@ -41,7 +41,12 @@ def test_first_migration_upgrades_and_downgrades_cleanly(tmp_path: Path) -> None
         "rule_evaluations",
         "rule_evaluation_evidence",
         "subjective_check_ins",
+        "alert_events",
+        "lab_results",
     }.issubset(inspector.get_table_names())
+    assert {
+        index["name"] for index in inspector.get_indexes("alert_events")
+    } >= {"uq_alert_events_active", "ix_alert_events_lookup"}
     assert {column["name"] for column in inspector.get_columns("observations")} == (
         EXPECTED_COLUMNS
     )
