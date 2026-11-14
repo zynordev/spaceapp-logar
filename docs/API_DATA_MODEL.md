@@ -170,6 +170,10 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
   (`{crew_member_id, step_key}`), değişmez `action_step_logs` tablosu
   (migration 0009). `AlertRead.completed_step_keys`.
 
+- [x] Kapsam genişletmesi: kabin atmosferi, radyasyon, uyku, hareket hastalığı,
+  görme kuralları; öznel girişe isteğe bağlı `vision_change`, `back_pain`,
+  `congestion` (0–4, migration 0010); `GET /v1/risk-coverage`
+
 ### Genel ölçüm sözleşmesi
 
 `POST /v1/measurements` aynı ortak zarfı kullanır. Her metrik tek bir birim ve
