@@ -33,5 +33,7 @@ class AlertRead(BaseModel):
     opened_evaluation_id: UUID
     last_evaluation_id: UUID
     resolved_evaluation_id: UUID | None
+    resolved_by: str | None = None
+    manual_resolution: bool = False
     explanation: str | None = None
     action_card: ActionCardRead | None = None

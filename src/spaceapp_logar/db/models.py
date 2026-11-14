@@ -203,7 +203,45 @@ class AlertEvent(Base):
         ForeignKey("rule_evaluations.id", ondelete="RESTRICT"),
         nullable=True,
     )
+    resolved_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class RedFlagReport(Base):
+    """Append-only red-flag symptom report from a crew member."""
+
+    __tablename__ = "red_flag_reports"
+    __table_args__ = (
+        CheckConstraint(
+            "(source_type = 'SYNTHETIC' AND scenario_id IS NOT NULL) OR "
+            "(source_type = 'MANUAL' AND scenario_id IS NULL)",
+            name="ck_red_flag_reports_source",
+        ),
+        Index(
+            "ix_red_flag_reports_lookup",
+            "mission_id",
+            "crew_member_id",
+            "observed_at",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+    )
+    mission_id: Mapped[str] = mapped_column(String(100))
+    crew_member_id: Mapped[str] = mapped_column(String(100))
+    flags: Mapped[str] = mapped_column(String(500))
+    observed_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    source_type: Mapped[str] = mapped_column(String(32))
+    source_id: Mapped[str] = mapped_column(String(100))
+    scenario_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    evaluation_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("rule_evaluations.id", ondelete="RESTRICT"),
+    )
+    ingested_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
 
 
 class LabResult(Base):

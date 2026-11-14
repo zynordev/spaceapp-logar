@@ -14,6 +14,7 @@ from spaceapp_logar.api.demo import router as demo_router
 from spaceapp_logar.api.lab_results import router as lab_results_router
 from spaceapp_logar.api.measurements import router as measurements_router
 from spaceapp_logar.api.observations import router as observations_router
+from spaceapp_logar.api.red_flags import router as red_flags_router
 from spaceapp_logar.api.status import router as status_router
 
 WEB_DIR = Path(__file__).parent / "web"
@@ -58,6 +59,7 @@ app.include_router(demo_router)
 app.include_router(lab_results_router)
 app.include_router(measurements_router)
 app.include_router(observations_router)
+app.include_router(red_flags_router)
 app.include_router(status_router)
 
 
