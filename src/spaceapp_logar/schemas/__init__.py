@@ -1,5 +1,9 @@
 """Validated API data contracts."""
 
+from spaceapp_logar.schemas.check_ins import (
+    SubjectiveCheckInCreate,
+    SubjectiveCheckInRead,
+)
 from spaceapp_logar.schemas.monitoring import (
     CO2ObservationAccepted,
     CO2WindowRead,
@@ -25,6 +29,8 @@ __all__ = [
     "ReportedQuality",
     "RuleEvaluationRead",
     "SourceType",
+    "SubjectiveCheckInCreate",
+    "SubjectiveCheckInRead",
     "TargetType",
 ]
 

@@ -3,6 +3,7 @@ from typing import Literal
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from spaceapp_logar.api.check_ins import router as check_ins_router
 from spaceapp_logar.api.observations import router as observations_router
 
 
@@ -19,6 +20,7 @@ app = FastAPI(
     version="0.1.0",
     description="Explainable astronaut health decision-support backend.",
 )
+app.include_router(check_ins_router)
 app.include_router(observations_router)
 
 
