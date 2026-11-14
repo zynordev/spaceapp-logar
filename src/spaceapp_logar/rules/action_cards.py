@@ -357,10 +357,13 @@ _V1_CARDS: tuple[ActionCard, ...] = (
 )
 
 # Imported here so the V2 module can reuse shared constants above.
+from spaceapp_logar.rules.action_cards_expanded import EXPANDED_CARDS  # noqa: E402
 from spaceapp_logar.rules.action_cards_v2 import (  # noqa: E402
-    ACTIVE_CARDS,
+    ACTIVE_CARDS as _CORE_V2_CARDS,
     DATA_HR_SENSOR_CHECK_CARD_V2,
 )
+
+ACTIVE_CARDS: tuple[ActionCard, ...] = _CORE_V2_CARDS + EXPANDED_CARDS
 
 _ALL_CARDS: tuple[ActionCard, ...] = _V1_CARDS + ACTIVE_CARDS
 
