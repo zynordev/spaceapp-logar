@@ -164,6 +164,10 @@ değerlendirmede kullanılan ham gözlem kimliklerini değişmez şekilde ilişk
 alanlarını ayrı `0–4` tam sayıları olarak saklar. Backend bu ham girişlerden teşhis
 veya doğrulanmamış tek bir sağlık puanı üretmez.
 
+`GET /v1/crew/{crew_id}/status`, son CO₂ değerlendirmesi ile son öznel kontrolü
+aynı cevapta gösterir. Öznel girişler henüz alarm seviyesini değiştirmez; bağlam
+olarak korunur ve cevabın sınırlamaları açıkça belirtilir.
+
 ## Onay kaydı
 
 14 Kasım 2026 tarihinde proje sahibi:

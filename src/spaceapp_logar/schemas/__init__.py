@@ -18,12 +18,15 @@ from spaceapp_logar.schemas.observations import (
     SourceType,
     TargetType,
 )
+from spaceapp_logar.schemas.status import CO2StatusRead, CrewStatusRead
 
 __all__ = [
     "CO2ObservationCreate",
     "CO2ObservationRead",
     "CO2ObservationAccepted",
     "CO2WindowRead",
+    "CO2StatusRead",
+    "CrewStatusRead",
     "EnvironmentMetric",
     "MeasurementUnit",
     "ReportedQuality",
