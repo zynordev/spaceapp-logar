@@ -117,6 +117,20 @@
       <!-- Öznel durum + laboratuvar -->
       <div class="row two">
         <section class="panel" aria-labelledby="h-checkin">
+          <section id="redFlagPanel" class="redflag" aria-labelledby="h-redflag" hidden>
+            <h2 id="h-redflag">Acil belirti (kırmızı bayrak)</h2>
+            <p class="hint">Bu belirtilerden biri varsa ölçümler normal olsa bile hemen bildirin. Sistem hiçbir ortalamayı beklemeden acil prosedüre yönlendirir. Teşhis değildir.</p>
+            <form id="redFlagForm" novalidate>
+              <fieldset class="redflag-options">
+                <legend class="sr-only">Kırmızı bayrak belirtileri</legend>
+                <div id="redFlagOptions"></div>
+              </fieldset>
+              <div class="form-actions">
+                <button id="redFlagBtn" class="btn danger" type="submit">Acil belirti bildir</button>
+                <span id="redFlagMsg" class="msg" role="status" aria-live="polite"></span>
+              </div>
+            </form>
+          </section>
           <h2 id="h-checkin">Öznel durum</h2>
           <form id="checkinForm" class="checkin" novalidate>
             <div id="sliders" class="sliders"></div>

@@ -75,6 +75,14 @@ select {
 .btn:hover:not(:disabled) { border-color: var(--accent); }
 .btn.primary { background: #1d6fa5; border-color: #3aa0dc; }
 .btn.primary:hover:not(:disabled) { background: #2380bb; }
+.btn.danger { background: #8f1d2c; border-color: #ff6b7d; color: #fff; font-weight: 700; }
+.btn.danger:hover:not(:disabled) { background: #a8243a; }
+.redflag { border: 2px solid #ff6b7d; border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: 1.2rem; background: rgba(143, 29, 44, .18); }
+.redflag h2 { color: #ffb3bd; }
+.redflag-options { border: 0; padding: 0; margin: 0 0 .6rem; }
+.redflag-options label { display: flex; gap: .5rem; align-items: flex-start; padding: .25rem 0; cursor: pointer; }
+.redflag-options input { margin-top: .2rem; width: 1.05rem; height: 1.05rem; accent-color: #ff6b7d; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .btn:disabled { opacity: .6; cursor: not-allowed; }
 .btn.small { padding: .25rem .6rem; font-size: .85rem; }
 .btn[aria-busy="true"]::before {

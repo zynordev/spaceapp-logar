@@ -34,7 +34,7 @@ const ATTENTION = {
   UNKNOWN:  { label: 'Bilinmiyor', icon: '?',      cls: 'att-unknown',  rank: 2, desc: 'Güvenilir değerlendirme için yeterli veri yok. Bu "normal" anlamına gelmez.' },
   WATCH:    { label: 'İzle',       icon: '!',      cls: 'att-watch',    rank: 3, desc: 'Bir ölçüm izlenmeli; acil olmayan bir yeniden kontrol gerekebilir.' },
   ALERT:    { label: 'Uyarı',      icon: '▲', cls: 'att-alert',    rank: 4, desc: 'Eylem kartındaki adımlar kısa sürede uygulanmalı; görev prosedürü önceliklidir.' },
-  CRITICAL: { label: 'Kritik',     icon: '✖', cls: 'att-critical', rank: 5, desc: 'Görevce doğrulanmış acil prosedür derhal açılmalıdır.' },
+  CRITICAL: { label: 'Kritik',     icon: '✖', cls: 'att-critical', rank: 5, desc: 'Acil prosedür hemen açılmalı ve ekip sağlık sorumlusu bilgilendirilmelidir.' },
 };
 const QUALITY = {
   VALID:   { label: 'Geçerli', icon: '✓', cls: 'q-valid' },
@@ -953,7 +953,8 @@ function renderAlerts() {
       const rule = rulesAll().find((r) => r.rule_id === a.rule_id);
       const meta = [`Açıldı: ${fmtDateTime(a.opened_at)}`];
       if (a.acknowledged_at) meta.push(`Görüldü: ${fmtDateTime(a.acknowledged_at)}${a.acknowledged_by ? ` (${a.acknowledged_by})` : ''}`);
-      if (a.resolved_at) meta.push(`Çözüldü: ${fmtDateTime(a.resolved_at)}`);
+      if (a.resolved_at) meta.push(`Çözüldü: ${fmtDateTime(a.resolved_at)}${a.resolved_by ? ` (${a.resolved_by})` : ''}`);
+      if (a.manual_resolution && a.status !== 'RESOLVED') meta.push('Ölçümlerle kendiliğinden kapanmaz; ekip üyesi değerlendirip kapatır.');
       const actions = el('div', { class: 'alert-actions' });
       if (a.status === 'OPEN') {
         actions.append(el('button', {
@@ -961,6 +962,13 @@ function renderAlerts() {
           'aria-label': `Alarmı gördüm olarak işaretle: ${(rule && rule.title) || a.rule_id}`,
           onclick: (e) => acknowledge(a, e.currentTarget),
         }, 'Gördüm'));
+      }
+      if (a.manual_resolution && a.status !== 'RESOLVED') {
+        actions.append(el('button', {
+          type: 'button', class: 'btn small', 'data-fk': `resolve-${a.id}`,
+          'aria-label': `Değerlendirildi olarak kapat: ${(rule && rule.title) || a.rule_id}`,
+          onclick: (e) => resolveAlert(a, e.currentTarget),
+        }, 'Değerlendirildi, kapat'));
       }
       if (a.action_card) {
         actions.append(el('button', {
@@ -996,9 +1004,74 @@ async function acknowledge(alertObj, btn) {
   }
 }
 
+// Kırmızı bayrak alarmları ölçümlerle kapanmaz; bir ekip üyesi değerlendirip kapatır.
+async function resolveAlert(alertObj, btn) {
+  const msg = $('#alertsMsg');
+  msg.hidden = true;
+  if (!state.crewId) return;
+  if (!window.confirm('Bu kırmızı bayrak olayı ekip sağlık sorumlusu tarafından değerlendirildi mi? Alarm kapatılacak ve kaydedilecek.')) return;
+  btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
+  try {
+    await api('POST', `/v1/alerts/${encodeURIComponent(alertObj.id)}/resolve`, { crew_member_id: state.crewId });
+    refresh();
+  } catch (e) {
+    msg.textContent = e.status === 0 ? 'Sunucuya ulaşılamıyor; alarm kapatılamadı.' : `Alarm kapatılamadı (${e.message}).`;
+    msg.hidden = false;
+    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
+  }
+}
+
 /* ---------------------------------------------------------
-   9. ÇİZİM: öznel durum formu, laboratuvar
+   9. ÇİZİM: kırmızı bayrak, öznel durum formu, laboratuvar
    --------------------------------------------------------- */
+async function loadRedFlagCatalog() {
+  if (MOCK_MODE) return;
+  let catalog;
+  try { catalog = await api('GET', '/v1/red-flags/catalog'); } catch (e) { return; }
+  if (!Array.isArray(catalog) || !catalog.length) return;
+  const box = $('#redFlagOptions');
+  clear(box);
+  for (const item of catalog) {
+    const id = `rf-${item.flag}`;
+    box.append(el('label', { for: id },
+      el('input', { type: 'checkbox', id, name: 'redflag', value: item.flag }),
+      el('span', { text: item.label })));
+  }
+  $('#redFlagForm').addEventListener('submit', submitRedFlags);
+  $('#redFlagPanel').hidden = false;
+}
+
+async function submitRedFlags(e) {
+  e.preventDefault();
+  const msg = $('#redFlagMsg');
+  const btn = $('#redFlagBtn');
+  if (!state.missionId || !state.crewId) { msg.className = 'msg err'; msg.textContent = 'Önce bir görev seçin.'; return; }
+  const flags = [...document.querySelectorAll('#redFlagOptions input:checked')].map((x) => x.value);
+  if (!flags.length) { msg.className = 'msg err'; msg.textContent = 'En az bir belirti seçin.'; return; }
+  btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
+  try {
+    await api('POST', '/v1/red-flags', {
+      mission_id: state.missionId, crew_member_id: state.crewId, flags,
+      observed_at: new Date().toISOString(), source_type: 'MANUAL', source_id: 'dashboard-user',
+    });
+    document.querySelectorAll('#redFlagOptions input:checked').forEach((x) => { x.checked = false; });
+    msg.className = 'msg err';
+    msg.textContent = 'Acil durum bildirildi. Eylem kartını uygulayın ve ekip sağlık sorumlusuna haber verin.';
+    state.selectedRuleId = 'RED_FLAG_SYMPTOM_V1';
+    await refresh();
+    $('#actionPanel').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+  } catch (err) {
+    msg.className = 'msg err';
+    msg.textContent = err.status === 0 ? 'Sunucuya ulaşılamıyor; bildirilemedi. Ekibe sözlü olarak haber verin.' : `Bildirilemedi (${err.message}). Ekibe sözlü olarak haber verin.`;
+  } finally {
+    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
+  }
+}
+
 function buildCheckinForm() {
   const box = $('#sliders');
   for (const [key, label] of CHECKIN_FIELDS) {
@@ -1230,6 +1303,7 @@ async function importOsdrLabs() {
 function init() {
   if (MOCK_MODE) $('#mockBanner').hidden = false;
   buildCheckinForm();
+  loadRedFlagCatalog();
 
   $('#missionSelect').addEventListener('change', (e) => {
     resetMissionData();
