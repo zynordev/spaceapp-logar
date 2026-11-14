@@ -51,6 +51,6 @@ def report_red_flags(
         crew_member_id=payload.crew_member_id,
         flags=payload.flags,
         observed_at=payload.observed_at,
-        evaluation=rule_status(result.record),
+        evaluation=rule_status(result.record, session),
         alert_id=result.alert.id if result.alert else None,
     )

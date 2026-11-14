@@ -93,7 +93,7 @@ def test_deterioration_after_normal_hour_raises_watch_and_card(
     assert normal["action_card"] is None
     assert worse["evaluation"]["health_attention"] == "WATCH"
     assert worse["evaluation"]["observed_value"] == pytest.approx(3.5)
-    assert worse["action_card"]["card_id"] == "ENV_CO2_WATCH_CARD_V1"
+    assert worse["action_card"]["card_id"] == "ENV_CO2_WATCH_CARD_V2"
 
 
 def test_severe_symptom_with_normal_sensor_does_not_change_attention(
@@ -155,5 +155,5 @@ def test_high_co2_without_symptoms_still_shows_the_card(
 
     body = response.json()
     assert body["co2"]["health_attention"] == "WATCH"
-    assert body["co2"]["action_card"]["card_id"] == "ENV_CO2_WATCH_CARD_V1"
+    assert body["co2"]["action_card"]["card_id"] == "ENV_CO2_WATCH_CARD_V2"
     assert body["latest_check_in"] is None

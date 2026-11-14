@@ -54,7 +54,7 @@ def test_red_flag_escalates_immediately_without_any_sensor_data(
     assert evaluation["health_attention"] == "CRITICAL"
     assert evaluation["validation_status"] == "DEMO_PENDING_REVIEW"
     card = evaluation["action_card"]
-    assert card["card_id"] == "RED_FLAG_EMERGENCY_CARD_V1"
+    assert card["card_id"] == "RED_FLAG_EMERGENCY_CARD_V2"
     assert card["allows_automatic_vehicle_command"] is False
     assert "teşhis" in evaluation["explanation"].lower()
     assert response.json()["alert_id"] is not None

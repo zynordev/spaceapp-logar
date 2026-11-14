@@ -16,6 +16,15 @@ class AlertAcknowledge(BaseModel):
     crew_member_id: Identifier
 
 
+class AlertStepDone(BaseModel):
+    """Crew member marking one step of the alert's current card as done."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    crew_member_id: Identifier
+    step_key: Identifier
+
+
 class AlertRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -35,5 +44,6 @@ class AlertRead(BaseModel):
     resolved_evaluation_id: UUID | None
     resolved_by: str | None = None
     manual_resolution: bool = False
+    completed_step_keys: list[str] = []
     explanation: str | None = None
     action_card: ActionCardRead | None = None

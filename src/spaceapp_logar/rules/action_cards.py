@@ -1,14 +1,14 @@
 """Versioned, pre-written action cards.
 
 The software never generates advice at run time; it only selects one of these
-fixed cards. ``ENV_CO2_WATCH_CARD_V1`` was approved by the project owner. All
-other cards are DEMO cards (validation_status ``DEMO_PENDING_REVIEW``): they
+fixed cards. Version 1 cards stay here so stored evaluations that showed
+them can still be resolved; new evaluations select the version 2 cards in
+``action_cards_v2``. ``ENV_CO2_WATCH_CARD_V1`` and ``_V2`` were approved by the
+project owner. All other cards are DEMO cards (validation_status ``DEMO_PENDING_REVIEW``): they
 only contain first-step actions listed as allowed in docs/biyo.md section 10.2
 (re-measure, stop activity/rest, record symptoms, open the mission procedure,
 notify the crew medical officer). They contain no diagnosis, drug or dose.
 """
-
-from dataclasses import dataclass
 
 from spaceapp_logar.rules.co2 import RULE_ID as CO2_NOMINAL_RULE_ID
 from spaceapp_logar.rules.models import (
@@ -24,39 +24,13 @@ from spaceapp_logar.rules.vitals import (
     TEMP_RULE_ID,
 )
 
-APPROVED = "APPROVED"
-DEMO_PENDING_REVIEW = "DEMO_PENDING_REVIEW"
-
-
-@dataclass(frozen=True, slots=True)
-class ActionCardStep:
-    """One short step shown to the astronaut."""
-
-    key: str
-    text_tr: str
-
-
-@dataclass(frozen=True, slots=True)
-class ActionCard:
-    """A pre-written action card and the safety limits that apply to it."""
-
-    card_id: str
-    version: int
-    attention: HealthAttention
-    rule_id: str
-    title_key: str
-    reason_key: str
-    title_tr: str
-    reason_tr: str
-    steps: tuple[ActionCardStep, ...]
-    footer_note_tr: str
-    requires_mission_procedure: bool
-    allows_automatic_vehicle_command: bool
-    validation_status: str = APPROVED
-
-    @property
-    def step_keys(self) -> tuple[str, ...]:
-        return tuple(step.key for step in self.steps)
+from spaceapp_logar.rules.card_model import (
+    APPROVED,
+    DEMO_PENDING_REVIEW,
+    ActionCard,
+    ActionCardStep,
+    CardReference,
+)
 
 
 DEMO_FOOTER = (
@@ -370,7 +344,7 @@ RED_FLAG_EMERGENCY_CARD_V1 = ActionCard(
     validation_status=DEMO_PENDING_REVIEW,
 )
 
-_ALL_CARDS: tuple[ActionCard, ...] = (
+_V1_CARDS: tuple[ActionCard, ...] = (
     ENV_CO2_WATCH_CARD_V1,
     VITAL_SPO2_WATCH_CARD_V1,
     VITAL_SPO2_ALERT_CARD_V1,
@@ -382,20 +356,28 @@ _ALL_CARDS: tuple[ActionCard, ...] = (
     RED_FLAG_EMERGENCY_CARD_V1,
 )
 
+# Imported here so the V2 module can reuse shared constants above.
+from spaceapp_logar.rules.action_cards_v2 import (  # noqa: E402
+    ACTIVE_CARDS,
+    DATA_HR_SENSOR_CHECK_CARD_V2,
+)
+
+_ALL_CARDS: tuple[ActionCard, ...] = _V1_CARDS + ACTIVE_CARDS
+
 _CARDS_BY_ID_AND_VERSION: dict[tuple[str, int], ActionCard] = {
     (card.card_id, card.version): card for card in _ALL_CARDS
 }
 
-# Which card a rule result shows. Health cards require VALID data; the only
-# card shown for non-valid data is the sensor-check card for a suspect jump.
+# Which card a rule result shows now (latest versions only). Health cards
+# require VALID data; the only card for non-valid data is the sensor check.
 _SELECTION: dict[tuple[str, HealthAttention, DataQuality], ActionCard] = {
     (card.rule_id, card.attention, DataQuality.VALID): card
-    for card in _ALL_CARDS
+    for card in ACTIVE_CARDS
     if card.attention is not HealthAttention.UNKNOWN
 }
 for _quality in (DataQuality.SUSPECT, DataQuality.FAULT):
     _SELECTION[(HR_JUMP_RULE_ID, HealthAttention.UNKNOWN, _quality)] = (
-        DATA_HR_SENSOR_CHECK_CARD_V1
+        DATA_HR_SENSOR_CHECK_CARD_V2
     )
 
 
@@ -415,3 +397,16 @@ def get_action_card(card_id: str, version: int) -> ActionCard | None:
 
 def all_action_cards() -> tuple[ActionCard, ...]:
     return _ALL_CARDS
+
+
+__all__ = [
+    "APPROVED",
+    "DEMO_PENDING_REVIEW",
+    "ActionCard",
+    "ActionCardStep",
+    "CardReference",
+    "ENV_CO2_WATCH_CARD_V1",
+    "all_action_cards",
+    "get_action_card",
+    "select_action_card",
+]

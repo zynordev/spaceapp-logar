@@ -6,6 +6,7 @@ from spaceapp_logar.rules import HealthAttention, get_action_card
 from spaceapp_logar.rules.catalog import RULES, RuleInfo
 from spaceapp_logar.schemas.action_cards import ActionCardRead
 from spaceapp_logar.schemas.status import RuleStatusRead
+from spaceapp_logar.services.situation import situation_for
 
 SEVERITY = (
     HealthAttention.NORMAL,
@@ -22,7 +23,12 @@ def card_for_record(record: RuleEvaluationRecord) -> ActionCardRead | None:
     return ActionCardRead.from_card(card) if card else None
 
 
-def rule_status(record: RuleEvaluationRecord) -> RuleStatusRead:
+def rule_status(
+    record: RuleEvaluationRecord,
+    session: Session | None = None,
+) -> RuleStatusRead:
+    """Rule result for clients; with a session it also carries live context."""
+
     info: RuleInfo | None = RULES.get(record.rule_id)
     return RuleStatusRead(
         rule_id=record.rule_id,
@@ -46,6 +52,7 @@ def rule_status(record: RuleEvaluationRecord) -> RuleStatusRead:
         evidence_level=info.evidence_level if info else "",
         validation_status=info.validation_status if info else "",
         action_card=card_for_record(record),
+        situation=situation_for(session, record) if session is not None else None,
     )
 
 

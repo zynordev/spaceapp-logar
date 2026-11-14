@@ -68,7 +68,7 @@ def test_co2_headache_scenario(api_client: tuple[TestClient, Engine]) -> None:
     rules = rules_by_id(status)
 
     assert rules["ENV_CO2_NOMINAL_V1"]["health_attention"] == "WATCH"
-    assert rules["ENV_CO2_NOMINAL_V1"]["action_card"]["card_id"] == "ENV_CO2_WATCH_CARD_V1"
+    assert rules["ENV_CO2_NOMINAL_V1"]["action_card"]["card_id"] == "ENV_CO2_WATCH_CARD_V2"
     assert rules["VITAL_SPO2_SUSTAINED_V1"]["health_attention"] == "NORMAL"
     assert rules["VITAL_TEMP_TREND_V1"]["health_attention"] == "NORMAL"
     assert rules["MULTI_CARDIO_RESP_V1"]["health_attention"] == "NORMAL"
@@ -93,7 +93,7 @@ def test_fever_trend_scenario(api_client: tuple[TestClient, Engine]) -> None:
     assert rules["MULTI_CARDIO_RESP_V1"]["health_attention"] == "ALERT"
     assert (
         rules["MULTI_CARDIO_RESP_V1"]["action_card"]["card_id"]
-        == "MULTI_CARDIO_RESP_ALERT_CARD_V1"
+        == "MULTI_CARDIO_RESP_ALERT_CARD_V2"
     )
     assert rules["ENV_CO2_NOMINAL_V1"]["health_attention"] == "NORMAL"
     assert status["overall_attention"] == "ALERT"
@@ -117,7 +117,7 @@ def test_spo2_drop_scenario(api_client: tuple[TestClient, Engine]) -> None:
     spo2 = rules["VITAL_SPO2_SUSTAINED_V1"]
 
     assert spo2["health_attention"] == "ALERT"
-    assert spo2["action_card"]["card_id"] == "VITAL_SPO2_ALERT_CARD_V1"
+    assert spo2["action_card"]["card_id"] == "VITAL_SPO2_ALERT_CARD_V2"
     assert spo2["action_card"]["allows_automatic_vehicle_command"] is False
     alerts = [a for a in alerts_of(client, result) if a["rule_id"] == spo2["rule_id"]]
     # WATCH escalated to ALERT inside the same alert, not a duplicate.
@@ -139,7 +139,7 @@ def test_sensor_fault_scenario_never_looks_healthy(
     jump = rules["DATA_HR_JUMP_V1"]
     assert jump["data_quality"] == "SUSPECT"
     assert jump["health_attention"] == "UNKNOWN"
-    assert jump["action_card"]["card_id"] == "DATA_HR_SENSOR_CHECK_CARD_V1"
+    assert jump["action_card"]["card_id"] == "DATA_HR_SENSOR_CHECK_CARD_V2"
     assert status["overall_attention"] == "UNKNOWN"
     assert alerts_of(client, result) == []
 

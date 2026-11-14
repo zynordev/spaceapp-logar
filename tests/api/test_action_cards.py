@@ -92,16 +92,19 @@ def test_sustained_high_co2_returns_the_approved_watch_card(
 
     assert body["evaluation"]["health_attention"] == "WATCH"
     card = body["action_card"]
-    assert card["card_id"] == "ENV_CO2_WATCH_CARD_V1"
-    assert card["version"] == 1
+    assert card["card_id"] == "ENV_CO2_WATCH_CARD_V2"
+    assert card["version"] == 2
     assert card["attention"] == "WATCH"
-    assert card["title_tr"] == "Kabin CO₂ değerini kontrol et"
+    assert card["title_tr"].startswith("Kabin CO₂ yüksek")
     assert card["step_keys"] == [
-        "verify_measurement",
+        "check_airflow",
+        "compare_modules",
+        "check_removal_system",
         "record_check_in",
-        "open_mission_procedure",
     ]
-    assert len(card["steps"]) == 3
+    assert all(step["why_tr"] for step in card["steps"])
+    assert card["reassess_minutes"] == 30
+    assert card["references"][0]["uri"].startswith("https://www.nasa.gov/")
     assert card["requires_mission_procedure"] is True
     assert card["allows_automatic_vehicle_command"] is False
 
@@ -132,10 +135,10 @@ def test_shown_card_is_recorded_with_the_rule_evaluation(
     # Early evaluations had too little data, so no card was shown.
     assert records[0].action_card_id is None
     assert records[0].action_card_version is None
-    # The final evaluation showed the approved card at version 1.
+    # The final evaluation showed the approved card at version 2.
     assert records[-1].health_attention == "WATCH"
-    assert records[-1].action_card_id == "ENV_CO2_WATCH_CARD_V1"
-    assert records[-1].action_card_version == 1
+    assert records[-1].action_card_id == "ENV_CO2_WATCH_CARD_V2"
+    assert records[-1].action_card_version == 2
 
 
 def test_crew_status_includes_the_card_that_was_shown(
@@ -148,7 +151,7 @@ def test_crew_status_includes_the_card_that_was_shown(
 
     assert response.status_code == 200
     card = response.json()["co2"]["action_card"]
-    assert card["card_id"] == "ENV_CO2_WATCH_CARD_V1"
+    assert card["card_id"] == "ENV_CO2_WATCH_CARD_V2"
     assert card["allows_automatic_vehicle_command"] is False
 
 
