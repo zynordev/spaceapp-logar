@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from spaceapp_logar.api.check_ins import router as check_ins_router
 from spaceapp_logar.api.observations import router as observations_router
+from spaceapp_logar.api.status import router as status_router
 
 
 class ServiceHealth(BaseModel):
@@ -22,6 +23,7 @@ app = FastAPI(
 )
 app.include_router(check_ins_router)
 app.include_router(observations_router)
+app.include_router(status_router)
 
 
 @app.get("/health", response_model=ServiceHealth, tags=["operations"])
