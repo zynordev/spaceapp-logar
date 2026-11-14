@@ -2,7 +2,7 @@
 
 Son güncelleme: 14 Kasım 2026
 
-Durum: **Onaylandı ve backend'e eklendi (14 Kasım 2026)**
+Durum: **V1 onaylandı; V2 onaylandı ve etkin (14 Kasım 2026)**
 
 Bu kart yalnızca bir saatlik ortalama kabin `ppCO2` değeri NASA'nın nominal
 `3 mmHg` sınırını aştığında gösterilecek `WATCH` kartıdır. Göreve özel `ALERT` veya
@@ -82,6 +82,39 @@ sınırlarla backend'e sürümlü eylem kartı olarak eklenmesini onayladı.
   cevabında `co2.action_card` alanı döner; kart yoksa `null`.
 - Yalnızca Türkçe metin eklendi (`*_tr` alanları). İngilizce metin ayrıca
   onaylanıp eklenecek.
+
+## Sürüm 2 (`ENV_CO2_WATCH_CARD_V2`)
+
+14 Kasım 2026'da proje sahibi, V1'in fazla genel olduğu geri bildirimiyle
+aşağıdaki V2 kartını onayladı. Yeni değerlendirmeler V2'yi gösterir; V1 eski
+kayıtlar için katalogda kalır.
+
+**Başlık:** Kabin CO₂ yüksek: hava akışını ve bulunduğun modülü kontrol et
+
+1. **Bulunduğun yerde hava akışını kontrol et:** fan ve menfezlerin önü kapalı
+   mı, uyku bölmesinin fanı çalışıyor mu?
+   *Neden:* Mikro yerçekiminde sıcak hava yükselmez ve doğal hava dolaşımı olmaz;
+   nefesle verilen CO₂ fan olmadan yüz çevresinde birikebilir.
+2. **Diğer modüllerin CO₂ değerine bak.** Yalnızca burada yüksekse
+   havalandırması iyi bir modüle geç.
+   *Neden:* Yerel birikim ile tüm kabinin sorunu farklı müdahale gerektirir.
+3. **CO₂ giderim sisteminin durumunu görev prosedürüne göre kontrol et ve yer
+   ekibine bildir.**
+   *Neden:* Giderim ekipmanını uçuş kontrol ekibi yönetir; yazılım ekipmana komut
+   vermez.
+4. **Belirtileri kaydet:** baş ağrısı, yorgunluk veya dikkat dağınıklığı.
+   *Neden:* CO₂ ile ilişkili belirtiler uzayda daha düşük düzeylerde
+   görülebilir; belirtiler etkinin tek göstergesidir.
+
+- **Yeniden değerlendirme:** 30 dakika (panelde geri sayım).
+- **Seviye yükselir:** baş ağrısı artarsa, bilinç bulanıklığı veya nefes
+  darlığı olursa "Acil belirti bildir"e geçilir.
+- **Kapanır:** bir saatlik ortalama 3 mmHg veya altına indiğinde.
+
+Taslakta dördüncü adım "30 dakika sonra yeniden değerlendir" idi. Uygulamada bu
+adım kart düzeyinde bir sayaca dönüştürüldü; dördüncü adım olarak V1'deki
+belirti kaydı korundu. Kartın üstünde canlı durum bölümü vardır: ölçülen değer,
+süre, eğilim, diğer modüllerin CO₂ değeri ve son öznel kayıt.
 
 ## Resmî kaynaklar
 

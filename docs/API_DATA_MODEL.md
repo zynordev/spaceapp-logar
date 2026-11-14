@@ -164,6 +164,12 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
   yalnızca ekip üyesinin kapatabildiği alarm (`POST /v1/alerts/{id}/resolve`);
   değişmez `red_flag_reports` tablosu ve `alert_events.resolved_by` (migration 0008)
 
+- [x] Eylem kartı V2: adım nedenleri, yeniden değerlendirme süresi, yükselme ve
+  kapanma koşulları, olası açıklamalar, kaynaklar. Kural durumunda canlı
+  `situation` bölümü. Adım işaretleme `POST /v1/alerts/{id}/steps`
+  (`{crew_member_id, step_key}`), değişmez `action_step_logs` tablosu
+  (migration 0009). `AlertRead.completed_step_keys`.
+
 ### Genel ölçüm sözleşmesi
 
 `POST /v1/measurements` aynı ortak zarfı kullanır. Her metrik tek bir birim ve
