@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from fastapi.testclient import TestClient
 import pytest
 
+from spaceapp_logar.db.session import get_session
 from spaceapp_logar.main import app
 from spaceapp_logar.observability import JsonFormatter
 
@@ -57,7 +58,19 @@ def test_404_error_body_shape() -> None:
 
 
 def test_422_error_body_keeps_detail_list() -> None:
-    response = client.post("/v1/measurements", json={}, headers={"X-Request-ID": "r422"})
+    # No database is needed to reject an invalid body; without this override the
+    # test depended on the developer's local database file (absent in CI, where
+    # the schema guard correctly answers 503 first).
+    def no_database():
+        yield None
+
+    app.dependency_overrides[get_session] = no_database
+    try:
+        response = client.post(
+            "/v1/measurements", json={}, headers={"X-Request-ID": "r422"}
+        )
+    finally:
+        app.dependency_overrides.pop(get_session, None)
 
     assert response.status_code == 422
     body = response.json()
