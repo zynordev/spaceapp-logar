@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: spaceapp-logar
+    runtime: docker
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: SPACEAPP_CORS_ORIGINS
+        value: "*"

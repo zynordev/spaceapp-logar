@@ -18,3 +18,4 @@ Ekip çalışma düzeni ve teknik belgeler:
 - GitHub Actions CI iş akışı eklendi (`.github/workflows/ci.yml`).
 - SQLite eşzamanlı okuma/yazma kilitlenmesini önlemek için WAL modu ve busy_timeout yapılandırıldı.
 - 195 testin tamamı (195 passed) doğrulandı.
+- Canlı dağıtım için Dockerfile ve Render Blueprint (`render.yaml`) yapılandırması eklendi.
