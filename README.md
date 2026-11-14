@@ -40,6 +40,7 @@ uv run pytest
 - [Backend teknoloji yığını seçenekleri](docs/BACKEND_STACK_OPTIONS.md)
 - [Açıklanabilir alarm kuralları](docs/ALARM_RULES.md)
 - [API ve veri modeli](docs/API_DATA_MODEL.md)
+- [CO₂ WATCH eylem kartı taslağı](docs/CO2_ACTION_CARD_PROPOSAL.md)
 
 ## Temel kaynaklar
 
