@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
-from typing import Annotated
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Query, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -49,6 +51,80 @@ def create_measurement(
         measurement=MeasurementRead.model_validate(observation),
         evaluations=[rule_status(record, session) for record in records],
     )
+
+
+MAX_BATCH_SIZE = 1000
+
+
+class MeasurementBatchCreate(BaseModel):
+    mode: Literal["all_or_nothing", "partial"] = "all_or_nothing"
+    # Items stay raw so each one is validated on its own.
+    measurements: list[Any]
+
+
+class RejectedItem(BaseModel):
+    index: int
+    errors: list[dict[str, Any]]
+
+
+class MeasurementBatchResult(BaseModel):
+    mode: str
+    accepted: int
+    rejected: list[RejectedItem]
+    evaluations: int
+
+
+@router.post(
+    "/v1/measurements/batch",
+    response_model=MeasurementBatchResult,
+    status_code=status.HTTP_201_CREATED,
+    responses={422: {"model": MeasurementBatchResult}},
+)
+def create_measurement_batch(
+    payload: MeasurementBatchCreate,
+    session: Annotated[Session, Depends(get_session)],
+) -> Any:
+    """Append many measurements in one transaction, oldest first.
+
+    ``all_or_nothing`` stores nothing if any item is invalid; ``partial``
+    stores the valid items and reports the rejected ones by index.
+    """
+
+    if len(payload.measurements) > MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Bir istekte en fazla {MAX_BATCH_SIZE} ölçüm gönderilebilir.",
+        )
+    valid: list[MeasurementCreate] = []
+    rejected: list[RejectedItem] = []
+    for index, item in enumerate(payload.measurements):
+        try:
+            valid.append(MeasurementCreate.model_validate(item))
+        except ValidationError as exc:
+            errors = exc.errors(include_url=False, include_input=False)
+            rejected.append(RejectedItem(index=index, errors=jsonable_encoder(errors)))
+
+    if payload.mode == "all_or_nothing" and rejected:
+        result = MeasurementBatchResult(
+            mode=payload.mode, accepted=0, rejected=rejected, evaluations=0
+        )
+        return JSONResponse(status_code=422, content=result.model_dump())
+
+    evaluations = 0
+    try:
+        for measurement in sorted(valid, key=lambda m: m.observed_at):
+            observation = store_measurement(session, measurement)
+            evaluations += len(evaluate_observation(session, observation))
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    result = MeasurementBatchResult(
+        mode=payload.mode, accepted=len(valid), rejected=rejected, evaluations=evaluations
+    )
+    if not valid:
+        return JSONResponse(status_code=status.HTTP_200_OK, content=result.model_dump())
+    return result
 
 
 @router.get("/v1/measurements", response_model=MeasurementSeriesRead)
