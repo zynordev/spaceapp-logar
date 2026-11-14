@@ -42,6 +42,16 @@ class SituationRead(BaseModel):
     completed_steps: list[CompletedStepRead] = []
 
 
+class BaselineUsedRead(BaseModel):
+    """Personal baseline a rule used (or could not use) for this evaluation."""
+
+    value: float | None
+    classification: str
+    status_label: str
+    sample_count: int | None
+    profile_version: int | None
+
+
 class RuleStatusRead(BaseModel):
     """Latest result of one rule, with the metadata needed to explain it."""
 
@@ -67,6 +77,7 @@ class RuleStatusRead(BaseModel):
     validation_status: str
     action_card: ActionCardRead | None = None
     situation: SituationRead | None = None
+    baseline: BaselineUsedRead | None = None
 
 
 class CrewStatusRead(BaseModel):

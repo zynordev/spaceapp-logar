@@ -5,7 +5,8 @@ from spaceapp_logar.db.models import RuleEvaluationRecord
 from spaceapp_logar.rules import HealthAttention, get_action_card
 from spaceapp_logar.rules.catalog import RULES, RuleInfo
 from spaceapp_logar.schemas.action_cards import ActionCardRead
-from spaceapp_logar.schemas.status import RuleStatusRead
+from spaceapp_logar.schemas.status import BaselineUsedRead, RuleStatusRead
+from spaceapp_logar.services.baseline import STATUS_LABELS
 from spaceapp_logar.services.situation import situation_for
 
 SEVERITY = (
@@ -53,6 +54,17 @@ def rule_status(
         validation_status=info.validation_status if info else "",
         action_card=card_for_record(record),
         situation=situation_for(session, record) if session is not None else None,
+        baseline=(
+            BaselineUsedRead(
+                value=record.baseline_value,
+                classification=record.baseline_classification,
+                status_label=STATUS_LABELS.get(record.baseline_classification, ""),
+                sample_count=record.baseline_sample_count,
+                profile_version=record.baseline_profile_version,
+            )
+            if record.baseline_classification
+            else None
+        ),
     )
 
 

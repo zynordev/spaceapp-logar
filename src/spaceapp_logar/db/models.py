@@ -6,6 +6,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Index,
+    JSON,
     Integer,
     String,
     SmallInteger,
@@ -107,6 +108,11 @@ class RuleEvaluationRecord(Base):
     source_uri: Mapped[str] = mapped_column(String(500))
     action_card_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     action_card_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Personal baseline used by the rule, if any (snapshot of the facts used).
+    baseline_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    baseline_classification: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    baseline_sample_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    baseline_profile_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
 
 
@@ -379,3 +385,116 @@ class SubjectiveCheckIn(Base):
         UTCDateTime(),
         default=utc_now,
     )
+
+
+class EnvironmentContext(Base):
+    """Append-only mission environment; the latest one at a time applies."""
+
+    __tablename__ = "environment_contexts"
+    __table_args__ = (
+        CheckConstraint(
+            "location IN ('EARTH', 'ISS', 'TRANSIT_VEHICLE', 'LUNAR_HABITAT', "
+            "'MARS_HABITAT', 'EVA')",
+            name="ck_environment_contexts_location",
+        ),
+        CheckConstraint(
+            "gravity_g >= 0 AND gravity_g <= 3",
+            name="ck_environment_contexts_gravity",
+        ),
+        Index("ix_environment_contexts_lookup", "mission_id", "effective_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    location: Mapped[str] = mapped_column(String(32))
+    gravity_g: Mapped[float] = mapped_column(Float)
+    eva_state: Mapped[str] = mapped_column(String(32))
+    communication_delay_seconds: Mapped[float] = mapped_column(Float)
+    expected_metrics: Mapped[list] = mapped_column(JSON)
+    sensor_set: Mapped[list] = mapped_column(JSON)
+    effective_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    source_type: Mapped[str] = mapped_column(String(32))
+    source_id: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class BaselineProfile(Base):
+    """Immutable snapshot of a personal baseline (one version of a profile)."""
+
+    __tablename__ = "baseline_profiles"
+    __table_args__ = (
+        Index(
+            "uq_baseline_profiles_version",
+            "mission_id",
+            "target_id",
+            "metric",
+            "activity_key",
+            "environment_key",
+            "version",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    target_id: Mapped[str] = mapped_column(String(100))
+    metric: Mapped[str] = mapped_column(String(100))
+    activity_key: Mapped[str] = mapped_column(String(32))
+    environment_key: Mapped[str] = mapped_column(String(64))
+    environment_context_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("environment_contexts.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+    environment_location: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    version: Mapped[int] = mapped_column(Integer)
+    median: Mapped[float | None] = mapped_column(Float, nullable=True)
+    p10: Mapped[float | None] = mapped_column(Float, nullable=True)
+    p25: Mapped[float | None] = mapped_column(Float, nullable=True)
+    p75: Mapped[float | None] = mapped_column(Float, nullable=True)
+    p90: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sample_count: Mapped[int] = mapped_column(Integer)
+    min_samples_required: Mapped[int] = mapped_column(Integer)
+    excluded_count: Mapped[int] = mapped_column(Integer)
+    classification: Mapped[str] = mapped_column(String(32))
+    computed_before: Mapped[datetime] = mapped_column(UTCDateTime())
+    created_by: Mapped[str] = mapped_column(String(100))
+    reason: Mapped[str] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class BaselineProfileActivation(Base):
+    """Append-only: which snapshot is in force for a profile key.
+
+    The latest row per key wins. ``profile_id`` NULL means "use the
+    automatically computed baseline". Rolling back is activating an earlier
+    snapshot again; nothing is deleted or overwritten.
+    """
+
+    __tablename__ = "baseline_profile_activations"
+    __table_args__ = (
+        Index(
+            "ix_baseline_profile_activations_key",
+            "mission_id",
+            "target_id",
+            "metric",
+            "activity_key",
+            "environment_key",
+            "activated_at",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    target_id: Mapped[str] = mapped_column(String(100))
+    metric: Mapped[str] = mapped_column(String(100))
+    activity_key: Mapped[str] = mapped_column(String(32))
+    environment_key: Mapped[str] = mapped_column(String(64))
+    profile_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("baseline_profiles.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+    activated_by: Mapped[str] = mapped_column(String(100))
+    reason: Mapped[str] = mapped_column(String(500))
+    activated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)

@@ -14,7 +14,7 @@ from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
-from spaceapp_logar.db.models import LabResult, SubjectiveCheckIn
+from spaceapp_logar.db.models import EnvironmentContext, LabResult, SubjectiveCheckIn
 from spaceapp_logar.schemas.lab_results import LabResultCreate
 from spaceapp_logar.schemas.measurements import METRIC_SPECS, MeasurementCreate, Metric
 from spaceapp_logar.rules.red_flags import RedFlag
@@ -602,6 +602,24 @@ def run_scenario(
     start = end - timedelta(minutes=scenario.duration_minutes - 1)
     mission_id = f"demo-{scenario_id}-{current:%Y%m%dT%H%M%S}-{uuid4().hex[:4]}"
     plan = scenario.build(start, Random(seed))
+
+    # Synthetic missions run on an ISS-like station. The context starts before
+    # the earliest record (sleep history), so the mission day is derived from it.
+    session.add(
+        EnvironmentContext(
+            mission_id=mission_id,
+            location="ISS",
+            gravity_g=0.0,
+            eva_state="NONE",
+            communication_delay_seconds=1.0,
+            expected_metrics=sorted({item["metric"] for item in plan.measurements}),
+            sensor_set=["demo-wearable-01", "demo-cabin-sensors-01"],
+            effective_at=start - timedelta(days=3),
+            source_type="SYNTHETIC",
+            source_id=SOURCE_ID,
+        )
+    )
+    session.flush()
 
     events: list[tuple[datetime, int, dict]] = [
         (item["observed_at"], 0, item) for item in plan.measurements

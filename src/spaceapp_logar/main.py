@@ -12,6 +12,7 @@ from spaceapp_logar.api.alerts import router as alerts_router
 from spaceapp_logar.api.check_ins import router as check_ins_router
 from spaceapp_logar.api.coverage import router as coverage_router
 from spaceapp_logar.api.demo import router as demo_router
+from spaceapp_logar.api.environment import router as environment_router
 from spaceapp_logar.api.lab_results import router as lab_results_router
 from spaceapp_logar.api.measurements import router as measurements_router
 from spaceapp_logar.api.observations import router as observations_router
@@ -58,6 +59,7 @@ app.include_router(alerts_router)
 app.include_router(check_ins_router)
 app.include_router(coverage_router)
 app.include_router(demo_router)
+app.include_router(environment_router)
 app.include_router(lab_results_router)
 app.include_router(measurements_router)
 app.include_router(observations_router)

@@ -1,7 +1,7 @@
 """Load evidence from the database, run rules, persist results and alerts."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from math import isfinite
 from statistics import median
@@ -57,6 +57,7 @@ from spaceapp_logar.rules.windows import (
 )
 from spaceapp_logar.schemas.measurements import Metric, is_plausible
 from spaceapp_logar.services.alerts import update_alert_lifecycle
+from spaceapp_logar.services.baseline import BaselineProfileResult, get_personal_baseline
 from spaceapp_logar.services.co2_monitoring import (
     assess_persisted_co2_window,
     persist_co2_evaluation,
@@ -85,6 +86,7 @@ class RuleOutcome:
     longest_missing_run_minutes: int
     ignored_observations: int
     evidence_ids: list[UUID]
+    baseline: BaselineProfileResult | None = None
 
 
 def usable(observation: Observation, allowed_activity: frozenset | None = None) -> bool:
@@ -138,35 +140,25 @@ def personal_baseline(
     allowed_activity: frozenset | None = None,
     min_samples: int = BASELINE_MIN_SAMPLES,
 ) -> float | None:
-    """Median of the earliest usable samples of the mission (DEMO policy).
+    """Compatibility wrapper: the median of an ESTABLISHED baseline, else None."""
 
-    The baseline only uses data recorded before the evaluated window, so the
-    current deviation can never become its own "normal".
-    """
-
-    observations = session.scalars(
-        select(Observation)
-        .where(
-            Observation.mission_id == mission_id,
-            Observation.target_id == target_id,
-            Observation.metric == metric.value,
-            Observation.observed_at < before,
-        )
-        .order_by(Observation.observed_at.asc())
-        .limit(BASELINE_SAMPLES * 4)
-    ).all()
-    values = [o.value for o in observations if usable(o, allowed_activity)][
-        :BASELINE_SAMPLES
-    ]
-    if len(values) < min_samples:
-        return None
-    return float(median(values))
+    result = get_personal_baseline(
+        session,
+        mission_id=mission_id,
+        target_id=target_id,
+        metric=metric.value,
+        before=before,
+        allowed_activities=allowed_activity,
+        min_samples=min_samples,
+    )
+    return result.median if result.is_sufficient else None
 
 
 def _outcome(
     evaluation: RuleEvaluation,
     window: MinuteWindow,
     evidence_ids: list[UUID],
+    baseline: BaselineProfileResult | None = None,
 ) -> RuleOutcome:
     return RuleOutcome(
         evaluation=evaluation,
@@ -177,6 +169,7 @@ def _outcome(
         longest_missing_run_minutes=window.longest_missing_run_minutes,
         ignored_observations=window.ignored_observations,
         evidence_ids=evidence_ids,
+        baseline=baseline,
     )
 
 
@@ -205,14 +198,15 @@ def run_temperature(
         window_minutes=TEMP_WINDOW_MINUTES,
         allowed_activity=None,
     )
-    baseline = personal_baseline(
+    baseline = get_personal_baseline(
         session,
         mission_id=mission_id,
         target_id=target_id,
-        metric=Metric.BODY_TEMPERATURE,
+        metric=Metric.BODY_TEMPERATURE.value,
         before=window.window_start,
     )
-    return _outcome(evaluate_temperature(window, baseline), window, ids)
+    usable_median = baseline.median if baseline.is_sufficient else None
+    return _outcome(evaluate_temperature(window, usable_median), window, ids, baseline)
 
 
 def latest_symptoms(
@@ -261,17 +255,18 @@ def run_cardio_resp(
         window_minutes=CARDIO_RESP_WINDOW_MINUTES,
         allowed_activity=REST_ONLY,
     )
-    baseline = personal_baseline(
+    baseline = get_personal_baseline(
         session,
         mission_id=mission_id,
         target_id=target_id,
-        metric=Metric.HEART_RATE,
+        metric=Metric.HEART_RATE.value,
         before=hr_window.window_start,
-        allowed_activity=REST_ONLY,
+        activity_state="REST",
     )
+    usable_median = baseline.median if baseline.is_sufficient else None
     symptoms = latest_symptoms(session, mission_id, target_id, as_of)
-    evaluation = evaluate_cardio_resp(hr_window, rr_window, baseline, symptoms)
-    return _outcome(evaluation, hr_window, hr_ids + rr_ids)
+    evaluation = evaluate_cardio_resp(hr_window, rr_window, usable_median, symptoms)
+    return _outcome(evaluation, hr_window, hr_ids + rr_ids, baseline)
 
 
 def run_hr_jump(session: Session, observation: Observation) -> RuleOutcome:
@@ -374,6 +369,14 @@ def persist_outcome(
         source_uri=evaluation.source_uri,
         action_card_id=card.card_id if card else None,
         action_card_version=card.version if card else None,
+        baseline_value=outcome.baseline.median if outcome.baseline else None,
+        baseline_classification=(
+            outcome.baseline.classification if outcome.baseline else None
+        ),
+        baseline_sample_count=outcome.baseline.sample_count if outcome.baseline else None,
+        baseline_profile_version=(
+            outcome.baseline.profile_version if outcome.baseline else None
+        ),
     )
     session.add(record)
     session.flush()
@@ -497,21 +500,24 @@ def run_radiation(
     )
     values = [row.value for row in rows if usable(row)]
     recent = sum(values) / len(values) if len(values) >= RADIATION_MIN_SAMPLES else None
-    baseline = personal_baseline(
+    baseline = get_personal_baseline(
         session,
         mission_id=mission_id,
         target_id=target_id,
-        metric=Metric.RADIATION_DOSE_RATE,
+        metric=Metric.RADIATION_DOSE_RATE.value,
         before=as_of - timedelta(minutes=RADIATION_WINDOW_MINUTES),
         min_samples=RADIATION_BASELINE_MIN_SAMPLES,
     )
     evaluation = evaluate_radiation(
-        recent, baseline, cumulative_dose_msv(session, mission_id, target_id, as_of)
+        recent,
+        baseline.median if baseline.is_sufficient else None,
+        cumulative_dose_msv(session, mission_id, target_id, as_of),
     )
-    return _sparse_outcome(
+    outcome = _sparse_outcome(
         evaluation, as_of, RADIATION_WINDOW_MINUTES, len(values),
         RADIATION_MIN_SAMPLES, len(rows) - len(values), [row.id for row in rows],
     )
+    return replace(outcome, baseline=baseline)
 
 
 def _latest_check_in(
