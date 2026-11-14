@@ -43,6 +43,8 @@ Panelin üst şeridinden:
    - `spo2-drop` (akut): dinlenmede SpO₂ önce WATCH, sonra ALERT.
    - `sensor-fault`: arızalı SpO₂ ve şüpheli kalp hızı sıçraması. Sağlık alarmı
      yoktur, genel durum "Bilinmiyor" görünür (kötü veri ≠ normal sağlık).
+   - `chest-pain-red-flag`: ölçümler normalken göğüs ağrısı bildirilir; sistem
+     beklemeden Kritik seviyeye çıkar ve acil kartı açar. Teşhis konmaz.
 2. **Gerçek OSDR lab verisi.** NASA OSDR OSD-569 (CBC) ve OSD-575 (CMP)
    dosyalarından Inspiration4 mürettebatının gerçek laboratuvar değerlerini yükler
    ([veri notu](data/osdr/README.md)).
@@ -66,6 +68,7 @@ uv run python -m spaceapp_logar.services.osdr_import
 |---|---|
 | `ENV_CO2_NOMINAL_V1` — kabin CO₂, NASA-STD-3001 nominal sınırı | Onaylı |
 | `VITAL_SPO2_SUSTAINED_V1`, `VITAL_TEMP_TREND_V1`, `MULTI_CARDIO_RESP_V1`, `DATA_HR_JUMP_V1` | **DEMO**, uzman doğrulaması bekliyor ([DEMO kuralları](docs/DEMO_RULES.md)) |
+| `RED_FLAG_SYMPTOM_V1` — göğüs ağrısı, ciddi nefes darlığı, bayılma vb. bildirilince anında Kritik | **DEMO**; ölçümlerle kapanmaz, ekip üyesi kapatır |
 
 11 metrik toplanıp grafiklenir: kalp hızı, SpO₂, solunum, vücut sıcaklığı,
 sistolik/diyastolik tansiyon, uyku, kabin CO₂/O₂/basınç ve radyasyon doz hızı.
@@ -77,7 +80,9 @@ Ana uçlar: `POST /v1/measurements` (tüm metrikler), `GET /v1/measurements`,
 `POST /v1/lab-results`, `GET /v1/crew/{id}/status`,
 `GET /v1/crew/{id}/lab-results`, `GET /v1/alerts`,
 `POST /v1/alerts/{id}/acknowledge`, `GET /v1/demo/scenarios`,
-`POST /v1/demo/scenarios/{id}/run`, `POST /v1/demo/osdr-labs/import`. Eski
+`POST /v1/demo/scenarios/{id}/run`, `POST /v1/demo/osdr-labs/import`,
+`GET /v1/red-flags/catalog`, `POST /v1/red-flags`,
+`POST /v1/alerts/{id}/resolve` (yalnızca kırmızı bayrak alarmları). Eski
 `POST /v1/observations` (yalnız CO₂) geriye uyumluluk için durur. Ayrıntı için
 [API ve veri modeli](docs/API_DATA_MODEL.md).
 

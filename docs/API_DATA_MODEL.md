@@ -160,6 +160,10 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
   (`docs/DEMO_RULES.md`)
 - [x] Sentetik demo senaryoları ve gerçek OSDR laboratuvar içe aktarımı
 
+- [x] Kırmızı bayrak bildirimi (`POST /v1/red-flags`), anında CRITICAL ve
+  yalnızca ekip üyesinin kapatabildiği alarm (`POST /v1/alerts/{id}/resolve`);
+  değişmez `red_flag_reports` tablosu ve `alert_events.resolved_by` (migration 0008)
+
 ### Genel ölçüm sözleşmesi
 
 `POST /v1/measurements` aynı ortak zarfı kullanır. Her metrik tek bir birim ve
