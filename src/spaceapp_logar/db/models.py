@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, Float, Index, String, Uuid
+from sqlalchemy import CheckConstraint, Float, Index, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from spaceapp_logar.db.base import Base
+from spaceapp_logar.db.types import UTCDateTime
 
 
 def utc_now() -> datetime:
@@ -42,13 +43,13 @@ class Observation(Base):
     metric: Mapped[str] = mapped_column(String(100))
     value: Mapped[float] = mapped_column(Float)
     unit: Mapped[str] = mapped_column(String(32))
-    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    observed_at: Mapped[datetime] = mapped_column(UTCDateTime())
     source_type: Mapped[str] = mapped_column(String(32))
     source_id: Mapped[str] = mapped_column(String(100))
     scenario_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     reported_quality: Mapped[str] = mapped_column(String(32))
     ingested_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        UTCDateTime(),
         default=utc_now,
     )
 

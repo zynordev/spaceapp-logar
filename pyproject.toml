@@ -26,6 +26,6 @@ build-backend = "hatchling.build"
 packages = ["src/spaceapp_logar"]
 
 [tool.pytest.ini_options]
-addopts = "-ra"
+addopts = "-ra --import-mode=importlib"
 testpaths = ["tests"]
 
