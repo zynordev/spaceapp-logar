@@ -147,8 +147,14 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
 - [x] CO₂ gözlemi için Pydantic istek/cevap modelleri ve doğrulama testleri
 - [x] SQLAlchemy `observation` tablosu ve ilk Alembic migration'ı
 - [x] `POST /v1/observations` ile ham kaydı değiştirmeden saklama
-- [ ] Son bir saatlik veri yeterliliği ve ortalama hesaplama
-- [ ] CO₂ kuralını çalıştırıp denetlenebilir sonucu döndürme
+- [x] Son bir saatlik veri yeterliliği ve dakika-bölmeli ortalama hesaplama
+- [x] CO₂ kuralını çalıştırıp denetlenebilir sonucu döndürme
+
+CO₂ penceresi 60 adet bir dakikalık bölmeden oluşur. En az 54 geçerli dakika ve
+en fazla beş dakikalık kesintisiz veri boşluğu kabul edilir. Aynı dakika içindeki
+ölçümler önce kendi aralarında ortalanır; böylece yüksek frekanslı bir veri patlaması
+bir saatlik sonucu orantısız biçimde etkilemez. Yetersiz pencerede sağlık dikkati
+`UNKNOWN` kalır.
 
 ## Onay kaydı
 

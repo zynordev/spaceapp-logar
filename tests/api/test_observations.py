@@ -61,17 +61,20 @@ def test_post_observation_persists_immutable_raw_record(
 
     assert response.status_code == 201
     body = response.json()
-    assert body["id"]
-    assert body["ingested_at"].endswith("Z")
-    assert body["observed_at"] == "2026-11-14T08:00:00Z"
-    assert body["value"] == 3.2
-    assert body["scenario_id"] == "co2-rise-demo-v1"
+    observation = body["observation"]
+    assert observation["id"]
+    assert observation["ingested_at"].endswith("Z")
+    assert observation["observed_at"] == "2026-11-14T08:00:00Z"
+    assert observation["value"] == 3.2
+    assert observation["scenario_id"] == "co2-rise-demo-v1"
+    assert body["window"]["valid_minute_buckets"] == 1
+    assert body["evaluation"]["health_attention"] == "UNKNOWN"
 
     with Session(engine) as session:
         stored = session.scalar(select(Observation))
 
     assert stored is not None
-    assert str(stored.id) == body["id"]
+    assert str(stored.id) == observation["id"]
     assert stored.observed_at.isoformat() == "2026-11-14T08:00:00+00:00"
     assert stored.source_type == "SYNTHETIC"
 
@@ -89,4 +92,27 @@ def test_invalid_observation_returns_422_without_writing_record(
     with Session(engine) as session:
         stored_count = session.scalar(select(func.count()).select_from(Observation))
     assert stored_count == 0
+
+
+def test_sixty_balanced_minutes_produce_explainable_watch(
+    api_with_database: tuple[TestClient, Engine],
+) -> None:
+    client, _ = api_with_database
+    latest_body: dict[str, object] | None = None
+
+    for minute in range(60):
+        payload = valid_synthetic_payload()
+        payload["observed_at"] = f"2026-11-14T08:{minute:02d}:00Z"
+        response = client.post("/v1/observations", json=payload)
+        assert response.status_code == 201
+        latest_body = response.json()
+
+    assert latest_body is not None
+    window = latest_body["window"]
+    evaluation = latest_body["evaluation"]
+    assert window["valid_minute_buckets"] == 60
+    assert window["average_ppco2_mmhg"] == pytest.approx(3.2)
+    assert evaluation["rule_id"] == "ENV_CO2_NOMINAL_V1"
+    assert evaluation["health_attention"] == "WATCH"
+    assert evaluation["source_uri"].startswith("https://www.nasa.gov/")
 
