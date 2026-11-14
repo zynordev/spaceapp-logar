@@ -875,6 +875,10 @@ function renderWhy() {
         kv('Kaynak', url ? el('a', { href: url, target: '_blank', rel: 'noopener noreferrer', text: rule.source || url }) : (rule.source || '—')),
         kv('Kanıt düzeyi', rule.evidence_level || '—'),
         kv('Değerlendirme', fmtDateTime(rule.evaluated_at, true)),
+        ...(rule.baseline ? kv('Kişisel başlangıç', el('span', null,
+          el('span', { class: `baseline-badge ${rule.baseline.classification === 'ESTABLISHED' ? 'bl-established' : 'bl-estimated'}`,
+            text: rule.baseline.status_label || rule.baseline.classification }),
+          ` ${isNum(rule.baseline.value) ? `${fmtNum(rule.baseline.value)} ${rule.unit || ''}` : '—'} · ${rule.baseline.sample_count ?? 0} örnek${rule.baseline.profile_version ? ` · profil v${rule.baseline.profile_version}` : ''}`)) : []),
       );
       box.append(dl);
       if (Array.isArray(rule.related_metrics) && rule.related_metrics.length) {

@@ -367,3 +367,8 @@ a { color: var(--accent); }
 .cov-badge.cov-data { color: #ffd38a; border-color: #c99a3c; }
 .cov-badge.cov-gap { color: var(--muted); border-color: var(--line); }
 .cov-meta, .cov-note { font-size: .82rem; color: var(--muted); margin-top: .15rem; }
+
+/* ---- Kişisel başlangıç rozeti ---- */
+.baseline-badge { font-size: .75rem; border-radius: 999px; padding: .05rem .5rem; border: 1px solid; }
+.baseline-badge.bl-established { color: #9ad8ff; border-color: #5cc8ff; }
+.baseline-badge.bl-estimated { color: #ffd38a; border-color: #c99a3c; }
