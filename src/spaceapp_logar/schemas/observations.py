@@ -56,6 +56,7 @@ class CO2ObservationCreate(BaseModel):
         extra="forbid",
         str_strip_whitespace=True,
         allow_inf_nan=False,
+        from_attributes=True,
     )
 
     mission_id: Identifier

@@ -14,6 +14,7 @@ Gereksinimler: Python 3.12 ve [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync
+uv run alembic upgrade head
 uv run uvicorn spaceapp_logar.main:app --reload
 ```
 

@@ -146,7 +146,7 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
 
 - [x] CO₂ gözlemi için Pydantic istek/cevap modelleri ve doğrulama testleri
 - [x] SQLAlchemy `observation` tablosu ve ilk Alembic migration'ı
-- [ ] `POST /v1/observations` ile ham kaydı değiştirmeden saklama
+- [x] `POST /v1/observations` ile ham kaydı değiştirmeden saklama
 - [ ] Son bir saatlik veri yeterliliği ve ortalama hesaplama
 - [ ] CO₂ kuralını çalıştırıp denetlenebilir sonucu döndürme
 
