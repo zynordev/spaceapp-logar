@@ -1,7 +1,9 @@
+import os
 from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -30,6 +32,26 @@ app = FastAPI(
     version="0.2.0",
     description="Explainable astronaut health decision-support backend.",
 )
+
+# Local frontend dev servers (Vite 5173, Next/CRA 3000) may call the API from
+# another origin. Override with SPACEAPP_CORS_ORIGINS="http://a,http://b".
+DEFAULT_CORS_ORIGINS = (
+    "http://localhost:5173,http://127.0.0.1:5173,"
+    "http://localhost:3000,http://127.0.0.1:3000"
+)
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("SPACEAPP_CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
+    if origin.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+    allow_credentials=False,
+)
+
 app.include_router(alerts_router)
 app.include_router(check_ins_router)
 app.include_router(demo_router)
