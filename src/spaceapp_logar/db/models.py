@@ -1,7 +1,16 @@
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, Float, Index, String, Uuid
+from sqlalchemy import (
+    CheckConstraint,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    Uuid,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from spaceapp_logar.db.base import Base
@@ -51,5 +60,65 @@ class Observation(Base):
     ingested_at: Mapped[datetime] = mapped_column(
         UTCDateTime(),
         default=utc_now,
+    )
+
+
+class RuleEvaluationRecord(Base):
+    """Persisted, versioned explanation produced by one rule execution."""
+
+    __tablename__ = "rule_evaluations"
+    __table_args__ = (
+        Index(
+            "ix_rule_evaluations_lookup",
+            "mission_id",
+            "target_id",
+            "rule_id",
+            "evaluated_at",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+    )
+    mission_id: Mapped[str] = mapped_column(String(100))
+    target_id: Mapped[str] = mapped_column(String(100))
+    rule_id: Mapped[str] = mapped_column(String(100))
+    rule_version: Mapped[int] = mapped_column(Integer)
+    evaluated_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    data_quality: Mapped[str] = mapped_column(String(32))
+    health_attention: Mapped[str] = mapped_column(String(32))
+    observed_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    unit: Mapped[str] = mapped_column(String(32))
+    threshold: Mapped[float] = mapped_column(Float)
+    comparison: Mapped[str] = mapped_column(String(16))
+    window_minutes: Mapped[int] = mapped_column(Integer)
+    window_start: Mapped[datetime] = mapped_column(UTCDateTime())
+    window_end: Mapped[datetime] = mapped_column(UTCDateTime())
+    valid_minute_buckets: Mapped[int] = mapped_column(Integer)
+    required_minute_buckets: Mapped[int] = mapped_column(Integer)
+    longest_missing_run_minutes: Mapped[int] = mapped_column(Integer)
+    ignored_observations: Mapped[int] = mapped_column(Integer)
+    explanation: Mapped[str] = mapped_column(Text)
+    source: Mapped[str] = mapped_column(String(255))
+    source_uri: Mapped[str] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class RuleEvaluationEvidence(Base):
+    """Raw observation used as evidence by a persisted rule evaluation."""
+
+    __tablename__ = "rule_evaluation_evidence"
+
+    evaluation_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("rule_evaluations.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    observation_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("observations.id", ondelete="RESTRICT"),
+        primary_key=True,
     )
 
