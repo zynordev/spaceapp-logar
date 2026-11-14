@@ -66,7 +66,7 @@ def test_sustained_high_co2_opens_one_open_alert_with_card(
     assert alert["target_id"] == "iss-destiny-lab"
     assert alert["acknowledged_at"] is None
     assert alert["resolved_at"] is None
-    assert alert["action_card"]["card_id"] == "ENV_CO2_WATCH_CARD_V1"
+    assert alert["action_card"]["card_id"] == "ENV_CO2_WATCH_CARD_V2"
     assert "3.40" in alert["explanation"]
 
 

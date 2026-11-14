@@ -78,8 +78,8 @@ def test_spo2_cards_follow_the_level() -> None:
     watch = select_action_card(evaluate_spo2(window(93.0, 10)))
     alert = select_action_card(evaluate_spo2(window(90.0, 10)))
 
-    assert watch.card_id == "VITAL_SPO2_WATCH_CARD_V1"
-    assert alert.card_id == "VITAL_SPO2_ALERT_CARD_V1"
+    assert watch.card_id == "VITAL_SPO2_WATCH_CARD_V2"
+    assert alert.card_id == "VITAL_SPO2_ALERT_CARD_V2"
     assert watch.validation_status == "DEMO_PENDING_REVIEW"
     assert alert.allows_automatic_vehicle_command is False
 
@@ -158,4 +158,4 @@ def test_hr_jump(previous, latest, seconds, quality) -> None:
     assert evaluation.data_quality is quality
     if quality is DataQuality.SUSPECT:
         assert evaluation.health_attention is HealthAttention.UNKNOWN
-        assert select_action_card(evaluation).card_id == "DATA_HR_SENSOR_CHECK_CARD_V1"
+        assert select_action_card(evaluation).card_id == "DATA_HR_SENSOR_CHECK_CARD_V2"

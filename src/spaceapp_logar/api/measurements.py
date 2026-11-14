@@ -47,7 +47,7 @@ def create_measurement(
     session.commit()
     return MeasurementAccepted(
         measurement=MeasurementRead.model_validate(observation),
-        evaluations=[rule_status(record) for record in records],
+        evaluations=[rule_status(record, session) for record in records],
     )
 
 

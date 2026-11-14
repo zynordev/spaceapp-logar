@@ -207,6 +207,37 @@ class AlertEvent(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
 
 
+class ActionStepLog(Base):
+    """Append-only record that a crew member completed one action-card step."""
+
+    __tablename__ = "action_step_logs"
+    __table_args__ = (
+        Index(
+            "uq_action_step_logs_step",
+            "alert_id",
+            "card_id",
+            "card_version",
+            "step_key",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+    )
+    alert_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("alert_events.id", ondelete="RESTRICT"),
+    )
+    card_id: Mapped[str] = mapped_column(String(100))
+    card_version: Mapped[int] = mapped_column(Integer)
+    step_key: Mapped[str] = mapped_column(String(100))
+    crew_member_id: Mapped[str] = mapped_column(String(100))
+    done_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
 class RedFlagReport(Base):
     """Append-only red-flag symptom report from a crew member."""
 

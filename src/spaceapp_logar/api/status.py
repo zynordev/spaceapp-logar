@@ -80,7 +80,7 @@ def get_crew_status(
         co2_status.action_card = card_for_record(co2_record)
 
     rules = [
-        rule_status(record)
+        rule_status(record, session)
         for record in latest_rule_records(
             session,
             mission_id=mission_id,

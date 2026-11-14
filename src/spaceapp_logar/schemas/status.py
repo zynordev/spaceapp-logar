@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -25,6 +26,22 @@ class CO2StatusRead(BaseModel):
     action_card: ActionCardRead | None = None
 
 
+class CompletedStepRead(BaseModel):
+    step_key: str
+    crew_member_id: str
+    done_at: datetime
+
+
+class SituationRead(BaseModel):
+    """Live context shown on top of an action card (facts, not advice)."""
+
+    facts_tr: list[str]
+    alert_id: UUID | None = None
+    level_since: datetime | None = None
+    reassess_at: datetime | None = None
+    completed_steps: list[CompletedStepRead] = []
+
+
 class RuleStatusRead(BaseModel):
     """Latest result of one rule, with the metadata needed to explain it."""
 
@@ -49,6 +66,7 @@ class RuleStatusRead(BaseModel):
     evidence_level: str
     validation_status: str
     action_card: ActionCardRead | None = None
+    situation: SituationRead | None = None
 
 
 class CrewStatusRead(BaseModel):

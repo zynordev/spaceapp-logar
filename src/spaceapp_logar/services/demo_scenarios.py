@@ -24,6 +24,7 @@ from spaceapp_logar.services.rule_engine import evaluate_check_in, evaluate_obse
 
 CREW = "crew-01"
 HABITAT = "iss-destiny-lab"
+SECOND_MODULE = "iss-harmony-node2"
 SOURCE_ID = "demo-scenario-runner"
 
 
@@ -64,12 +65,14 @@ def _add(
     *,
     quality: str = "VALID",
     activity: str | None = None,
+    target: str | None = None,
 ) -> None:
     spec = METRIC_SPECS[metric]
+    default_target = CREW if spec.target_type.value == "CREW_MEMBER" else HABITAT
     plan.measurements.append(
         {
             "target_type": spec.target_type.value,
-            "target_id": CREW if spec.target_type.value == "CREW_MEMBER" else HABITAT,
+            "target_id": target or default_target,
             "metric": metric.value,
             "value": round(value, 2),
             "unit": spec.unit,
@@ -171,6 +174,15 @@ def build_co2_headache(start: datetime, rng: Random) -> Plan:
     minutes = 180
     plan = Plan()
     _environment(plan, start, minutes, rng, co2=lambda m: _ramp(m, 60, 75, 2.2, 3.6))
+    # A second, well-ventilated module stays nominal: the rise is local.
+    for m in range(minutes):
+        _add(
+            plan,
+            start + timedelta(minutes=m),
+            Metric.CABIN_CO2_PARTIAL_PRESSURE,
+            2.3 + rng.gauss(0, 0.04),
+            target=SECOND_MODULE,
+        )
 
     def exercising(m: int) -> bool:
         return 20 <= m < 35
@@ -296,8 +308,9 @@ SCENARIOS: dict[str, Scenario] = {
             title="Kabin CO₂ yükselmesi + baş ağrısı",
             time_scale="acute",
             description=(
-                "Kabin CO₂ bir saat boyunca nominal sınırın üzerine çıkar, astronot "
-                "hafif baş ağrısı bildirir. Arada yapılan egzersiz, bağlam sayesinde "
+                "Destiny modülünde CO₂ bir saat boyunca nominal sınırın üzerine çıkar; "
+                "Harmony modülü normal kalır (yerel birikim). Astronot hafif baş ağrısı "
+                "bildirir. Arada yapılan egzersiz, bağlam sayesinde "
                 "alarm üretmez."
             ),
             expected=(

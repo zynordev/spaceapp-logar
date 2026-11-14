@@ -6,10 +6,16 @@ from spaceapp_logar.rules import ActionCard, HealthAttention
 class ActionCardStepRead(BaseModel):
     key: str
     text_tr: str
+    why_tr: str = ""
+
+
+class CardReferenceRead(BaseModel):
+    label: str
+    uri: str
 
 
 class ActionCardRead(BaseModel):
-    """Approved action card as returned to clients."""
+    """Pre-written action card as returned to clients."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -27,6 +33,11 @@ class ActionCardRead(BaseModel):
     requires_mission_procedure: bool
     allows_automatic_vehicle_command: bool
     validation_status: str
+    reassess_minutes: int | None = None
+    escalate_if_tr: list[str] = []
+    closes_when_tr: str = ""
+    considerations_tr: list[str] = []
+    references: list[CardReferenceRead] = []
 
     @classmethod
     def from_card(cls, card: ActionCard) -> "ActionCardRead":
@@ -41,11 +52,18 @@ class ActionCardRead(BaseModel):
             reason_tr=card.reason_tr,
             step_keys=list(card.step_keys),
             steps=[
-                ActionCardStepRead(key=step.key, text_tr=step.text_tr)
+                ActionCardStepRead(key=step.key, text_tr=step.text_tr, why_tr=step.why_tr)
                 for step in card.steps
             ],
             footer_note_tr=card.footer_note_tr,
             requires_mission_procedure=card.requires_mission_procedure,
             allows_automatic_vehicle_command=card.allows_automatic_vehicle_command,
             validation_status=card.validation_status,
+            reassess_minutes=card.reassess_minutes,
+            escalate_if_tr=list(card.escalate_if_tr),
+            closes_when_tr=card.closes_when_tr,
+            considerations_tr=list(card.considerations_tr),
+            references=[
+                CardReferenceRead(label=ref.label, uri=ref.uri) for ref in card.references
+            ],
         )

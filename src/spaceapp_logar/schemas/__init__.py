@@ -1,7 +1,7 @@
 """Validated API data contracts."""
 
 from spaceapp_logar.schemas.action_cards import ActionCardRead, ActionCardStepRead
-from spaceapp_logar.schemas.alerts import AlertAcknowledge, AlertRead
+from spaceapp_logar.schemas.alerts import AlertAcknowledge, AlertRead, AlertStepDone
 from spaceapp_logar.schemas.check_ins import (
     SubjectiveCheckInCreate,
     SubjectiveCheckInRead,
@@ -27,6 +27,7 @@ __all__ = [
     "ActionCardStepRead",
     "AlertAcknowledge",
     "AlertRead",
+    "AlertStepDone",
     "CO2ObservationCreate",
     "CO2ObservationRead",
     "CO2ObservationAccepted",
