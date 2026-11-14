@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>SpaceApp Logar — Astronot Sağlık Karar Desteği</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Ana içeriğe geç</a>
+
+  <!-- ÜST ŞERİT: başlık, görev seçici, demo menüsü -->
+  <header class="topbar">
+    <h1 class="title">
+      <span class="logo" aria-hidden="true">&#9679;</span>
+      SpaceApp Logar <span class="sep" aria-hidden="true">—</span>
+      <span class="subtitle">Astronot Sağlık Karar Desteği</span>
+    </h1>
+    <div class="controls">
+      <div class="field">
+        <label for="missionSelect">Görev</label>
+        <select id="missionSelect" aria-label="Görev seç"></select>
+      </div>
+      <div class="field" id="crewField" hidden>
+        <label for="crewSelect">Astronot</label>
+        <select id="crewSelect" aria-label="Astronot seç"></select>
+      </div>
+      <div class="field">
+        <label for="scenarioSelect">Demo senaryosu</label>
+        <select id="scenarioSelect" aria-label="Demo senaryosu seç"></select>
+      </div>
+      <button id="runBtn" class="btn primary" type="button">Demo senaryosu çalıştır</button>
+      <button id="osdrBtn" class="btn" type="button" title="NASA OSDR OSD-569/OSD-575 gerçek Inspiration4 laboratuvar verisini yükler">Gerçek OSDR lab verisi</button>
+    </div>
+  </header>
+
+  <!-- HER ZAMAN GÖRÜNÜR UYARI BANDI -->
+  <div class="disclaimer" role="note">
+    <span class="ico" aria-hidden="true">&#9888;</span>
+    <span>Prototip karar-destek aracıdır. Teşhis koymaz, tedavi önermez. Eşiklerin 'DEMO' etiketli olanları uzman doğrulaması bekliyor.</span>
+  </div>
+  <div id="offlineBanner" class="offline" role="alert" hidden>
+    <span class="ico" aria-hidden="true">&#10006;</span>
+    <span>Sunucuya ulaşılamıyor. Son bilinen veriler gösteriliyor; yeniden deneniyor.</span>
+  </div>
+  <div id="mockBanner" class="mockbar" role="note" hidden>
+    Mock veri modu (?mock=1): ekrandaki veriler sahtedir.
+  </div>
+
+  <main id="main">
+    <!-- Demo senaryosu açıklaması -->
+    <section id="scenarioInfo" class="panel scenario" aria-labelledby="scenarioTitle" hidden>
+      <div class="scenario-head">
+        <h2 id="scenarioTitle">Senaryo</h2>
+        <span id="scenarioScale" class="chip"></span>
+      </div>
+      <p id="scenarioDesc" class="muted"></p>
+      <div class="two-col">
+        <div>
+          <h3>Beklenen sonuçlar</h3>
+          <ul id="scenarioExpected" class="plain-list"></ul>
+        </div>
+        <div id="runResult" hidden>
+          <h3>Son çalıştırma sonucu</h3>
+          <p id="runCount" class="muted"></p>
+          <ul id="runSummary" class="plain-list"></ul>
+        </div>
+      </div>
+      <p id="runError" class="msg err" role="alert" hidden></p>
+    </section>
+
+    <!-- Boş durum -->
+    <section id="emptyState" class="panel empty" hidden>
+      <h2 id="emptyTitle">Henüz görev yok</h2>
+      <p id="emptyText">Bir demo senaryosu çalıştırın.</p>
+    </section>
+
+    <div id="dashboard" hidden>
+      <!-- Genel durum + hatırlatmalar -->
+      <div class="row top">
+        <section id="overall" class="panel overall" aria-labelledby="h-overall"></section>
+        <aside id="reminders" class="panel reminders" aria-labelledby="h-rem">
+          <h2 id="h-rem">Hatırlatmalar</h2>
+          <ul id="reminderList" class="reminder-list" aria-live="polite"></ul>
+        </aside>
+      </div>
+
+      <!-- Gösterge kartları -->
+      <section class="panel" aria-labelledby="h-ind">
+        <h2 id="h-ind">Göstergeler</h2>
+        <p class="hint">Bir karta tıklayarak ana grafiği o ölçüme geçirin. Renkler yanında her zaman metinle de belirtilir.</p>
+        <div id="cards" class="cards"></div>
+      </section>
+
+      <!-- Ana grafik + neden bu durum -->
+      <div class="row mid">
+        <section class="panel chart-panel" aria-labelledby="chartTitle">
+          <h2 id="chartTitle">Zaman grafiği</h2>
+          <div id="chartBox" class="chart-box"></div>
+          <ul id="chartLegend" class="legend" aria-label="Grafik göstergesi"></ul>
+        </section>
+        <section id="why" class="panel why" aria-labelledby="h-why"></section>
+      </div>
+
+      <!-- Eylem kartı + alarmlar -->
+      <div class="row two">
+        <section id="actionPanel" class="panel action" aria-labelledby="h-action"></section>
+        <section class="panel" aria-labelledby="h-alerts">
+          <h2 id="h-alerts">Alarmlar</h2>
+          <p id="alertsMsg" class="msg err" role="alert" hidden></p>
+          <ul id="alertList" class="alert-list"></ul>
+        </section>
+      </div>
+
+      <!-- Öznel durum + laboratuvar -->
+      <div class="row two">
+        <section class="panel" aria-labelledby="h-checkin">
+          <h2 id="h-checkin">Öznel durum</h2>
+          <form id="checkinForm" class="checkin" novalidate>
+            <div id="sliders" class="sliders"></div>
+            <div class="form-actions">
+              <button id="checkinBtn" class="btn primary" type="submit">Kaydet</button>
+              <span id="checkinMsg" class="msg" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+          <h3>Son kayıt</h3>
+          <div id="latestCheckin" class="latest-checkin"></div>
+          <p class="hint">Öznel girişler yalnızca bağlamdır; bazı çok-sinyalli kurallar bunları okur. Teşhis değildir.</p>
+        </section>
+        <section id="labPanel" class="panel" aria-labelledby="h-lab" hidden>
+          <h2 id="h-lab">Periyodik laboratuvar</h2>
+          <div id="labGrid" class="lab-grid"></div>
+          <div id="labLimits"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    SpaceApp Logar &middot; NASA Space Apps 2026 prototipi &middot; Açıklanabilir karar-destek; yazılım araç/ekipman komutu vermez.
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>
