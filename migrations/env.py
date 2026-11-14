@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 
 from spaceapp_logar.db.base import Base
 from spaceapp_logar.db import models  # noqa: F401
+from spaceapp_logar.db.session import database_url_from_env
 
 config = context.config
 
@@ -14,9 +15,9 @@ if config.config_file_name is not None:
     # migrations run in-process.
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
-database_url = os.getenv("SPACEAPP_DATABASE_URL")
-if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+# Same resolution as the app: SPACEAPP_DATABASE_URL, then DATABASE_URL.
+if os.getenv("SPACEAPP_DATABASE_URL") or os.getenv("DATABASE_URL"):
+    config.set_main_option("sqlalchemy.url", database_url_from_env())
 
 target_metadata = Base.metadata
 

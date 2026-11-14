@@ -30,6 +30,27 @@ Ayrı bir frontend geliştirme sunucusu kullanılıyorsa CORS varsayılan olarak
 `localhost`/`127.0.0.1` üzerindeki 5173 (Vite) ve 3000 portlarına açıktır. Başka
 bir adres için: `SPACEAPP_CORS_ORIGINS="http://localhost:4200"` ortam değişkeni.
 
+### Ortam değişkenleri
+
+| Değişken | Varsayılan | Açıklama |
+|---|---|---|
+| `SPACEAPP_DATABASE_URL` / `DATABASE_URL` | `sqlite:///./spaceapp-logar.db` | Veritabanı. `postgres://` ve `postgresql://` adresleri otomatik olarak psycopg sürücüsüne çevrilir (Render gibi platformlar `DATABASE_URL` verir). SQLite yerel/demo içindir. |
+| `SPACEAPP_CORS_ORIGINS` | 5173 ve 3000 yerel portları | Virgülle ayrılmış izinli adresler. |
+| `SPACEAPP_LOG_FORMAT` | `json` | `text` ile düz satır log. Loglar istek/yanıt gövdesi içermez. |
+| `SPACEAPP_LOG_LEVEL` | `INFO` | Log seviyesi. |
+| `SPACEAPP_SCHEMA_GUARD` | `on` | Şema eskiyse `/v1` uçları 500 yerine açık bir 503 döndürür. |
+
+`/health` her zaman 200 döner; `status` alanı `ok` veya `degraded` olur ve
+`database`, `schema_state`, `schema_revision`, `expected_revision` alanlarıyla
+neyin eksik olduğunu söyler. `git pull` sonrası `degraded` görürseniz
+`uv run alembic upgrade head` çalıştırın. Her yanıtta `X-Request-ID` başlığı
+vardır; hata bildirirken bu kimliği paylaşın.
+
+PostgreSQL ile test: `SPACEAPP_TEST_POSTGRES_URL` boş bir test veritabanını
+gösterecek şekilde ayarlanırsa `uv run pytest tests/db/test_postgres.py tests/api`
+testleri Postgres'e karşı çalışır (veritabanının `public` şeması her testte
+silinir). CI bunu ayrı bir işte yapar.
+
 ## Demo akışı
 
 Panelin üst şeridinden:

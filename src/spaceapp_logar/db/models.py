@@ -164,6 +164,7 @@ class AlertEvent(Base):
             "rule_id",
             unique=True,
             sqlite_where=text("status IN ('OPEN', 'ACKNOWLEDGED')"),
+            postgresql_where=text("status IN ('OPEN', 'ACKNOWLEDGED')"),
         ),
     )
 

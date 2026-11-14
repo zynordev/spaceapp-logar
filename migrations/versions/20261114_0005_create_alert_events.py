@@ -83,6 +83,7 @@ def upgrade() -> None:
         ["mission_id", "target_id", "rule_id"],
         unique=True,
         sqlite_where=sa.text("status IN ('OPEN', 'ACKNOWLEDGED')"),
+        postgresql_where=sa.text("status IN ('OPEN', 'ACKNOWLEDGED')"),
     )
 
 
