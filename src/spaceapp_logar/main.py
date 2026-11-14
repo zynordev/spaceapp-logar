@@ -19,6 +19,7 @@ from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.red_flags import router as red_flags_router
 from spaceapp_logar.api.status import router as status_router
 from spaceapp_logar.db import session as db_session
+from spaceapp_logar.observability import REQUEST_ID_HEADER, install_observability
 
 WEB_DIR = Path(__file__).parent / "web"
 
@@ -59,11 +60,15 @@ CORS_ORIGINS = [
     for origin in os.getenv("SPACEAPP_CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
     if origin.strip()
 ]
+# Request id + JSON logs + error body; installed before CORS so CORS stays
+# the outermost middleware and also decorates error responses.
+install_observability(app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", REQUEST_ID_HEADER],
+    expose_headers=[REQUEST_ID_HEADER],
     allow_credentials=False,
 )
 
