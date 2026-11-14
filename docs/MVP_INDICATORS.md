@@ -81,6 +81,9 @@ kalabalıklaştırmayacaktır.
   bulunuyor.
 - CBC tablosundaki hemoglobin alanı `hemoglobin_value_percent` olarak
   adlandırılmış. Birim özgün dosya ve metadata ile doğrulanmadan kullanılmayacak.
+  **Çözüldü (14 Kasım 2026):** Özgün `LSDS-7_..._SUBMITTED.csv` dosyasında birim
+  `g/dL` olarak yazılı ve değerler dönüştürülmüş tabloyla aynı; `percent` adı
+  yanıltıcı bir etikettir. Ayrıntı: [data/osdr/README.md](../data/osdr/README.md).
 
 ## Neden omics göstergeleri MVP dışında?
 
