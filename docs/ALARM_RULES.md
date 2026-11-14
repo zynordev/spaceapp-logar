@@ -1,8 +1,8 @@
-# Açıklanabilir Alarm Kuralları — Karar Taslağı
+# Açıklanabilir Alarm Kuralları
 
 Son güncelleme: 14 Kasım 2026
 
-Durum: **Kullanıcı onayı bekliyor (Onay Kapısı C)**
+Durum: **Onaylandı (Onay Kapısı C tamamlandı)**
 
 Bu belge teşhis algoritması tanımlamaz. Ölçümün ne zaman yeniden kontrol edilmesi,
 izlenmesi veya önceden doğrulanmış görev prosedürüne yönlendirilmesi gerektiğini
@@ -115,13 +115,21 @@ Bir alarm kaydı en az şu sorulara cevap vermelidir:
 
 Bu bilgiler daha sonra API/veri modeli onayında kesin alanlara dönüştürülecektir.
 
-## Onay bekleyen kararlar
+## Onay kaydı
 
-1. Sabit eşik yerine mutlak sınır + kişisel değişim + bağlamdan oluşan hibrit
-   yaklaşım kullanılsın mı?
-2. Veri kalitesi ve sağlık dikkati iki ayrı durum olarak gösterilsin mi?
-3. İlk uçtan uca demo, kabin CO₂ yükselmesi ve buna eşlik eden öznel ağrı
-   (baş ağrısı) girdisi senaryosu olsun mu?
+14 Kasım 2026 tarihinde proje sahibi:
+
+- mutlak sınır + kişisel değişim + bağlamdan oluşan hibrit yaklaşımı;
+- veri kalitesi ve sağlık dikkatinin ayrı durumlar olmasını;
+- ilk uçtan uca demoda kabin CO₂ yükselmesi ve öznel ağrı (baş ağrısı) girdisi
+  kullanılmasını onayladı.
+
+İlk uygulanan kural `ENV_CO2_NOMINAL_V1` olacaktır. Diğer aday kurallar API/veri
+modeli ve görev konfigürasyonu onaylandıktan sonra uygulanacaktır.
+
+İlk teknik dilimde kural, önceden hesaplanmış bir saatlik ortalama `ppCO2`
+değerini değerlendirir. Ham telemetriden zaman ağırlıklı ortalama ve pencere veri
+kalitesi üretimi, API/veri modeli kararıyla birlikte ayrı uygulanacaktır.
 
 ## Resmî kaynaklar
 

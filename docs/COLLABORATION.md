@@ -73,4 +73,5 @@ Bu varsayım proje sahibinin geri bildirimiyle değiştirilebilir.
   veri doğrulaması geliştirme boyunca sürecek.
 - MVP sağlık ve çevre göstergeleri onaylandı (Onay Kapısı A tamamlandı).
 - Python/FastAPI backend teknoloji yığını onaylandı (Onay Kapısı B tamamlandı).
-- Sıradaki ortak karar: açıklanabilir alarm kuralları (Onay Kapısı C).
+- Hibrit ve açıklanabilir alarm yaklaşımı onaylandı (Onay Kapısı C tamamlandı).
+- Sıradaki ortak karar: API ve veri modeli (Onay Kapısı D).
