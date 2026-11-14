@@ -40,6 +40,25 @@ rozetiyle gösterilir. Onaylı CO₂ kuralı (`ENV_CO2_NOMINAL_V1`) değişmemi�
 | `MULTI_CARDIO_RESP_V1` | Dinlenme (`REST`) kalp + solunum + son 120 dk öznel kayıt | 15 dk ortalama | kalp ≥ kişisel başlangıç +20 bpm **ve** solunum >20/dk → WATCH; ayrıca yorgunluk/baş dönmesi/bulantı/ağrı ≥2/4 → ALERT |
 | `DATA_HR_JUMP_V1` | Ardışık kalp hızı ölçümleri | 2 dk | >40 bpm sıçrama → veri `SUSPECT`, sağlık `UNKNOWN` |
 
+| `RED_FLAG_SYMPTOM_V1` | Astronotun bildirdiği kırmızı bayrak belirtisi | Yok (anında) | Her zaman CRITICAL + acil kart |
+
+### Kırmızı bayrak (`RED_FLAG_SYMPTOM_V1`)
+
+[biyo.md](biyo.md) bölüm 10'daki sınıflara dayanır: göğüs ağrısı/baskı, ciddi
+nefes darlığı, bayılma veya bilinç kaybı, yeni bilinç bulanıklığı, yeni nörolojik
+belirti, ani ciddi görme değişikliği, durdurulamayan kanama, hızla kötüleşen durum,
+birden fazla ekip üyesinde aynı anda belirti.
+
+- `POST /v1/red-flags` ile bildirilir; seçenekler `GET /v1/red-flags/catalog`.
+- Hiçbir pencere, ortalama veya sensör doğrulaması beklenmez. Normal sensör
+  değerleri ciddi bir olayı (örneğin kalp krizini) dışlamaz.
+- Kural teşhis koymaz. Yalnızca acil ilk adım kartını açar.
+- Alarm ölçümlerle kendiliğinden kapanmaz. Bir ekip üyesi değerlendirdikten sonra
+  `POST /v1/alerts/{id}/resolve` ile kapatır. Kapatan kişi ve zamanı kaydedilir;
+  kural durumu NORMAL'e döner. Ölçüm tabanlı alarmlar elle kapatılamaz (409).
+- Sistem kalp krizini veya başka bir hastalığı tespit etmez. Bunun için EKG, kan
+  testi ve hekim değerlendirmesi gerekir.
+
 Öznel girişler tek başına hiçbir kuralı tetiklemez. Yalnızca
 `MULTI_CARDIO_RESP_V1`'de, ölçülen iki sinyal zaten yüksekken seviyeyi WATCH'tan
 ALERT'e taşır. Bu, [ALARM_RULES.md](ALARM_RULES.md)'deki aday kuralın
@@ -66,6 +85,7 @@ invaziv müdahale içermez. Hiçbir kart araç veya ekipmana komut vermez
 | `MULTI_CARDIO_RESP_WATCH_CARD_V1` | Dinlen ve tekrar ölç, aktivite bağlamını kaydet, belirtileri kaydet |
 | `MULTI_CARDIO_RESP_ALERT_CARD_V1` | Dinlen, tüm vitalleri yeniden ölç, bildir |
 | `DATA_HR_SENSOR_CHECK_CARD_V1` | Sensörü yeniden yerleştir, ölçümü tekrarla, arızayı kaydet (sağlık alarmı değil) |
+| `RED_FLAG_EMERGENCY_CARD_V1` | İşi durdur ve güvenli pozisyona geç; ekip sağlık sorumlusuna ve yer ekibine hemen bildir, yanında biri kalsın; acil tıbbi prosedürü aç |
 
 ## Alarm davranışı
 
