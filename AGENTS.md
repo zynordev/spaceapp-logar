@@ -16,4 +16,5 @@ Ekip çalışma düzeni ve teknik belgeler:
 - Halil'e ve agent'ına frontend devir promptu iletildi.
 - Frontend dev sunucuları için CORS desteği (5173 / 3000) senkronize edildi.
 - GitHub Actions CI iş akışı eklendi (`.github/workflows/ci.yml`).
-- 180 testin tamamı (180 passed) doğrulandı.
+- SQLite eşzamanlı okuma/yazma kilitlenmesini önlemek için WAL modu ve busy_timeout yapılandırıldı.
+- 195 testin tamamı (195 passed) doğrulandı.
