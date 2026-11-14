@@ -164,6 +164,10 @@ değerlendirmede kullanılan ham gözlem kimliklerini değişmez şekilde ilişk
 alanlarını ayrı `0–4` tam sayıları olarak saklar. Backend bu ham girişlerden teşhis
 veya doğrulanmamış tek bir sağlık puanı üretmez.
 
+CO₂ `WATCH` değerlendirmesi, onaylı `ENV_CO2_WATCH_CARD_V1` eylem kartını gösterir.
+Kartın kimliği ve sürümü `rule_evaluation` kaydında saklanır; kart metni kodda
+sürümlü olarak tutulur (ayrıntı: `docs/CO2_ACTION_CARD_PROPOSAL.md`).
+
 `GET /v1/crew/{crew_id}/status`, son CO₂ değerlendirmesi ile son öznel kontrolü
 aynı cevapta gösterir. Öznel girişler henüz alarm seviyesini değiştirmez; bağlam
 olarak korunur ve cevabın sınırlamaları açıkça belirtilir.
