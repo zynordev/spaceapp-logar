@@ -1,4 +1,3 @@
-import os
 from collections.abc import Iterator
 
 from fastapi import HTTPException
@@ -6,20 +5,26 @@ from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from spaceapp_logar.db.schema_check import OUTDATED, SchemaGuard
-
-DEFAULT_DATABASE_URL = "sqlite:///./spaceapp-logar.db"
-
+from spaceapp_logar.db.url import (
+    DEFAULT_DATABASE_URL,
+    database_url_from_env,
+    is_sqlite,
+    normalize_database_url,
+)
 
 def create_database_engine(database_url: str) -> Engine:
-    connect_args = (
-        {"check_same_thread": False, "timeout": 30.0}
-        if database_url.startswith("sqlite")
-        else {}
-    )
-    database_engine = create_engine(database_url, connect_args=connect_args)
-    if database_url.startswith("sqlite"):
+    """SQLite for local/demo use, PostgreSQL for shared deployments."""
+
+    database_url = normalize_database_url(database_url)
+    if is_sqlite(database_url):
+        database_engine = create_engine(
+            database_url,
+            connect_args={"check_same_thread": False, "timeout": 30.0},
+        )
+        # WAL and the other pragmas are SQLite-only.
         event.listen(database_engine, "connect", _configure_sqlite_connection)
-    return database_engine
+        return database_engine
+    return create_engine(database_url, pool_pre_ping=True)
 
 
 def _configure_sqlite_connection(dbapi_connection: object, _: object) -> None:
@@ -31,9 +36,7 @@ def _configure_sqlite_connection(dbapi_connection: object, _: object) -> None:
     cursor.close()
 
 
-engine = create_database_engine(
-    os.getenv("SPACEAPP_DATABASE_URL", DEFAULT_DATABASE_URL)
-)
+engine = create_database_engine(database_url_from_env())
 SessionFactory = sessionmaker(bind=engine, expire_on_commit=False)
 schema_guard = SchemaGuard(engine)
 

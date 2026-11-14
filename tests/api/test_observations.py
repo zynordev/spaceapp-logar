@@ -33,29 +33,6 @@ def valid_synthetic_payload() -> dict[str, object]:
     }
 
 
-@pytest.fixture
-def api_with_database(tmp_path: Path) -> Iterator[tuple[TestClient, Engine]]:
-    database_path = tmp_path / "api-test.db"
-    database_url = f"sqlite:///{database_path}"
-
-    alembic_config = Config("alembic.ini")
-    alembic_config.set_main_option("sqlalchemy.url", database_url)
-    command.upgrade(alembic_config, "head")
-
-    engine = create_database_engine(database_url)
-    testing_session_factory = sessionmaker(bind=engine, expire_on_commit=False)
-
-    def override_get_session() -> Iterator[Session]:
-        with testing_session_factory() as session:
-            yield session
-
-    app.dependency_overrides[get_session] = override_get_session
-    with TestClient(app) as client:
-        yield client, engine
-    app.dependency_overrides.clear()
-    engine.dispose()
-
-
 def test_post_observation_persists_immutable_raw_record(
     api_with_database: tuple[TestClient, Engine],
 ) -> None:

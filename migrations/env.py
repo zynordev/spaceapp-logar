@@ -5,16 +5,22 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from spaceapp_logar.db.base import Base
+from spaceapp_logar.db.url import DEFAULT_DATABASE_URL, database_url_from_env
 from spaceapp_logar.db import models  # noqa: F401
 
 config = context.config
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # Keep the application's loggers alive when migrations run in-process
+    # (tests, embedded upgrades).
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
-database_url = os.getenv("SPACEAPP_DATABASE_URL")
-if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+# Callers (tests, scripts) may set an explicit URL; otherwise use the same
+# environment variables as the application (SQLite or PostgreSQL).
+if config.get_main_option("sqlalchemy.url") == DEFAULT_DATABASE_URL:
+    config.set_main_option(
+        "sqlalchemy.url", database_url_from_env().replace("%", "%%")
+    )
 
 target_metadata = Base.metadata
 

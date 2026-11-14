@@ -5,6 +5,7 @@ from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 
 
+
 EXPECTED_COLUMNS = {
     "id",
     "mission_id",
@@ -23,19 +24,16 @@ EXPECTED_COLUMNS = {
 }
 
 
-def alembic_config(database_path: Path) -> Config:
-    config = Config("alembic.ini")
-    config.set_main_option("sqlalchemy.url", f"sqlite:///{database_path}")
-    return config
 
 
-def test_first_migration_upgrades_and_downgrades_cleanly(tmp_path: Path) -> None:
-    database_path = tmp_path / "migration-test.db"
-    config = alembic_config(database_path)
+def test_first_migration_upgrades_and_downgrades_cleanly(
+    database_url: str, make_alembic_config
+) -> None:
+    config = make_alembic_config(database_url)
 
     command.upgrade(config, "head")
 
-    engine = create_engine(f"sqlite:///{database_path}")
+    engine = create_engine(database_url)
     inspector = inspect(engine)
     assert {
         "observations",
@@ -72,7 +70,7 @@ def test_first_migration_upgrades_and_downgrades_cleanly(tmp_path: Path) -> None
 
     command.downgrade(config, "20261114_0003")
 
-    engine = create_engine(f"sqlite:///{database_path}")
+    engine = create_engine(database_url)
     remaining_columns = {
         column["name"] for column in inspect(engine).get_columns("rule_evaluations")
     }
@@ -82,7 +80,7 @@ def test_first_migration_upgrades_and_downgrades_cleanly(tmp_path: Path) -> None
 
     command.downgrade(config, "base")
 
-    engine = create_engine(f"sqlite:///{database_path}")
+    engine = create_engine(database_url)
     assert "observations" not in inspect(engine).get_table_names()
     engine.dispose()
 

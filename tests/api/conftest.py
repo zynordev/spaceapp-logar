@@ -1,8 +1,6 @@
 from collections.abc import Iterator
-from pathlib import Path
 
 from alembic import command
-from alembic.config import Config
 from fastapi.testclient import TestClient
 import pytest
 from sqlalchemy import Engine
@@ -13,13 +11,10 @@ from spaceapp_logar.main import app
 
 
 @pytest.fixture
-def api_client(tmp_path: Path) -> Iterator[tuple[TestClient, Engine]]:
-    """API client backed by a fresh migrated SQLite database."""
+def api_client(database_url: str, make_alembic_config) -> Iterator[tuple[TestClient, Engine]]:
+    """API client backed by a fresh migrated database (SQLite or PostgreSQL)."""
 
-    database_url = f"sqlite:///{tmp_path / 'api-test.db'}"
-    config = Config("alembic.ini")
-    config.set_main_option("sqlalchemy.url", database_url)
-    command.upgrade(config, "head")
+    command.upgrade(make_alembic_config(database_url), "head")
 
     engine = create_database_engine(database_url)
     session_factory = sessionmaker(bind=engine, expire_on_commit=False)
@@ -33,3 +28,10 @@ def api_client(tmp_path: Path) -> Iterator[tuple[TestClient, Engine]]:
         yield client, engine
     app.dependency_overrides.clear()
     engine.dispose()
+
+
+@pytest.fixture
+def api_with_database(api_client: tuple[TestClient, Engine]) -> tuple[TestClient, Engine]:
+    """Older test modules use this name; it is the same fixture."""
+
+    return api_client
