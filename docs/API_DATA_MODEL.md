@@ -1,8 +1,8 @@
-# API ve Veri Modeli Seçenekleri
+# API ve Veri Modeli
 
 Son güncelleme: 14 Kasım 2026
 
-Durum: **Kullanıcı onayı bekliyor (Onay Kapısı D)**
+Durum: **Onaylandı (Onay Kapısı D tamamlandı)**
 
 Bu belge sensör, çevre, öznel durum ve laboratuvar verilerinin backend'e nasıl
 alınacağını; kural sonuçları ve alarmlarla nasıl ilişkilendirileceğini belirler.
@@ -142,9 +142,15 @@ Onaydan sonra küçük parçalar halinde:
 
 Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır.
 
-## Onay bekleyen kararlar
+## Onay kaydı
 
-1. Ortak zarf + türüne göre doğrulanan hibrit model kullanılsın mı?
-2. Ham gözlemler değişmez, kural sonuçları ayrı kayıtlar olsun mu?
-3. İlk veri modeli ve endpoint yalnızca çevresel CO₂ gözlemiyle başlasın mı?
+14 Kasım 2026 tarihinde proje sahibi:
+
+- ortak zarf + türüne göre doğrulanan hibrit modeli;
+- ham gözlemlerin değişmez, kural sonuçlarının ayrı kayıtlar olmasını;
+- ilk veri modeli ve endpoint'in yalnızca çevresel CO₂ gözlemiyle başlamasını
+  onayladı.
+
+İlk uygulama parçası yalnızca CO₂ Pydantic istek/cevap modellerini ve doğrulama
+testlerini kapsar. Veritabanı ve HTTP endpoint'i sonraki ayrı parçalardır.
 

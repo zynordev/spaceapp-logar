@@ -74,4 +74,5 @@ Bu varsayım proje sahibinin geri bildirimiyle değiştirilebilir.
 - MVP sağlık ve çevre göstergeleri onaylandı (Onay Kapısı A tamamlandı).
 - Python/FastAPI backend teknoloji yığını onaylandı (Onay Kapısı B tamamlandı).
 - Hibrit ve açıklanabilir alarm yaklaşımı onaylandı (Onay Kapısı C tamamlandı).
-- Sıradaki ortak karar: API ve veri modeli (Onay Kapısı D).
+- Hibrit API ve veri modeli onaylandı (Onay Kapısı D tamamlandı).
+- Sıradaki ortak karar: uçtan uca demo hikâyesi (Onay Kapısı E).
