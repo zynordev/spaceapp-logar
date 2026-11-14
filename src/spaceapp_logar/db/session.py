@@ -9,19 +9,22 @@ DEFAULT_DATABASE_URL = "sqlite:///./spaceapp-logar.db"
 
 def create_database_engine(database_url: str) -> Engine:
     connect_args = (
-        {"check_same_thread": False}
+        {"check_same_thread": False, "timeout": 30.0}
         if database_url.startswith("sqlite")
         else {}
     )
     database_engine = create_engine(database_url, connect_args=connect_args)
     if database_url.startswith("sqlite"):
-        event.listen(database_engine, "connect", _enable_sqlite_foreign_keys)
+        event.listen(database_engine, "connect", _configure_sqlite_connection)
     return database_engine
 
 
-def _enable_sqlite_foreign_keys(dbapi_connection: object, _: object) -> None:
+def _configure_sqlite_connection(dbapi_connection: object, _: object) -> None:
     cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]
     cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.execute("PRAGMA busy_timeout=30000")
     cursor.close()
 
 
