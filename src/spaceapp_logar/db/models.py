@@ -8,6 +8,7 @@ from sqlalchemy import (
     Index,
     Integer,
     String,
+    SmallInteger,
     Text,
     Uuid,
 )
@@ -40,7 +41,6 @@ class Observation(Base):
         ),
         Index("ix_observations_observed_at", "observed_at"),
     )
-
     id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
         primary_key=True,
@@ -61,8 +61,6 @@ class Observation(Base):
         UTCDateTime(),
         default=utc_now,
     )
-
-
 class RuleEvaluationRecord(Base):
     """Persisted, versioned explanation produced by one rule execution."""
 
@@ -122,3 +120,62 @@ class RuleEvaluationEvidence(Base):
         primary_key=True,
     )
 
+
+class SubjectiveCheckIn(Base):
+    """Append-only five-field subjective crew check-in."""
+
+    __tablename__ = "subjective_check_ins"
+    __table_args__ = (
+        CheckConstraint(
+            "fatigue BETWEEN 0 AND 4",
+            name="ck_subjective_check_ins_fatigue",
+        ),
+        CheckConstraint(
+            "dizziness BETWEEN 0 AND 4",
+            name="ck_subjective_check_ins_dizziness",
+        ),
+        CheckConstraint(
+            "nausea BETWEEN 0 AND 4",
+            name="ck_subjective_check_ins_nausea",
+        ),
+        CheckConstraint(
+            "pain BETWEEN 0 AND 4",
+            name="ck_subjective_check_ins_pain",
+        ),
+        CheckConstraint(
+            "mood_distress BETWEEN 0 AND 4",
+            name="ck_subjective_check_ins_mood_distress",
+        ),
+        CheckConstraint(
+            "(source_type = 'SYNTHETIC' AND scenario_id IS NOT NULL) OR "
+            "(source_type = 'MANUAL' AND scenario_id IS NULL)",
+            name="ck_subjective_check_ins_source",
+        ),
+        Index(
+            "ix_subjective_check_ins_lookup",
+            "mission_id",
+            "crew_member_id",
+            "observed_at",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+    )
+    mission_id: Mapped[str] = mapped_column(String(100))
+    crew_member_id: Mapped[str] = mapped_column(String(100))
+    fatigue: Mapped[int] = mapped_column(SmallInteger)
+    dizziness: Mapped[int] = mapped_column(SmallInteger)
+    nausea: Mapped[int] = mapped_column(SmallInteger)
+    pain: Mapped[int] = mapped_column(SmallInteger)
+    mood_distress: Mapped[int] = mapped_column(SmallInteger)
+    observed_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    source_type: Mapped[str] = mapped_column(String(32))
+    source_id: Mapped[str] = mapped_column(String(100))
+    scenario_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    ingested_at: Mapped[datetime] = mapped_column(
+        UTCDateTime(),
+        default=utc_now,
+    )

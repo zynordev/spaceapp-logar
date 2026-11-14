@@ -160,6 +160,10 @@ Her `POST /v1/observations` işleminde ham gözlem ve o anda üretilen
 `rule_evaluation` aynı veritabanı transaction'ında saklanır. Ayrı bir kanıt tablosu,
 değerlendirmede kullanılan ham gözlem kimliklerini değişmez şekilde ilişkilendirir.
 
+`POST /v1/check-ins`, yorgunluk, baş dönmesi, bulantı, ağrı ve ruh hali sıkıntısı
+alanlarını ayrı `0–4` tam sayıları olarak saklar. Backend bu ham girişlerden teşhis
+veya doğrulanmamış tek bir sağlık puanı üretmez.
+
 ## Onay kaydı
 
 14 Kasım 2026 tarihinde proje sahibi:

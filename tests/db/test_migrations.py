@@ -40,6 +40,7 @@ def test_first_migration_upgrades_and_downgrades_cleanly(tmp_path: Path) -> None
         "observations",
         "rule_evaluations",
         "rule_evaluation_evidence",
+        "subjective_check_ins",
     }.issubset(inspector.get_table_names())
     assert {column["name"] for column in inspector.get_columns("observations")} == (
         EXPECTED_COLUMNS
