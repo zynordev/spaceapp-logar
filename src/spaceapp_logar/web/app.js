@@ -893,49 +893,144 @@ function renderWhy() {
   });
 }
 
-function actionCardView(card, contextText) {
+function actionCardView(card, contextText, situation) {
   const a = ATTENTION[card.attention] || ATTENTION.UNKNOWN;
+  const sit = situation || null;
+  const done = new Map((sit && Array.isArray(sit.completed_steps) ? sit.completed_steps : []).map((d) => [d.step_key, d]));
   const wrap = el('div', { class: `action-card ${a.cls}` });
   wrap.append(el('div', { class: 'badge-row' }, attBadge(card.attention), validationBadge(card.validation_status)));
   if (contextText) wrap.append(el('p', { class: 'muted', text: contextText }));
   wrap.append(el('div', { class: 'ac-title', text: card.title_tr || card.title_key || 'Eylem kartı' }));
   if (card.reason_tr) wrap.append(el('p', { text: card.reason_tr }));
+
+  // Şu an ne oluyor? (ölçülen gerçekler; tavsiye değil)
+  if (sit && Array.isArray(sit.facts_tr) && sit.facts_tr.length) {
+    wrap.append(el('div', { class: 'ac-situation', role: 'group', 'aria-label': 'Şu anki durum' },
+      el('h3', { text: 'Şu an ne oluyor?' }),
+      el('ul', null, sit.facts_tr.map((f) => el('li', { text: f })))));
+  }
+
+  // Yeniden değerlendirme sayacı
+  if (sit && sit.reassess_at) {
+    const left = toMs(sit.reassess_at) - Date.now();
+    const due = left <= 0;
+    const mins = Math.max(0, Math.ceil(left / 60000));
+    const every = card.reassess_minutes ? `, her ${card.reassess_minutes} dk` : '';
+    wrap.append(el('div', { class: `callout reassess${due ? ' due' : ''}`, role: 'status' },
+      el('span', { 'aria-hidden': 'true', text: '⏱' }),
+      el('span', { text: due
+        ? `Yeniden değerlendirme zamanı geldi (${fmtDateTime(sit.reassess_at)}). Ölçümleri ve belirtileri tekrar kontrol et.`
+        : `Yeniden değerlendirme: ${fmtDateTime(sit.reassess_at)} (${mins} dk kaldı${every}).` })));
+  }
+
   if (card.requires_mission_procedure) {
     wrap.append(el('div', { class: 'callout proc' }, el('span', { 'aria-hidden': 'true', text: '⚑' }), el('span', { text: 'Görev prosedürü önceliklidir.' })));
   }
+
+  // Adımlar: ne yap + neden + "Yaptım"
   const steps = Array.isArray(card.steps) ? card.steps : [];
-  if (steps.length) wrap.append(el('ol', null, steps.map((s) => el('li', { text: s.text_tr || s.key }))));
+  if (steps.length) {
+    const alertId = sit && sit.alert_id;
+    wrap.append(el('h3', { text: 'Ne yapmalıyım?' }));
+    wrap.append(el('ol', { class: 'ac-steps' }, steps.map((st) => {
+      const d = done.get(st.key);
+      const li = el('li', { class: d ? 'step done' : 'step' });
+      li.append(el('div', { class: 'step-text', text: st.text_tr || st.key }));
+      if (st.why_tr) li.append(el('div', { class: 'step-why' }, el('b', { text: 'Neden: ' }), document.createTextNode(st.why_tr)));
+      if (d) {
+        li.append(el('div', { class: 'step-done', text: `✓ Yapıldı — ${fmtDateTime(d.done_at)} (${d.crew_member_id})` }));
+      } else if (alertId) {
+        li.append(el('button', {
+          type: 'button', class: 'btn small', 'data-fk': `step-${alertId}-${st.key}`,
+          'aria-label': `Adımı yaptım olarak işaretle: ${st.text_tr || st.key}`,
+          onclick: (e) => markStepDone(alertId, st.key, e.currentTarget),
+        }, 'Yaptım'));
+      }
+      return li;
+    })));
+  }
+
+  // Ne olursa yükselir / ne zaman kapanır
+  const esc = Array.isArray(card.escalate_if_tr) ? card.escalate_if_tr : [];
+  if (esc.length) {
+    wrap.append(el('div', { class: 'ac-cond escalate' },
+      el('h3', { text: 'Seviye yükselir / acil durum' }),
+      el('ul', null, esc.map((x) => el('li', { text: x })))));
+  }
+  if (card.closes_when_tr) {
+    wrap.append(el('div', { class: 'ac-cond closes' },
+      el('h3', { text: 'Ne zaman kapanır?' }), el('p', { text: card.closes_when_tr })));
+  }
+
+  // Olası açıklamalar (teşhis değil)
+  const cons = Array.isArray(card.considerations_tr) ? card.considerations_tr : [];
+  if (cons.length) {
+    wrap.append(el('details', { class: 'ac-considerations' },
+      el('summary', { text: 'Olası açıklamalar (teşhis değildir)' }),
+      el('ul', null, cons.map((x) => el('li', { text: x })))));
+  }
+
   if (card.allows_automatic_vehicle_command === false) {
     wrap.append(el('div', { class: 'callout nocmd' }, el('span', { 'aria-hidden': 'true', text: 'ℹ' }), el('span', { text: 'Yazılım araç/ekipman komutu vermez.' })));
   }
   if (card.footer_note_tr) wrap.append(el('p', { class: 'footer-note', text: card.footer_note_tr }));
+
+  const refs = Array.isArray(card.references) ? card.references : [];
+  if (refs.length) {
+    const p = el('p', { class: 'card-refs' }, 'Kaynak: ');
+    refs.forEach((r, i) => {
+      if (i) p.append(document.createTextNode(' · '));
+      p.append(/^https?:\/\//.test(r.uri || '')
+        ? el('a', { href: r.uri, target: '_blank', rel: 'noopener noreferrer', text: r.label })
+        : el('span', { text: `${r.label} (${r.uri})` }));
+    });
+    wrap.append(p);
+  }
   wrap.append(el('p', { class: 'card-meta', text: `Kart: ${card.card_id || '—'}${card.version != null ? ` v${card.version}` : ''}` }));
   return wrap;
+}
+
+async function markStepDone(alertId, stepKey, btn) {
+  if (!state.crewId) return;
+  btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
+  try {
+    await api('POST', `/v1/alerts/${encodeURIComponent(alertId)}/steps`, { crew_member_id: state.crewId, step_key: stepKey });
+    await refresh();
+  } catch (e) {
+    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
+    btn.textContent = e.status === 0 ? 'Bağlantı yok' : 'Kaydedilemedi';
+  }
 }
 
 function renderAction() {
   const rule = selectedRule();
   const fromAlert = state.alertCardId ? state.alerts.find((a) => a.id === state.alertCardId) : null;
-  let card = null, ctx = '';
+  let card = null, ctx = '', sit = null;
   if (fromAlert && fromAlert.action_card) {
     card = fromAlert.action_card;
     ctx = 'Seçili alarmın eylem kartı.';
+    const r = rulesAll().find((x) => x.rule_id === fromAlert.rule_id);
+    if (r && r.situation && r.situation.alert_id === fromAlert.id) sit = r.situation;
   } else if (rule && rule.action_card) {
     card = rule.action_card;
     ctx = `Kural: ${rule.title || rule.rule_id}`;
+    sit = rule.situation || null;
   } else {
     const other = worstRule(rulesAll().filter((r) => r.action_card));
     if (other) {
       card = other.action_card;
+      sit = other.situation || null;
       ctx = `Seçili ölçümün kuralında eylem kartı yok; en yüksek dikkatli kuralın kartı gösteriliyor (${other.title || other.rule_id}).`;
     }
   }
-  memo('action', [card, ctx], () => {
+  memo('action', [card, ctx, sit, Math.floor(Date.now() / 30000)], () => {
     const box = $('#actionPanel');
     clear(box);
     box.append(el('h2', { id: 'h-action', text: 'Eylem kartı' }));
-    if (card) box.append(actionCardView(card, ctx));
-    else box.append(el('p', { class: 'muted', text: 'Şu an etkin bir eylem kartı yok. Kartlar yalnızca bir kural dikkat gerektirdiğinde, önceden yazılmış ve doğrulanmış metinlerle gösterilir.' }));
+    if (card) box.append(actionCardView(card, ctx, sit));
+    else box.append(el('p', { class: 'muted', text: 'Şu an etkin bir eylem kartı yok. Kartlar yalnızca bir kural dikkat gerektirdiğinde, önceden yazılmış metinlerle gösterilir.' }));
   });
 }
 
