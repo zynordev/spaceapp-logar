@@ -329,3 +329,25 @@ a { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---- Eylem kartı v2 ---- */
+.ac-situation { background: rgba(92, 200, 255, .08); border: 1px solid var(--line); border-radius: var(--radius); padding: .6rem .8rem; margin: .6rem 0; }
+.ac-situation h3, .action-card h3 { font-size: .95rem; margin: .5rem 0 .3rem; }
+.ac-situation ul { margin: 0; padding-left: 1.1rem; }
+.ac-situation li { margin: .15rem 0; }
+.ac-steps { padding-left: 1.3rem; }
+.ac-steps .step { margin: .55rem 0; }
+.ac-steps .step-text { font-weight: 600; }
+.ac-steps .step-why { color: var(--muted); font-size: .88rem; margin: .15rem 0 .3rem; }
+.ac-steps .step.done .step-text { text-decoration: line-through; opacity: .75; }
+.ac-steps .step-done { color: #7df0ad; font-size: .85rem; }
+.callout.reassess { border-color: #5cc8ff; }
+.callout.reassess.due { border-color: #ffb547; background: rgba(255, 181, 71, .12); font-weight: 600; }
+.ac-cond { border-left: 3px solid var(--line); padding: .2rem .7rem; margin: .6rem 0; }
+.ac-cond.escalate { border-left-color: #ff6b7d; }
+.ac-cond.closes { border-left-color: #7df0ad; }
+.ac-cond ul { margin: 0; padding-left: 1.1rem; }
+.ac-considerations { margin: .6rem 0; }
+.ac-considerations summary { cursor: pointer; font-weight: 600; }
+.card-refs { font-size: .82rem; color: var(--muted); }
+.card-refs a { color: var(--accent); }
