@@ -118,6 +118,9 @@ gönderir.
 İlk kod dilimi yalnızca `POST /v1/observations` içindeki CO₂ veri sözleşmesini
 uygular. Diğer endpoint'ler aynı anda boş iskelet olarak oluşturulmaz.
 
+Bu tablo ilk öneridir; bugün uygulamada olan uçların tamamı aşağıda
+"Güncel uç listesi" bölümündedir.
+
 ## Saklama ve değişmezlik kuralları
 
 - Ham gözlem alındıktan sonra değeri sessizce güncellenmez veya silinmez.
@@ -127,7 +130,8 @@ uygular. Diğer endpoint'ler aynı anda boş iskelet olarak oluşturulmaz.
 - OSDR kaydında dataset kimliği `source_id` içinde zorunludur.
 - Kural sürümü ve kaynak URL'si değerlendirme anındaki haliyle saklanır.
 - SQLite yarışma demosu içindir; uçuşa hazır veya klinik üretim veritabanı olduğu
-  iddia edilmez.
+  iddia edilmez. PostgreSQL de desteklenir (bkz. "Veritabanı: SQLite ve
+  PostgreSQL"); bu da klinik üretim iddiası değildir.
 - Demo profillerinde gerçek astronot PII veya tıbbi kayıt kullanılmaz.
 
 ## İlk uygulama sırası
@@ -174,6 +178,24 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
   görme kuralları; öznel girişe isteğe bağlı `vision_change`, `back_pain`,
   `congestion` (0–4, migration 0010); `GET /v1/risk-coverage`
 
+- [x] Ortam bağlamı: değişmez `environment_contexts` tablosu (migration 0011),
+  `POST/GET /v1/environment-contexts`, `GET /v1/environment-contexts/current`;
+  görev günü saklanmaz, türetilir
+- [x] Kişisel normal servisi `get_personal_baseline` ve `GET /v1/baselines`
+  (`ESTABLISHED` / `ESTIMATED_RESEARCH`)
+- [x] Profil sürümleri: `baseline_profiles` + `baseline_profile_activations`
+  (migration 0012); anlık görüntü, yeniden etkinleştirme (geri alma), `release`
+- [x] Kural kaydında kullanılan kişisel normal alanları (migration 0013) ve
+  kural durumunda `baseline` bölümü
+- [x] Şema kontrolü: şema kodun gerisindeyse veri uçları `503`, `/health`
+  `schema` alanı
+- [x] PostgreSQL desteği (SQLite yanında); `rule_evaluations.source` `TEXT`
+  (migration 0014); CI'da `test-postgres` işi
+- [x] Toplu ölçüm ucu `POST /v1/measurements/batch` ve CSV telemetri adaptörü
+- [x] Gözlemlenebilirlik: `X-Request-ID`, JSON istek logları, tutarlı hata gövdesi
+- [x] İsteğe bağlı token kimlik doğrulama ve roller (`POST /v1/auth/token`,
+  `SPACEAPP_AUTH_REQUIRED` varsayılan kapalı)
+
 ### Genel ölçüm sözleşmesi
 
 `POST /v1/measurements` aynı ortak zarfı kullanır. Her metrik tek bir birim ve
@@ -191,25 +213,34 @@ metrik, pencere, eşik, kanıt sınıfı, doğrulama durumu, eylem kartı) ve
 
 ### Alarm olayı yaşam döngüsü
 
-`OPEN → ACKNOWLEDGED → RESOLVED`. Her `POST /v1/observations` değerlendirmesinden
-sonra aynı transaction içinde güncellenir:
+`OPEN → ACKNOWLEDGED → RESOLVED`. Alarm yaşam döngüsü her kural
+değerlendirmesinden sonra aynı transaction içinde güncellenir
+(`POST /v1/observations`, `/v1/measurements`, `/v1/measurements/batch`,
+`/v1/check-ins`, `/v1/red-flags` ve kırmızı bayrağı kapatan
+`POST /v1/alerts/{id}/resolve`):
 
-- Eylem kartı gösteren bir `WATCH` değerlendirmesi alarm açar. Aynı görev, hedef ve
-  kural için etkin (`OPEN` veya `ACKNOWLEDGED`) alarm varsa yenisi açılmaz; mevcut
-  alarmın son değerlendirmesi güncellenir (aynı kök neden tek olay altında kalır).
-  Bu kural veritabanında kısmi benzersiz indeksle de korunur.
-- Tam bir geçerli pencerenin `NORMAL` çıkması etkin alarmı `RESOLVED` yapar.
+- Eylem kartı gösteren bir `WATCH`, `ALERT` veya `CRITICAL` değerlendirmesi alarm
+  açar. Aynı görev, hedef ve kural için etkin (`OPEN` veya `ACKNOWLEDGED`) alarm
+  varsa yenisi açılmaz; mevcut alarmın son değerlendirmesi, seviyesi ve kartı
+  güncellenir (aynı kök neden tek olay altında kalır). Bu kural veritabanında
+  kısmi benzersiz indeksle de korunur.
+- Seviye yükselirse (ör. `WATCH → ALERT`) onaylanmış alarm yeniden `OPEN` olur ve
+  onay bilgisi (`acknowledged_at`, `acknowledged_by`) silinir; ekip yeni seviyeyi
+  yeniden onaylamalıdır.
+- `NORMAL` bir değerlendirme etkin alarmı `RESOLVED` yapar (pencere kullanmayan,
+  öznel girişe dayalı kurallar dahil).
 - `UNKNOWN` (eksik/bozuk veri) alarmı kapatmaz: kötü veri, durumun bittiğinin
   kanıtı değildir.
 - Etkin alarmın son değerlendirmesinden daha eski bir değerlendirme yok sayılır;
   geç gelen veri yaşam döngüsünü geri sarmaz.
 - `acknowledge` aynı alarm için tekrarlanırsa ilk onaylayanı korur (idempotent);
-  çözülmüş alarm onaylanamaz (`409`).
+  çözülmüş alarm onaylanamaz (`409`). İstisna: yukarıdaki seviye yükselmesi onayı
+  siler.
 - Çözüldükten sonra CO₂ yeniden yükselirse yeni bir alarm açılır.
 
 `GET /v1/alerts` `mission_id` ister; `status`, `target_id` ve `limit` (1–200)
-isteğe bağlıdır. Her alarm, açan değerlendirmenin açıklamasını ve gösterilen
-eylem kartını taşır.
+isteğe bağlıdır. Her alarm, son değerlendirmenin açıklamasını (alarmın güncel
+seviyesini açıklayan) ve güncel eylem kartını taşır.
 
 ### Periyodik laboratuvar sonuçları
 
@@ -217,9 +248,9 @@ eylem kartını taşır.
 ALT, AST. Sonuçlar ham ve değişmezdir; kaynak referans aralığı (`reference_low`,
 `reference_high`) her kayıtla birlikte saklanır, yazılım yeni eşik üretmez.
 
-- Her analit için yalnızca açık birimler kabul edilir. Hemoglobin için yüzde birimi
-  özellikle yoktur: OSD-569 `percent` etiketi özgün dosyayla doğrulanmadan
-  kullanılmaz (`docs/MVP_INDICATORS.md`).
+- Her analit için yalnızca açık birimler kabul edilir. Hemoglobin yalnız `g/dL`
+  veya `g/L` kabul eder. OSD-569'daki `percent` etiketinin yanlış olduğu, özgün
+  dosyada birimin `g/dL` yazılı olmasıyla doğrulandı (`docs/MVP_INDICATORS.md`).
 - `OSDR` kaynağında `source_id` bir dataset kimliği olmalıdır (`OSD-569` gibi);
   `SYNTHETIC` kayıtta `scenario_id` zorunludur.
 - `GET /v1/crew/{id}/lab-results` her analit için son değeri; kaynak aralığa göre
@@ -239,16 +270,386 @@ Her `POST /v1/observations` işleminde ham gözlem ve o anda üretilen
 değerlendirmede kullanılan ham gözlem kimliklerini değişmez şekilde ilişkilendirir.
 
 `POST /v1/check-ins`, yorgunluk, baş dönmesi, bulantı, ağrı ve ruh hali sıkıntısı
-alanlarını ayrı `0–4` tam sayıları olarak saklar. Backend bu ham girişlerden teşhis
+alanlarını ayrı `0–4` tam sayıları olarak saklar. Bu beş zorunlu alana ek olarak
+isteğe bağlı `vision_change`, `back_pain`, `congestion` (0–4, boş bırakılabilir)
+da saklanır (migration 0010). Backend bu ham girişlerden teşhis
 veya doğrulanmamış tek bir sağlık puanı üretmez.
 
-CO₂ `WATCH` değerlendirmesi, onaylı `ENV_CO2_WATCH_CARD_V1` eylem kartını gösterir.
-Kartın kimliği ve sürümü `rule_evaluation` kaydında saklanır; kart metni kodda
+CO₂ `WATCH` değerlendirmesi onaylı `ENV_CO2_WATCH_CARD_V2` kartını (sürüm 2)
+gösterir; `ENV_CO2_WATCH_CARD_V1` eski kayıtlar için katalogda kalır. Kartın kimliği ve sürümü `rule_evaluation` kaydında saklanır; kart metni kodda
 sürümlü olarak tutulur (ayrıntı: `docs/CO2_ACTION_CARD_PROPOSAL.md`).
 
 `GET /v1/crew/{crew_id}/status`, son CO₂ değerlendirmesi ile son öznel kontrolü
-aynı cevapta gösterir. Öznel girişler henüz alarm seviyesini değiştirmez; bağlam
-olarak korunur ve cevabın sınırlamaları açıkça belirtilir.
+aynı cevapta gösterir.
+
+> Güncelleme (kapsam genişletmesinden sonra): `POST /v1/check-ins` artık
+> `evaluate_check_in` ile öznel girişi okuyan kuralları çalıştırır. Belirtiye
+> dayalı kurallar (`SENS_MOTION_SICKNESS_V1`, `SANS_VISION_SYMPTOM_V1`) tek
+> başına `WATCH` üretebilir ve eylem kartıyla alarm açabilir (en fazla İzle
+> seviyesi); `MULTI_CARDIO_RESP_V1` ve uyku kuralı yalnızca ölçümleri varsa
+> yeniden çalışır. Öznel giriş teşhis üretmez.
+>
+> Bilinen tutarsızlık: `GET /v1/crew/{id}/status` cevabındaki `limitations`
+> metni ("Öznel girişler ... tek başına teşhis veya alarm üretmez") ve
+> `api/check_ins.py` içindeki kod yorumu eskidir; belirtiye dayalı kurallar tek
+> başına `WATCH` alarmı açabilir. Kod metninin düzeltilmesi ayrı bir iştir.
+
+### Ortam bağlamı
+
+Görevin nerede ve hangi koşulda yürüdüğü, değişmez (yalnız eklenen)
+`environment_contexts` kayıtlarıyla tutulur (migration 0011). Bir kayıt
+`effective_at` anından itibaren geçerlidir; ortam değişince yeni kayıt eklenir,
+eskisi güncellenmez.
+
+| Alan | Kural |
+|---|---|
+| `mission_id` | Görev kimliği |
+| `location` | `EARTH`, `ISS`, `TRANSIT_VEHICLE`, `LUNAR_HABITAT`, `MARS_HABITAT`, `EVA` |
+| `gravity_g` | `0`–`3` |
+| `eva_state` | `NONE` (varsayılan), `PREBREATHE`, `ACTIVE`, `POST_EVA`; `location=EVA` ise `NONE` olamaz |
+| `communication_delay_seconds` | `0`–`3600` |
+| `expected_metrics` | Metrik kataloğundan, tekrarsız liste |
+| `sensor_set` | En fazla 50 sensör adı (`^[A-Za-z0-9._:-]+$`) |
+| `effective_at` | Zaman dilimi zorunlu; UTC'ye çevrilir |
+| `source_type` / `source_id` | Varsayılan `MANUAL` / `mission-config` |
+
+Uçlar:
+
+- `POST /v1/environment-contexts` — yeni ortam kaydı (`201`).
+- `GET /v1/environment-contexts?mission_id=...` — görevin bütün ortam kayıtları,
+  `effective_at` sırasıyla.
+- `GET /v1/environment-contexts/current?mission_id=...&at=...` — `at` anında
+  (varsayılan: şimdi) geçerli kayıt, `mission_started_at` ve `mission_day`.
+
+Görev günü saklanmaz, her seferinde türetilir: görev başlangıcı görevin en erken
+ortam kaydıdır; ortam kaydı yoksa en erken gözlem zamanıdır.
+`mission_day = (at − başlangıç) // 1 gün + 1`; başlangıç yoksa veya `at`
+başlangıçtan önceyse `null`.
+
+Şu an kurallar `gravity_g`, `eva_state`, `communication_delay_seconds`,
+`expected_metrics` ve `sensor_set` alanlarını okumaz; bunlar saklanır ve
+döndürülür. Ortam kaydının kural tarafındaki tek etkisi, kişisel normalin hangi
+ortam aralığından hesaplanacağını belirlemesidir (aşağıda). Demo senaryoları her
+sentetik görev için `ISS` konumlu bir ortam kaydı oluşturur.
+
+### Kişisel normal servisi
+
+`services/baseline.py` içindeki servis, bir mürettebat üyesinin veya habitat
+hedefinin kendi önceki, kararlı verisinden "kişisel normal" hesaplar. Politika
+DEMO'dur (`docs/biyo.md` bölüm 5, karar 5.1-C); kanıt sınıfı F kuralların
+yerine geçmez.
+
+```python
+get_personal_baseline(
+    session, *, mission_id, target_id, metric, before,
+    activity_state=None, allowed_activities=None,
+    environment_location=None, environment_context_id=None,
+    min_samples=None, max_samples=None, use_active_snapshot=True,
+) -> BaselineProfileResult
+```
+
+Dönen alanlar: `median`, `p10`, `p25`, `p75`, `p90`, `sample_count`,
+`min_samples_required`, `excluded_count`, `is_sufficient`, `classification`,
+`status_label`, `evidence_level`, `environment_location`,
+`environment_context_id`, `activity_state`, `profile_id`, `profile_version`,
+`limitation_note`. Yüzdelikler doğrusal aradeğerlemeyle hesaplanır.
+
+Sınıflandırma:
+
+- `ESTABLISHED` (`status_label`: `kişisel_kararlı`, `evidence_level`:
+  `kişisel veri`) — kullanılabilir örnek sayısı en az `min_samples_required`.
+- `ESTIMATED_RESEARCH` (`status_label`: `tahmini/araştırma`,
+  `evidence_level`: `F`) — veri yetersiz. Kurallar bunu yerleşik kişisel normal
+  olarak kullanmaz: medyanı yalnızca `is_sufficient` doğruysa kullanırlar.
+
+Metrik bazlı varsayılan örnek sınırları (en az / en fazla), örnekler:
+
+| Metrik | En az | En fazla |
+|---|---|---|
+| `HEART_RATE`, `SPO2`, `RESPIRATION_RATE`, `BODY_TEMPERATURE` | 30 | 60 |
+| `SYSTOLIC_BP`, `DIASTOLIC_BP` | 5 | 20 |
+| `SLEEP_DURATION` | 3 | 7 |
+| `CABIN_CO2_PARTIAL_PRESSURE`, `CABIN_O2_FRACTION`, `CABIN_PRESSURE` | 30 | 60 |
+| `RADIATION_DOSE_RATE` | 10 | 60 |
+
+Listede olmayan metrikte `(30, 60)` kullanılır; çağıran `min_samples` /
+`max_samples` ile değiştirebilir.
+
+Hesap aralığı: yalnız `before` anından kesinlikle önceki veri kullanılır. `before`
+anında geçerli bir ortam kaydı varsa aralık o kaydın `effective_at` anından
+başlar ve bir sonraki ortam kaydında biter; böylece ortam değişince yeni bir
+profil başlar. Ortam kaydı yoksa görevin bütün önceki verisi kullanılır. Gözlemler
+eskiden yeniye okunur ve en fazla `max_samples` kullanılabilir örnek alınır
+(sorgu en çok `max_samples × 6` satır okur). `activity_state` verilirse yalnız o
+etkinlikteki ölçümler kullanılır.
+
+Öğrenmeden dışlananlar ("hasta veya arızalı dönem normal olmaz"):
+
+- `reported_quality` `VALID` olmayan, sonlu olmayan veya metrik kataloğunun
+  fiziksel olarak mümkün aralığı dışındaki değerler;
+- aynı hedefte alarmın etkin olduğu aralıklar (kırmızı bayrak alarmları dahil);
+  çevre metriklerinde yalnız o metriği kullanan kuralların alarmları sayılır;
+- mürettebat metriklerinde, yorgunluk, baş dönmesi, bulantı, ağrı veya ruh hali
+  sıkıntısından biri `≥ 2/4` olan öznel kaydın ardından 12 saat. (İsteğe bağlı
+  `vision_change`, `back_pain`, `congestion` alanları bu dışlamada kullanılmaz.)
+
+Ay ve Mars için nüfus "normal aralık" tablosu yoktur; `LUNAR_HABITAT` veya
+`MARS_HABITAT` ortamında `limitation_note` bunu açıkça yazar ve yalnız kişinin
+kendi verisi kullanılır.
+
+Kişisel normal kullanan kurallar ve çağrı biçimi:
+
+| Kural | Metrik | Bağlam |
+|---|---|---|
+| `VITAL_TEMP_TREND_V1` | `BODY_TEMPERATURE` | etkinlik filtresi yok; `before` = pencere başlangıcı |
+| `MULTI_CARDIO_RESP_V1` | `HEART_RATE` | `activity_state=REST`; `before` = kalp hızı penceresi başlangıcı |
+| `ENV_RADIATION_V1` | `RADIATION_DOSE_RATE` | `min_samples=10`; `before` = son pencerenin başı |
+
+`GET /v1/baselines?mission_id=&target_id=&metric=&activity_state=&before=`
+yürürlükteki kişisel normali döndürür (`before` varsayılan: şimdi). Etkin bir
+profil anlık görüntüsü varsa hesaplama yerine o döner.
+
+### Profil sürümleri
+
+`baseline_profiles` tablosu kişisel normalin değişmez anlık görüntülerini,
+`baseline_profile_activations` tablosu hangisinin yürürlükte olduğunu tutar
+(migration 0012). Profil anahtarı: `mission_id`, `target_id`, `metric`,
+`activity_key` (verilen `activity_state` ya da `ANY`) ve `environment_key`
+(ortam kaydı kimliği ya da `NONE`). Her anahtar için sürüm numarası
+benzersizdir.
+
+- `POST /v1/baseline-profiles` — gövde: `mission_id`, `target_id`, `metric`,
+  isteğe bağlı `activity_state` ve `before`, `created_by`, `reason` (3–500
+  karakter). O anki veriden taze hesap yapar (etkin anlık görüntüyü değil),
+  sürümü `en büyük + 1` olarak kaydeder ve hemen etkinleştirir (`201`).
+- `GET /v1/baseline-profiles?mission_id=&target_id=&metric=` — sürümler, sırayla.
+- `POST /v1/baseline-profiles/{id}/activate` — gövde: `activated_by`, `reason`.
+  Önceki bir sürümü yeniden yürürlüğe koyar. Geri alma budur: hiçbir şey
+  silinmez, yeni bir etkinleştirme satırı eklenir. `404`: profil yok.
+- `POST /v1/baseline-profiles/{id}/release` — aynı gövde; o profilin anahtarını
+  otomatik hesaplamaya döndürür (`profile_id` boş etkinleştirme satırı, `204`).
+
+Bir anahtar için en son etkinleştirme geçerlidir. `created_by` / `activated_by`
+gövdeden alınır; token kullanıcısından türetilmez.
+
+### Kural kaydında kişisel normal
+
+`rule_evaluations` tablosuna boş bırakılabilir dört alan eklendi
+(migration 0013): `baseline_value` (kullanılan profilin medyanı),
+`baseline_classification`, `baseline_sample_count`, `baseline_profile_version`
+(`0` = otomatik hesap). Kişisel normal kullanmayan kurallarda ve eski kayıtlarda
+bu alanlar boştur. Kural durumu (`rules[]`, `evaluations[]`) bu durumda
+`baseline` bölümünü (`value`, `classification`, `status_label`,
+`sample_count`, `profile_version`) gösterir; `baseline_classification` boşsa
+`baseline` `null` olur. Panel bu bölümü "Kişisel başlangıç" etiketiyle gösterir.
+
+### Şema kontrolü
+
+`git pull` sonrası `uv run alembic upgrade head` unutulursa API eskiden belirsiz
+`500` hataları veriyordu. Artık her veri isteği (`get_session` bağımlılığı)
+önce veritabanının Alembic sürümünü koddaki son sürümle karşılaştırır. Sonuç
+`current` ise önbelleğe alınır; `outdated` / `unknown` ise en çok 5 saniyede bir
+yeniden denetlenir.
+
+Şema gerideyse veri uçları `503` döner (sürüm değerleri örnektir):
+
+```json
+{
+  "detail": {
+    "code": "SCHEMA_OUTDATED",
+    "message": "Veritabanı şeması kodun gerisinde (veritabanı: ..., kod: ...). Çalıştırın: uv run alembic upgrade head",
+    "database_revision": "20261114_0013",
+    "code_revision": "20261114_0014"
+  },
+  "error": {"code": "SERVICE_UNAVAILABLE", "message": "SERVICE_UNAVAILABLE", "request_id": "..."}
+}
+```
+
+`GET /health` `get_session` bağımlılığını kullanmaz (yalnız aynı şema
+denetimini çağırır); bu yüzden şema geride olsa da `200` ve `status: "ok"`
+döner, şemayı ayrıca bildirir: `status`, `service`, `api_version`, `schema`
+(`current` / `outdated` / `unknown`) ve `schema_detail` (`state`,
+`database_revision`, `code_revision`, `message`). Veritabanına ulaşılamazsa
+veya `alembic.ini` bulunamazsa `unknown` olur; `unknown` veri isteklerini
+engellemez, yalnız `outdated` engeller.
+
+### Veritabanı: SQLite ve PostgreSQL
+
+Veritabanı adresi sırasıyla `SPACEAPP_DATABASE_URL`, `DATABASE_URL`, yoksa
+`sqlite:///./spaceapp-logar.db` ile seçilir. `postgres://` ve `postgresql://`
+adresleri psycopg 3 sürücüsüne (`postgresql+psycopg://`) çevrilir. SQLite'ta WAL,
+`foreign_keys=ON`, `synchronous=NORMAL` ve `busy_timeout=30000` ayarlanır;
+PostgreSQL'de `pool_pre_ping` açıktır. Alembic aynı adres kuralını kullanır.
+
+Migration 0014, `rule_evaluations.source` sütununu `VARCHAR(255)`'ten `TEXT`'e
+genişletir: bir radyasyon kuralının kaynak metni 266 karakterdir ve PostgreSQL
+`VARCHAR(255)` sınırını uyguladığı için demo senaryoları orada başarısız
+oluyordu; SQLite bu sınırı uygulamaz.
+
+Testler: `TEST_DATABASE_URL` verilirse bütün test seti o veritabanında koşar
+(her test için `public` şeması sıfırlanır). CI'da `test` (SQLite) ve
+`test-postgres` (`postgres:16` servis kapsayıcısı) işleri vardır. PostgreSQL veya
+Docker kurulu olmayan makinede
+`uv run --with pgserver python scripts/test_postgres_local.py` geçici gömülü bir
+PostgreSQL başlatır ve test setini onunla koşar (`pgserver` proje bağımlılığı
+değildir). Render'da hangi veritabanının kullanılacağı henüz kararlaştırılmadı;
+`render.yaml` veritabanı tanımlamaz.
+
+### Toplu ölçüm ucu
+
+`POST /v1/measurements/batch` gövdesi: `mode` (`all_or_nothing` varsayılan,
+veya `partial`) ve `measurements` (her biri `POST /v1/measurements` ile aynı
+sözleşme). Bir istekte en fazla 1000 ölçüm; fazlası `413`.
+
+Her öğe ayrı ayrı şemaya göre doğrulanır; geçersizler sırasıyla
+`rejected: [{index, errors}]` içinde raporlanır.
+
+- `all_or_nothing`: tek bir öğe geçersizse hiçbiri saklanmaz; `422` ve
+  `{mode, accepted: 0, rejected, evaluations: 0}` gövdesi döner (bu gövde
+  standart hata zarfı değildir).
+- `partial`: geçerli öğeler saklanır, geçersizler raporlanır. "Kısmi kabul"
+  yalnızca şema doğrulamasını geçemeyen öğelerin atlanması demektir; geçerli
+  öğeler tek transaction'da saklanır ve saklama veya kural değerlendirmesi
+  sırasında bir hata olursa bütün toplu işlem geri alınır.
+- Geçerli öğeler `observed_at` sırasıyla (eskiden yeniye) saklanır ve her biri
+  için kurallar çalışır. Başarılı cevap `201` ve
+  `{mode, accepted, rejected, evaluations}`; `evaluations` üretilen kural
+  değerlendirmesi sayısıdır. Hiç geçerli öğe yoksa (örneğin boş liste) `200`.
+
+### CSV telemetri adaptörü
+
+`services/adapters/` cihaz kayıtlarını `MeasurementCreate` nesnelerine çevirir.
+Ortak arayüz `DeviceAdapter` protokolüdür:
+`parse(record, index=None) -> MeasurementCreate | AdapterError`
+(`AdapterError`: `reason`, `record_index`).
+
+`CsvTelemetryAdapter(source_type, source_id, scenario_id=None)`:
+
+- Sütunlar: `timestamp,mission_id,target_id,metric,value,unit,quality,activity`;
+  ilk altısı zorunlu, `quality` boşsa `VALID`, `activity` boşsa yok.
+- `timestamp` ISO 8601 olmalıdır; hedef türü metrik kataloğundan gelir; kaynak
+  kimliği adaptör örneğine sabittir. `SYNTHETIC` kaynakta `scenario_id` zorunludur.
+- Eksik sütun, bilinmeyen metrik, geçersiz zaman veya sayı olmayan değer ve
+  şema hataları `AdapterError` olarak döner; satır sessizce düşürülmez.
+- `parse_csv_text(adapter, text)` başlık satırlı bir CSV belgesinin her satırını
+  çözer.
+
+Adaptör şu an kütüphane arayüzüdür; CSV yükleyen bir HTTP ucu yoktur. Çıktı
+`POST /v1/measurements/batch` ile gönderilebilir.
+
+### Gözlemlenebilirlik
+
+- `X-Request-ID`: istekte gelen değer `^[A-Za-z0-9._-]{1,100}$` kalıbına
+  uyuyorsa korunur, değilse yeni bir UUID (hex) üretilir. Her cevapta başlık
+  olarak döner; CORS bu başlığı kabul eder ve tarayıcıya açar.
+- JSON loglar: `spaceapp_logar` log kaydedicisi satır başına bir JSON nesnesi
+  yazar. Alanlar `ts`, `level`, `logger`, `message`, varsa `request_id`,
+  `method`, `path`, `status`, `duration_ms` ve hata durumunda `exc_type`. Yalnız
+  bu alanlar yazılır; sorgu dizesi loglanmaz (yalnız yol).
+- Hata gövdesi: bütün HTTP hataları, doğrulama hataları (`422`) ve beklenmeyen
+  hatalar (`500`) aynı biçimdedir:
+
+```json
+{
+  "detail": "<FastAPI'nin önceki detail değeri; mevcut istemciler için korunur>",
+  "error": {"code": "NOT_FOUND", "message": "Alert not found", "request_id": "..."}
+}
+```
+
+`error.code` HTTP durum adıdır (`NOT_FOUND`, `CONFLICT`, `UNAUTHORIZED` gibi);
+doğrulama hatalarında `VALIDATION_ERROR`, beklenmeyen hatalarda
+`INTERNAL_ERROR`. `detail` bir metin değilse `error.message` durum adı olur.
+Toplu ölçümün `all_or_nothing` `422` cevabı bu zarfı kullanmaz (yukarıda).
+
+### Kimlik doğrulama ve roller (isteğe bağlı)
+
+Bu bir demo kimlik bilgisi düzenidir, üretim kimlik sistemi değildir: token
+iptali, yenileme ve parola özetleme yoktur.
+
+Ortam değişkenleri (her istekte okunur):
+
+| Değişken | Anlamı |
+|---|---|
+| `SPACEAPP_AUTH_REQUIRED` | Varsayılan `false`; `1` / `true` / `yes` açar |
+| `SPACEAPP_AUTH_SECRET` | Token imzalama anahtarı (HMAC-SHA256); yoksa token verilemez ve doğrulanamaz |
+| `SPACEAPP_AUTH_USERS` | `id:ROL:parola` girişleri, virgülle ayrılır; parolalar depoda tutulmaz |
+
+Roller: `ASTRONAUT`, `CREW_MEDICAL_OFFICER`, `GROUND`.
+
+- `POST /v1/auth/token` — gövde `{user_id, passcode}`; cevap `access_token`,
+  `token_type: "bearer"`, `expires_at`, `role`, `user_id`. Token 12 saat
+  geçerlidir. Anahtar tanımlı değilse `503`, yanlış kimlik/parola `401`. Token
+  gerektirmeyen tek `/v1` ucudur; `/health` ve `/ui/` de token istemez.
+- Diğer bütün `/v1` uçları `Authorization: Bearer <token>` okur.
+  - Bayrak kapalı (varsayılan): tokensız istek anonim demo kullanıcısı
+    (`demo-anonymous`) olarak çalışır ve loglanır. Geçersiz/süresi dolmuş token
+    yok sayılır, loglanır ve istek anonim çalışır. Geçerli token her iki modda da
+    kabul edilir ve rolü uygulanır.
+  - Bayrak açık: token yoksa veya geçersizse `401`.
+- Aktör: `acknowledge`, `steps` ve `resolve` uçlarında işlemi yapan kişi geçerli
+  token varsa token kullanıcısıdır; gövdedeki `crew_member_id` yok sayılır.
+  Token yoksa (bayrak kapalı) gövdedeki `crew_member_id` zorunludur, yoksa `422`.
+  Bu kişi `acknowledged_by`, `resolved_by` ve adım kaydındaki `crew_member_id`
+  olarak saklanır.
+- Rol kuralı şu an yalnız `resolve` (kırmızı bayrak kapatma) için vardır: token
+  ile çağrılırsa yalnız `CREW_MEDICAL_OFFICER` kapatabilir, diğerleri `403`.
+  Anonim demo erişiminde (bayrak kapalı) rol denetlenmez.
+
+Sınırlamalar: çevrimdışı panel `Authorization` başlığı göndermez ve giriş akışı
+yoktur; bayrak açılırsa panel çalışmaz. Kırmızı bayrak, ortam ve profil uçları
+kişi bilgisini gövdeden alır.
+
+### Migration listesi
+
+| Sürüm | Ne yapar |
+|---|---|
+| `20261114_0001` | `observations` tablosu (değişmez ham gözlem; `SYNTHETIC` ⇔ `scenario_id` kısıtı) |
+| `20261114_0002` | `rule_evaluations` ve `rule_evaluation_evidence` (değerlendirmede kullanılan gözlem kimlikleri) |
+| `20261114_0003` | `subjective_check_ins` (beş alan, her biri 0–4; kaynak `MANUAL` veya `SYNTHETIC`) |
+| `20261114_0004` | `rule_evaluations.action_card_id` / `action_card_version` |
+| `20261114_0005` | `alert_events` (yaşam döngüsü kısıtları; etkin alarm için kısmi benzersiz indeks) |
+| `20261114_0006` | `lab_results` (kaynak referans aralığıyla, yalnız eklenen) |
+| `20261114_0007` | `observations.activity_state` |
+| `20261114_0008` | `red_flag_reports` tablosu ve `alert_events.resolved_by` |
+| `20261114_0009` | `action_step_logs` (alarm + kart + sürüm + adım için benzersiz) |
+| `20261114_0010` | `subjective_check_ins.vision_change`, `back_pain`, `congestion` (boş bırakılabilir) |
+| `20261114_0011` | `environment_contexts` (konum ve yerçekimi kısıtları) |
+| `20261114_0012` | `baseline_profiles` ve `baseline_profile_activations` |
+| `20261114_0013` | `rule_evaluations.baseline_value`, `baseline_classification`, `baseline_sample_count`, `baseline_profile_version` |
+| `20261114_0014` | `rule_evaluations.source` `VARCHAR(255)` → `TEXT` |
+
+### Güncel uç listesi
+
+| Yöntem ve yol | İşlev |
+|---|---|
+| `GET /health` | Süreç ve şema durumu |
+| `POST /v1/auth/token` | Demo kullanıcısına token verir |
+| `POST /v1/observations` | CO₂ gözlemi (ilk uç) |
+| `POST /v1/measurements` | Tek vital/çevre ölçümü + kurallar |
+| `POST /v1/measurements/batch` | Toplu ölçüm |
+| `GET /v1/measurements` | Bir metriğin zaman serisi |
+| `GET /v1/metrics` | Metrik kataloğu |
+| `GET /v1/missions` | Görev listesi |
+| `POST /v1/check-ins` | Öznel durum kontrolü |
+| `POST /v1/lab-results` | Laboratuvar sonucu |
+| `GET /v1/crew/{crew_member_id}/lab-results` | Laboratuvar kartı |
+| `GET /v1/crew/{crew_member_id}/status` | Kural durumları ve genel dikkat seviyesi |
+| `GET /v1/alerts` | Alarm listesi |
+| `POST /v1/alerts/{alert_id}/acknowledge` | Alarmı gördüm |
+| `POST /v1/alerts/{alert_id}/steps` | Eylem kartı adımı yapıldı |
+| `POST /v1/alerts/{alert_id}/resolve` | Kırmızı bayrak alarmını elle kapatır |
+| `GET /v1/red-flags/catalog` | Kırmızı bayrak kataloğu |
+| `POST /v1/red-flags` | Kırmızı bayrak bildirimi |
+| `GET /v1/risk-coverage` | Risk kapsam haritası |
+| `POST`, `GET /v1/environment-contexts` | Ortam kaydı ekler / listeler |
+| `GET /v1/environment-contexts/current` | Geçerli ortam ve görev günü |
+| `GET /v1/baselines` | Yürürlükteki kişisel normal |
+| `POST`, `GET /v1/baseline-profiles` | Anlık görüntü alır / listeler |
+| `POST /v1/baseline-profiles/{profile_id}/activate` | Sürümü yeniden etkinleştirir (geri alma) |
+| `POST /v1/baseline-profiles/{profile_id}/release` | Otomatik hesaplamaya döner |
+| `GET /v1/demo/scenarios` | Demo senaryoları |
+| `POST /v1/demo/scenarios/{scenario_id}/run` | Senaryoyu çalıştırır |
+| `POST /v1/demo/osdr-labs/import` | OSDR laboratuvar verisini içe aktarır |
 
 ## Onay kaydı
 
