@@ -21,6 +21,14 @@ class HealthAttention(StrEnum):
     CRITICAL = "CRITICAL"
 
 
+class AlertStatus(StrEnum):
+    """Lifecycle of an alert event shown to the crew."""
+
+    OPEN = "OPEN"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    RESOLVED = "RESOLVED"
+
+
 @dataclass(frozen=True, slots=True)
 class RuleEvaluation:
     """Auditable output produced by one deterministic rule."""

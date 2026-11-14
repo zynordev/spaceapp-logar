@@ -16,12 +16,14 @@ from spaceapp_logar.rules.co2_window import (
     assess_co2_window,
 )
 from spaceapp_logar.rules.models import (
+    AlertStatus,
     DataQuality,
     HealthAttention,
     RuleEvaluation,
 )
 
 __all__ = [
+    "AlertStatus",
     "ActionCard",
     "ActionCardStep",
     "ENV_CO2_WATCH_CARD_V1",
