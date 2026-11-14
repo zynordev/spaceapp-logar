@@ -2,7 +2,7 @@
 
 Son güncelleme: 14 Kasım 2026
 
-Durum: **Kullanıcı onayı bekliyor (Onay Kapısı B)**
+Durum: **Onaylandı (Onay Kapısı B tamamlandı)**
 
 Bu karar belgesi MVP backend'inin hangi araçlarla geliştirileceğini karşılaştırır.
 Amaç en fazla teknoloji kullanmak değil; sağlık ve çevre ölçümlerini açık,
@@ -96,6 +96,12 @@ SQLite + pytest** önerilir.
 Docker ve gerçek zamanlı akış altyapısı başlangıç bağımlılığı yapılmayacaktır.
 Sensör verisi önce normal HTTP uçlarıyla alınacak; canlı ekran gerçekten ihtiyaç
 duyarsa daha sonra WebSocket veya Server-Sent Events eklenecektir.
+
+## Onay kaydı
+
+14 Kasım 2026 tarihinde proje sahibi önerilen Python/FastAPI yığınını onayladı.
+İlk teknik dilim yalnızca servis iskeleti, `/health` operasyon ucu ve otomatik
+testle sınırlandırıldı.
 
 ## Seçimden sonra ilk teknik dilim
 

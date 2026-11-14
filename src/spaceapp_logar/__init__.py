@@ -1,0 +1,2 @@
+"""SpaceApp Logar backend package."""
+
