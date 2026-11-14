@@ -26,6 +26,10 @@ uv run uvicorn spaceapp_logar.main:app --reload
 curl http://127.0.0.1:8000/health
 ```
 
+Ayrı bir frontend geliştirme sunucusu kullanılıyorsa CORS varsayılan olarak
+`localhost`/`127.0.0.1` üzerindeki 5173 (Vite) ve 3000 portlarına açıktır. Başka
+bir adres için: `SPACEAPP_CORS_ORIGINS="http://localhost:4200"` ortam değişkeni.
+
 ## Demo akışı
 
 Panelin üst şeridinden:
