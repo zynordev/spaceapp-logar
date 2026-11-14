@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from spaceapp_logar.rules import DataQuality, HealthAttention
+from spaceapp_logar.schemas.action_cards import ActionCardRead
 from spaceapp_logar.schemas.check_ins import SubjectiveCheckInRead
 
 
@@ -21,6 +22,7 @@ class CO2StatusRead(BaseModel):
     explanation: str
     source: str
     source_uri: str
+    action_card: ActionCardRead | None = None
 
 
 class CrewStatusRead(BaseModel):

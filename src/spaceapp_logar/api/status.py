@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 
 from spaceapp_logar.db.models import RuleEvaluationRecord, SubjectiveCheckIn
 from spaceapp_logar.db.session import get_session
+from spaceapp_logar.rules import get_action_card
 from spaceapp_logar.schemas import (
+    ActionCardRead,
     CO2StatusRead,
     CrewStatusRead,
     SubjectiveCheckInRead,
@@ -56,12 +58,26 @@ def get_crew_status(
         .limit(1)
     )
 
+    co2_status = None
+    if co2_record is not None:
+        co2_status = CO2StatusRead.model_validate(co2_record)
+        if (
+            co2_record.action_card_id is not None
+            and co2_record.action_card_version is not None
+        ):
+            action_card = get_action_card(
+                co2_record.action_card_id,
+                co2_record.action_card_version,
+            )
+            if action_card is not None:
+                co2_status.action_card = ActionCardRead.from_card(action_card)
+
     return CrewStatusRead(
         mission_id=mission_id,
         crew_member_id=crew_member_id,
         environment_target_id=environment_target_id,
         generated_at=datetime.now(timezone.utc),
-        co2=CO2StatusRead.model_validate(co2_record) if co2_record else None,
+        co2=co2_status,
         latest_check_in=(
             SubjectiveCheckInRead.model_validate(check_in) if check_in else None
         ),

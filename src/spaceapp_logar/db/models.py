@@ -101,6 +101,8 @@ class RuleEvaluationRecord(Base):
     explanation: Mapped[str] = mapped_column(Text)
     source: Mapped[str] = mapped_column(String(255))
     source_uri: Mapped[str] = mapped_column(String(500))
+    action_card_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    action_card_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
 
 

@@ -53,9 +53,25 @@ def test_first_migration_upgrades_and_downgrades_cleanly(tmp_path: Path) -> None
         constraint["name"]
         for constraint in inspector.get_check_constraints("observations")
     } == {"ck_observations_synthetic_scenario"}
+    assert {
+        "action_card_id",
+        "action_card_version",
+    }.issubset(
+        {column["name"] for column in inspector.get_columns("rule_evaluations")}
+    )
     engine.dispose()
 
     command.check(config)
+
+    command.downgrade(config, "20261114_0003")
+
+    engine = create_engine(f"sqlite:///{database_path}")
+    remaining_columns = {
+        column["name"] for column in inspect(engine).get_columns("rule_evaluations")
+    }
+    assert "action_card_id" not in remaining_columns
+    assert "action_card_version" not in remaining_columns
+    engine.dispose()
 
     command.downgrade(config, "base")
 

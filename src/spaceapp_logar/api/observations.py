@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 
 from spaceapp_logar.db.models import Observation
 from spaceapp_logar.db.session import get_session
+from spaceapp_logar.rules import get_action_card
 from spaceapp_logar.schemas import (
+    ActionCardRead,
     CO2ObservationAccepted,
     CO2ObservationCreate,
     CO2ObservationRead,
@@ -53,7 +55,7 @@ def create_observation(
         target_id=observation.target_id,
         as_of=observation.observed_at,
     )
-    persist_co2_evaluation(
+    evaluation_record = persist_co2_evaluation(
         session,
         mission_id=observation.mission_id,
         target_id=observation.target_id,
@@ -62,9 +64,19 @@ def create_observation(
     )
     session.commit()
     assessment = persisted_input.assessment
+    action_card = (
+        get_action_card(
+            evaluation_record.action_card_id,
+            evaluation_record.action_card_version,
+        )
+        if evaluation_record.action_card_id is not None
+        and evaluation_record.action_card_version is not None
+        else None
+    )
     return CO2ObservationAccepted(
         observation=CO2ObservationRead.model_validate(observation),
         window=CO2WindowRead.model_validate(assessment.window),
         evaluation=RuleEvaluationRead.model_validate(assessment.evaluation),
+        action_card=ActionCardRead.from_card(action_card) if action_card else None,
     )
 

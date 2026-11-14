@@ -15,6 +15,7 @@ from spaceapp_logar.rules import (
     CO2WindowAssessment,
     DataQuality,
     assess_co2_window,
+    select_action_card,
 )
 from spaceapp_logar.rules.co2_window import co2_window_bounds
 from spaceapp_logar.schemas import EnvironmentMetric
@@ -72,6 +73,7 @@ def persist_co2_evaluation(
     assessment = persisted_input.assessment
     evaluation = assessment.evaluation
     window = assessment.window
+    action_card = select_action_card(evaluation)
     record = RuleEvaluationRecord(
         mission_id=mission_id,
         target_id=target_id,
@@ -94,6 +96,8 @@ def persist_co2_evaluation(
         explanation=evaluation.explanation,
         source=evaluation.source,
         source_uri=evaluation.source_uri,
+        action_card_id=action_card.card_id if action_card else None,
+        action_card_version=action_card.version if action_card else None,
     )
     session.add(record)
     session.flush()
