@@ -67,25 +67,54 @@ uygulamasıdır.
 Tansiyon, uyku, kabin O₂, kabin basıncı ve radyasyon toplanır ve grafikte
 gösterilir. Bunlar için kural yoktur; eşikleri biyoloji ekibinden beklenir.
 
-## Eylem kartları
+## Eylem kartları (sürüm 2)
 
-DEMO kartları yalnızca [biyo.md](biyo.md) bölüm 10.2'de izin verilen ilk adım
-türlerini içerir: ölçümü tekrarlamak veya doğrulamak, aktiviteyi durdurup
+14 Kasım 2026'da kartlar genel "ölçümü doğrula, bildir" metinlerinden somut ve
+açıklamalı bir yapıya geçti. Yeni değerlendirmeler V2 kartlarını gösterir; V1
+kartları eski kayıtların açıklanabilmesi için katalogda kalır
+(`src/spaceapp_logar/rules/action_cards_v2.py`).
+
+Her V2 kartında şunlar vardır:
+
+- **Somut adımlar ve her adımın tek cümlelik nedeni.** Örneğin CO₂ kartı,
+  mikro yerçekiminde doğal hava dolaşımı olmadığı için CO₂'nin yüz çevresinde
+  birikebileceğini açıklar.
+- **Yeniden değerlendirme süresi** (`reassess_minutes`). Panelde geri sayım
+  olarak görünür; tamamlanan her adımla yeniden başlar.
+- **Seviyenin ne zaman yükseleceği** (`escalate_if_tr`) ve **alarmın ne zaman
+  kapanacağı** (`closes_when_tr`).
+- **Olası açıklamalar** (`considerations_tr`): biyo.md bölüm 9'daki "olasılık /
+  dışlanmamış alternatif" sınıfı. Teşhis değildir.
+- **Kaynaklar** (`references`).
+
+Kartın üstünde canlı **"Şu an ne oluyor?"** bölümü (`situation`) gösterilir. Bu
+bölümde yalnızca ölçülmüş veya kaydedilmiş gerçekler yer alır: ölçülen değer ve
+sınır, durumun ne kadar süredir devam ettiği, 30 dakikalık eğilim, son öznel
+kayıt, CO₂ için diğer modüllerin değeri (yerel birikim mi, kabin geneli mi) ve
+tamamlanan adım sayısı.
+
+Astronot her adımı panelde "Yaptım" ile işaretler
+(`POST /v1/alerts/{id}/steps`). Kayıt değiştirilemez; aynı adımı tekrar
+işaretlemek ilk kaydı korur.
+
+İçerik sınırları değişmedi. Kartlar yalnızca [biyo.md](biyo.md) bölüm 10.2'de
+izin verilen ilk adım türlerini içerir: ölçümü doğrulamak, ortamı kontrol etmek,
 dinlenmek, belirtileri kaydetmek, görev prosedürünü açmak, ekip sağlık
 sorumlusuna veya yer ekibine bildirmek. Hiçbir kart teşhis, ilaç, doz veya
 invaziv müdahale içermez. Hiçbir kart araç veya ekipmana komut vermez
-(`allows_automatic_vehicle_command=false`).
+(`allows_automatic_vehicle_command=false`). Bu sınırlar testle denetlenir.
 
-| Kart | Kural ve seviye |
-|---|---|
-| `VITAL_SPO2_WATCH_CARD_V1` | SpO₂ WATCH: sensör yerleşimini doğrula, belirtileri kaydet, kabin O₂/basıncına bak |
-| `VITAL_SPO2_ALERT_CARD_V1` | SpO₂ ALERT: dinlen, ikinci sensörle doğrula, ekip sağlık sorumlusuna bildir |
-| `VITAL_TEMP_WATCH_CARD_V1` | Sıcaklık WATCH: sensör temasını doğrula, belirtileri kaydet, 1 saat içinde yeniden ölç |
-| `VITAL_TEMP_ALERT_CARD_V1` | Sıcaklık ALERT: ikinci ölçümle doğrula, belirtileri kaydet, bildir |
-| `MULTI_CARDIO_RESP_WATCH_CARD_V1` | Dinlen ve tekrar ölç, aktivite bağlamını kaydet, belirtileri kaydet |
-| `MULTI_CARDIO_RESP_ALERT_CARD_V1` | Dinlen, tüm vitalleri yeniden ölç, bildir |
-| `DATA_HR_SENSOR_CHECK_CARD_V1` | Sensörü yeniden yerleştir, ölçümü tekrarla, arızayı kaydet (sağlık alarmı değil) |
-| `RED_FLAG_EMERGENCY_CARD_V1` | İşi durdur ve güvenli pozisyona geç; ekip sağlık sorumlusuna ve yer ekibine hemen bildir, yanında biri kalsın; acil tıbbi prosedürü aç |
+| Kart | Durum | Öne çıkan adımlar | Yeniden değerlendirme |
+|---|---|---|---|
+| `ENV_CO2_WATCH_CARD_V2` | **Onaylı** | Hava akışını kontrol et, modülleri karşılaştır, giderim sistemini kontrol et ve bildir, belirtileri kaydet | 30 dk |
+| `VITAL_SPO2_WATCH_CARD_V2` | DEMO | Eli ısıt ve hareketsiz ölç, ikinci cihazla karşılaştır, kabin O₂/basıncına bak | 10 dk |
+| `VITAL_SPO2_ALERT_CARD_V2` | DEMO | Dinlen, ikinci cihazla doğrula, ekibe ve kabine bak, bildir | 5 dk |
+| `VITAL_TEMP_WATCH_CARD_V2` | DEMO | Sensör temasını doğrula, egzersiz/ortam bağlamını kaydet, dinlen ve sıvı alımını kaydet | 60 dk |
+| `VITAL_TEMP_ALERT_CARD_V2` | DEMO | İkinci termometre, belirtiler, görev prosedüründeki enfeksiyon kontrol önlemleri, bildir | 30 dk |
+| `MULTI_CARDIO_RESP_WATCH_CARD_V2` | DEMO | 5 dk dinlen ve tekrar ölç, aktivite bağlamını kaydet, SpO₂ ve sıcaklığa bak | 15 dk |
+| `MULTI_CARDIO_RESP_ALERT_CARD_V2` | DEMO | Dinlen, tüm vitalleri ölç, kritik görevleri yalnız yapma, bildir | 10 dk |
+| `DATA_HR_SENSOR_CHECK_CARD_V2` | DEMO | Sensörü yerleştir, hareketsiz ölç, nabzı elle say, arızayı kaydet | 5 dk |
+| `RED_FLAG_EMERGENCY_CARD_V2` | DEMO | İşi bırak ve sabitlen, ekibe sesli haber ver, ekip sağlık sorumlusu ve uçuş hekimiyle iletişime geç, acil prosedürü aç | 5 dk |
 
 ## Alarm davranışı
 
