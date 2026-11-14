@@ -65,6 +65,8 @@ const LAB_LABELS = {
 const CHECKIN_FIELDS = [
   ['fatigue', 'Yorgunluk'], ['dizziness', 'Baş dönmesi'], ['nausea', 'Bulantı'],
   ['pain', 'Ağrı'], ['mood_distress', 'Ruh hali sıkıntısı'],
+  ['vision_change', 'Görme değişikliği'], ['back_pain', 'Sırt ağrısı'],
+  ['congestion', 'Burun tıkanıklığı / yüz şişkinliği'],
 ];
 const SEVERITY_WORDS = ['Yok', 'Hafif', 'Orta', 'Şiddetli', 'Çok şiddetli'];
 
@@ -1395,10 +1397,48 @@ async function importOsdrLabs() {
 /* ---------------------------------------------------------
    11. BAŞLATMA
    --------------------------------------------------------- */
+// NASA'nın 5 tehlikesine göre hangi riskleri nasıl kapsadığımızı gösterir (statik).
+const COVERAGE_LABELS = {
+  RULE: { text: 'Kural var', cls: 'cov-rule', icon: '◆' },
+  DATA_ONLY: { text: 'Sadece veri', cls: 'cov-data', icon: '◇' },
+  GAP: { text: 'Boşluk', cls: 'cov-gap', icon: '○' },
+};
+async function loadCoverage() {
+  if (MOCK_MODE) return;
+  let cov;
+  try { cov = await api('GET', '/v1/risk-coverage'); } catch (e) { return; }
+  if (!cov || !Array.isArray(cov.hazards)) return;
+  const sum = cov.summary || {};
+  const total = (sum.RULE || 0) + (sum.DATA_ONLY || 0) + (sum.GAP || 0);
+  $('#coverageSummary').textContent = `${total} risk: ${sum.RULE || 0} için karar destek kuralı var, ${sum.DATA_ONLY || 0} için yalnızca veri toplanıyor, ${sum.GAP || 0} henüz kapsanmıyor.`;
+  $('#coverageNote').textContent = cov.note_tr || '';
+  const grid = $('#coverageGrid');
+  clear(grid);
+  for (const h of cov.hazards) {
+    const box = el('div', { class: 'cov-hazard' }, el('h3', { text: h.title_tr }));
+    const ul = el('ul', { class: 'cov-list' });
+    for (const r of h.risks) {
+      const lab = COVERAGE_LABELS[r.coverage] || COVERAGE_LABELS.GAP;
+      const li = el('li', { class: `cov-item ${lab.cls}` },
+        el('div', { class: 'cov-top' },
+          el('span', { class: `cov-badge ${lab.cls}` }, el('span', { 'aria-hidden': 'true', text: `${lab.icon} ` }), lab.text),
+          el('span', { class: 'cov-title', text: r.title_tr })));
+      if (r.indicators_tr && r.indicators_tr.length) li.append(el('div', { class: 'cov-meta', text: `Göstergeler: ${r.indicators_tr.join(', ')}` }));
+      if (r.rules && r.rules.length) li.append(el('div', { class: 'cov-meta', text: `Kurallar: ${r.rules.map((x) => `${x.title}${x.validation_status === 'APPROVED' ? ' (onaylı)' : ' (DEMO)'}`).join('; ')}` }));
+      if (r.note_tr) li.append(el('div', { class: 'cov-note', text: r.note_tr }));
+      ul.append(li);
+    }
+    box.append(ul);
+    grid.append(box);
+  }
+  $('#coveragePanel').hidden = false;
+}
+
 function init() {
   if (MOCK_MODE) $('#mockBanner').hidden = false;
   buildCheckinForm();
   loadRedFlagCatalog();
+  loadCoverage();
 
   $('#missionSelect').addEventListener('change', (e) => {
     resetMissionData();
