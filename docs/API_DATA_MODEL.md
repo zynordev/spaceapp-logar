@@ -53,7 +53,7 @@ Bu yaklaşım tekrar ile aşırı esneklik arasında denge kurduğu için öneri
 | `mission` | Demo görevini ve bağlamını tanımlar | `id`, `name`, `started_at` |
 | `crew_member` | Gerçek PII içermeyen demo astronot profili | `id`, `callsign`, `mission_id` |
 | `observation` | Vital veya çevre zaman serisi | `metric`, `value`, `unit`, `observed_at`, hedef, kaynak |
-| `subjective_check_in` | Beş adet 0–4 öznel giriş | yorgunluk, baş dönmesi, bulantı, ağrı, ruh hali sıkıntısı |
+| `subjective_check_in` | Beş zorunlu + üç isteğe bağlı 0–4 öznel giriş | yorgunluk, baş dönmesi, bulantı, ağrı, ruh hali sıkıntısı; isteğe bağlı `vision_change`, `back_pain`, `congestion` (migration 0010) |
 | `lab_result` | Periyodik CBC/CMP değeri | ölçüm, değer, birim, referans alt/üst, örnek zamanı |
 | `rule_evaluation` | Bir kuralın denetlenebilir sonucu | kural/sürüm, veri kalitesi, dikkat durumu, kanıt |
 | `alert_event` | Kullanıcıya gösterilen ve yaşam döngüsü izlenen olay | açılma, onaylanma, çözülme, eylem kartı |
@@ -124,10 +124,12 @@ Bu tablo ilk öneridir; bugün uygulamada olan uçların tamamı aşağıda
 ## Saklama ve değişmezlik kuralları
 
 - Ham gözlem alındıktan sonra değeri sessizce güncellenmez veya silinmez.
-- Düzeltme gerekirse eski kayda referans veren yeni bir kayıt oluşturulur.
+- Düzeltme kaydı (eski kayda referans veren yeni kayıt) henüz uygulanmadı; şu an
+  yalnız yeni bir ham kayıt eklenebilir.
 - Bütün zamanlar UTC saklanır; arayüz yerel saate çevirebilir.
 - Sentetik kayıtta `source_type=SYNTHETIC` ve `scenario_id` zorunludur.
-- OSDR kaydında dataset kimliği `source_id` içinde zorunludur.
+- Laboratuvar sonuçlarında OSDR kaynağı için `source_id` bir dataset kimliği
+  (`OSD-569` gibi) olmalıdır; gözlem ve ölçüm uçlarında bu biçim denetlenmez.
 - Kural sürümü ve kaynak URL'si değerlendirme anındaki haliyle saklanır.
 - SQLite yarışma demosu içindir; uçuşa hazır veya klinik üretim veritabanı olduğu
   iddia edilmez. PostgreSQL de desteklenir (bkz. "Veritabanı: SQLite ve
@@ -171,7 +173,8 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
 - [x] Eylem kartı V2: adım nedenleri, yeniden değerlendirme süresi, yükselme ve
   kapanma koşulları, olası açıklamalar, kaynaklar. Kural durumunda canlı
   `situation` bölümü. Adım işaretleme `POST /v1/alerts/{id}/steps`
-  (`{crew_member_id, step_key}`), değişmez `action_step_logs` tablosu
+  (`{step_key, crew_member_id?}`; `crew_member_id` yalnız token yokken zorunlu,
+  geçerli token varsa yok sayılır), değişmez `action_step_logs` tablosu
   (migration 0009). `AlertRead.completed_step_keys`.
 
 - [x] Kapsam genişletmesi: kabin atmosferi, radyasyon, uyku, hareket hastalığı,
@@ -336,8 +339,8 @@ sentetik görev için `ISS` konumlu bir ortam kaydı oluşturur.
 
 `services/baseline.py` içindeki servis, bir mürettebat üyesinin veya habitat
 hedefinin kendi önceki, kararlı verisinden "kişisel normal" hesaplar. Politika
-DEMO'dur (`docs/biyo.md` bölüm 5, karar 5.1-C); kanıt sınıfı F kuralların
-yerine geçmez.
+DEMO'dur (`docs/biyo.md` bölüm 5, Kritik karar 5.1, seçenek C). Kişisel normal,
+kaynaklı mutlak eşiklerin yerine geçmez; ek bağlamdır.
 
 ```python
 get_personal_baseline(
@@ -393,9 +396,10 @@ etkinlikteki ölçümler kullanılır.
   sıkıntısından biri `≥ 2/4` olan öznel kaydın ardından 12 saat. (İsteğe bağlı
   `vision_change`, `back_pain`, `congestion` alanları bu dışlamada kullanılmaz.)
 
-Ay ve Mars için nüfus "normal aralık" tablosu yoktur; `LUNAR_HABITAT` veya
-`MARS_HABITAT` ortamında `limitation_note` bunu açıkça yazar ve yalnız kişinin
-kendi verisi kullanılır.
+Ay ve Mars için nüfus "normal aralık" tablosu yoktur; yalnız kişinin kendi verisi
+kullanılır. Otomatik hesapta `LUNAR_HABITAT` / `MARS_HABITAT` ortamında
+`limitation_note` bunu açıkça yazar; sabitlenmiş profil kullanılıyorsa not yalnız
+profil sürümünü belirtir.
 
 Kişisel normal kullanan kurallar ve çağrı biçimi:
 
@@ -422,7 +426,9 @@ benzersizdir.
   isteğe bağlı `activity_state` ve `before`, `created_by`, `reason` (3–500
   karakter). O anki veriden taze hesap yapar (etkin anlık görüntüyü değil),
   sürümü `en büyük + 1` olarak kaydeder ve hemen etkinleştirir (`201`).
-- `GET /v1/baseline-profiles?mission_id=&target_id=&metric=` — sürümler, sırayla.
+- `GET /v1/baseline-profiles?mission_id=&target_id=&metric=` — görev/hedef/metrik
+  için bütün profil anahtarlarının (etkinlik, ortam) sürümleri, sürüm numarasına
+  göre sıralı; farklı anahtarlarda aynı sürüm numarası olabilir.
 - `POST /v1/baseline-profiles/{id}/activate` — gövde: `activated_by`, `reason`.
   Önceki bir sürümü yeniden yürürlüğe koyar. Geri alma budur: hiçbir şey
   silinmez, yeni bir etkinleştirme satırı eklenir. `404`: profil yok.
@@ -435,7 +441,8 @@ gövdeden alınır; token kullanıcısından türetilmez.
 ### Kural kaydında kişisel normal
 
 `rule_evaluations` tablosuna boş bırakılabilir dört alan eklendi
-(migration 0013): `baseline_value` (kullanılan profilin medyanı),
+(migration 0013): `baseline_value` (hesaplanan veya sabitlenmiş profilin medyanı;
+sınıflandırma `ESTIMATED_RESEARCH` ise kural bu değeri kullanmamıştır),
 `baseline_classification`, `baseline_sample_count`, `baseline_profile_version`
 (`0` = otomatik hesap). Kişisel normal kullanmayan kurallarda ve eski kayıtlarda
 bu alanlar boştur. Kural durumu (`rules[]`, `evaluations[]`) bu durumda
@@ -540,8 +547,10 @@ Adaptör şu an kütüphane arayüzüdür; CSV yükleyen bir HTTP ucu yoktur. Ç
 ### Gözlemlenebilirlik
 
 - `X-Request-ID`: istekte gelen değer `^[A-Za-z0-9._-]{1,100}$` kalıbına
-  uyuyorsa korunur, değilse yeni bir UUID (hex) üretilir. Her cevapta başlık
-  olarak döner; CORS bu başlığı kabul eder ve tarayıcıya açar.
+  uyuyorsa korunur, değilse yeni bir UUID (hex) üretilir. Uygulamaya ulaşan her
+  cevapta başlık olarak döner (CORS ön kontrol / `OPTIONS` cevapları hariç:
+  bunları en dıştaki CORS ara katmanı kendisi cevaplar); CORS bu başlığı kabul
+  eder ve tarayıcıya açar.
 - JSON loglar: `spaceapp_logar` log kaydedicisi satır başına bir JSON nesnesi
   yazar. Alanlar `ts`, `level`, `logger`, `message`, varsa `request_id`,
   `method`, `path`, `status`, `duration_ms` ve hata durumunda `exc_type`. Yalnız
@@ -551,14 +560,19 @@ Adaptör şu an kütüphane arayüzüdür; CSV yükleyen bir HTTP ucu yoktur. Ç
 
 ```json
 {
-  "detail": "<FastAPI'nin önceki detail değeri; mevcut istemciler için korunur>",
+  "detail": "<HTTP hatasında FastAPI'nin detail değeri>",
   "error": {"code": "NOT_FOUND", "message": "Alert not found", "request_id": "..."}
 }
 ```
 
-`error.code` HTTP durum adıdır (`NOT_FOUND`, `CONFLICT`, `UNAUTHORIZED` gibi);
-doğrulama hatalarında `VALIDATION_ERROR`, beklenmeyen hatalarda
-`INTERNAL_ERROR`. `detail` bir metin değilse `error.message` durum adı olur.
+`detail`, HTTP hatalarında FastAPI'nin detail değeridir (mevcut istemciler için
+korunur); istek şeması doğrulama hatalarında hata listesidir; `500`'de
+"Beklenmeyen bir sunucu hatası oluştu." metnidir. `error.code` HTTP durum adıdır
+(`NOT_FOUND`, `CONFLICT`, `UNAUTHORIZED` gibi). İstek şeması doğrulama hataları
+`VALIDATION_ERROR` ("İstek doğrulanamadı.") kodunu, beklenmeyen hatalar
+`INTERNAL_ERROR` kodunu taşır; kodda üretilen `422`'ler (ör. token yokken eksik
+`crew_member_id`, kartta olmayan `step_key`) `UNPROCESSABLE_ENTITY` kodunu
+taşır. `detail` bir metin değilse `error.message` durum adı olur.
 Toplu ölçümün `all_or_nothing` `422` cevabı bu zarfı kullanmaz (yukarıda).
 
 ### Kimlik doğrulama ve roller (isteğe bağlı)
@@ -596,8 +610,10 @@ Roller: `ASTRONAUT`, `CREW_MEDICAL_OFFICER`, `GROUND`.
   Anonim demo erişiminde (bayrak kapalı) rol denetlenmez.
 
 Sınırlamalar: çevrimdışı panel `Authorization` başlığı göndermez ve giriş akışı
-yoktur; bayrak açılırsa panel çalışmaz. Kırmızı bayrak, ortam ve profil uçları
-kişi bilgisini gövdeden alır.
+yoktur; bayrak açılırsa panel çalışmaz. Token kullanıcısı yalnız `acknowledge`,
+`steps` ve `resolve` uçlarında aktör olarak kullanılır; diğer bütün uçlar (öznel
+kontrol, gözlem/ölçüm, laboratuvar, kırmızı bayrak, ortam, profil) kişi bilgisini
+gövdeden alır.
 
 ### Migration listesi
 
