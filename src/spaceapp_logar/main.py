@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -18,15 +18,23 @@ from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.red_flags import router as red_flags_router
 from spaceapp_logar.api.status import router as status_router
 
+from spaceapp_logar.db.session import engine
+from spaceapp_logar.observability import REQUEST_ID_HEADER, install
+from spaceapp_logar.services.schema_check import SchemaMonitor
+
 WEB_DIR = Path(__file__).parent / "web"
 
 
 class ServiceHealth(BaseModel):
-    """Operational status of the backend service."""
+    """Operational status of the backend service and its database schema."""
 
-    status: Literal["ok"] = "ok"
+    status: Literal["ok", "degraded"] = "ok"
     service: str = "spaceapp-logar-api"
     api_version: str = "0.2.0"
+    database: str = "ok"
+    schema_state: str = "current"
+    schema_revision: str | None = None
+    expected_revision: str | None = None
 
 
 app = FastAPI(
@@ -50,9 +58,13 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", REQUEST_ID_HEADER],
+    expose_headers=[REQUEST_ID_HEADER],
     allow_credentials=False,
 )
+
+# Request ids, structured logs, error bodies and the schema guard.
+install(app, SchemaMonitor(engine))
 
 app.include_router(alerts_router)
 app.include_router(check_ins_router)
@@ -66,10 +78,21 @@ app.include_router(status_router)
 
 
 @app.get("/health", response_model=ServiceHealth, tags=["operations"])
-def get_service_health() -> ServiceHealth:
-    """Confirm that the API process is ready to receive requests."""
+def get_service_health(request: Request) -> ServiceHealth:
+    """Process liveness plus database reachability and schema revision.
 
-    return ServiceHealth()
+    Always 200 so a platform health check does not kill the process; a
+    `degraded` status explains what to fix (e.g. run migrations).
+    """
+
+    state = request.app.state.schema_monitor.state(force=True)
+    return ServiceHealth(
+        status="ok" if state.usable else "degraded",
+        database=state.database,
+        schema_state=state.schema,
+        schema_revision=state.current_revision,
+        expected_revision=state.expected_revision,
+    )
 
 
 @app.get("/", include_in_schema=False)
