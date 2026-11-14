@@ -36,6 +36,8 @@ uv run pytest
 - [Araştırma ve geliştirme planı](docs/RESEARCH_PLAN.md)
 - [Challenge ve açık veri ön incelemesi](docs/DATA_AUDIT.md)
 - [Birlikte çalışma biçimi ve onay noktaları](docs/COLLABORATION.md)
+- [Git ile ortak çalışma düzeni](docs/GIT_WORKFLOW.md)
+- [Ortak iş panosu](docs/WORK_BOARD.md)
 - [MVP gösterge kısa listesi](docs/MVP_INDICATORS.md)
 - [Backend teknoloji yığını seçenekleri](docs/BACKEND_STACK_OPTIONS.md)
 - [Açıklanabilir alarm kuralları](docs/ALARM_RULES.md)

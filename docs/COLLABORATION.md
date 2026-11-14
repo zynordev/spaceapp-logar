@@ -19,6 +19,17 @@ Her adımda şu sıra izlenir:
 7. Sonuç, değişen dosyalar ve açık kalan sorular bildirilir.
 8. Mantıksal olarak tamamlanan parçalar ayrı commit'lerde tutulur.
 
+## Git ve eşzamanlı çalışma
+
+Ekip kararıyla Halil, piebio ve Codex aynı `main` dalında çalışır. Çakışmayı
+önlemek için aynı anda yalnızca bir kişi repoya yazar ve push eder. Yazma sırası
+`MAIN BENDE` mesajıyla alınır, güncel `main` yalnız fast-forward ile çekilir ve
+push tamamlanınca commit/test bilgisiyle `MAIN SERBEST` mesajı verilir. Aktif
+işlerin sahibi ve dosya sınırı ortak panoda tutulur.
+
+- [Git ile ortak çalışma düzeni](GIT_WORKFLOW.md)
+- [Ortak iş panosu](WORK_BOARD.md)
+
 ## Roller
 
 ### Codex'in sorumlulukları
@@ -76,6 +87,7 @@ Bu varsayım proje sahibinin geri bildirimiyle değiştirilebilir.
 - Hibrit ve açıklanabilir alarm yaklaşımı onaylandı (Onay Kapısı C tamamlandı).
 - Hibrit API ve veri modeli onaylandı (Onay Kapısı D tamamlandı).
 - Sıradaki ortak karar: uçtan uca demo hikâyesi (Onay Kapısı E).
+- Ortak `main` için sıralı yazma ve fast-forward düzeni tanımlandı.
 
 ## Hızlandırılmış backend yetkisi
 
