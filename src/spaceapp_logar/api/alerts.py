@@ -19,7 +19,8 @@ def _to_read(
     explanations: dict[UUID, str],
 ) -> AlertRead:
     read = AlertRead.model_validate(alert)
-    read.explanation = explanations.get(alert.opened_evaluation_id)
+    # The latest evaluation explains the alert's current level.
+    read.explanation = explanations.get(alert.last_evaluation_id)
     if alert.action_card_id is not None and alert.action_card_version is not None:
         card = get_action_card(alert.action_card_id, alert.action_card_version)
         if card is not None:
@@ -28,7 +29,7 @@ def _to_read(
 
 
 def _explanations(session: Session, alerts: list[AlertEvent]) -> dict[UUID, str]:
-    evaluation_ids = {alert.opened_evaluation_id for alert in alerts}
+    evaluation_ids = {alert.last_evaluation_id for alert in alerts}
     if not evaluation_ids:
         return {}
     rows = session.execute(

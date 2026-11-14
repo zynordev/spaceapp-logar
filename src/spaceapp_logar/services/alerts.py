@@ -5,18 +5,23 @@ from spaceapp_logar.db.models import AlertEvent, RuleEvaluationRecord
 from spaceapp_logar.rules import AlertStatus, HealthAttention
 
 ACTIVE_STATUSES = (AlertStatus.OPEN.value, AlertStatus.ACKNOWLEDGED.value)
+ALERTING_LEVELS = (
+    HealthAttention.WATCH.value,
+    HealthAttention.ALERT.value,
+    HealthAttention.CRITICAL.value,
+)
 
 
 def update_alert_lifecycle(
     session: Session,
     record: RuleEvaluationRecord,
 ) -> AlertEvent | None:
-    """Open, refresh or resolve the alert for one persisted rule evaluation.
+    """Open, refresh, escalate or resolve the alert for one rule evaluation.
 
-    - A WATCH evaluation that showed an approved card opens an alert, or
-      refreshes the active one for the same mission, target and rule.
-    - A NORMAL evaluation (a full valid window within the limit) resolves the
-      active alert.
+    - A WATCH/ALERT/CRITICAL evaluation that showed a pre-written card opens an
+      alert, or refreshes the active one for the same mission, target and rule
+      (also updating its level and card, e.g. WATCH -> ALERT).
+    - A NORMAL evaluation resolves the active alert.
     - UNKNOWN evaluations never resolve an alert: missing or bad data is not
       evidence that the situation ended.
     - An evaluation older than the alert's latest evaluation is ignored so
@@ -38,13 +43,21 @@ def update_alert_lifecycle(
 
     active = latest if latest is not None and latest.status in ACTIVE_STATUSES else None
 
-    if (
-        record.health_attention == HealthAttention.WATCH.value
-        and record.action_card_id is not None
-    ):
+    if record.health_attention in ALERTING_LEVELS and record.action_card_id is not None:
         if active is not None:
+            escalated = ALERTING_LEVELS.index(record.health_attention) > (
+                ALERTING_LEVELS.index(active.health_attention)
+            )
+            if escalated and active.status == AlertStatus.ACKNOWLEDGED.value:
+                # A higher level must be seen again by the crew.
+                active.status = AlertStatus.OPEN.value
+                active.acknowledged_at = None
+                active.acknowledged_by = None
             active.last_evaluation_id = record.id
             active.last_evaluated_at = record.evaluated_at
+            active.health_attention = record.health_attention
+            active.action_card_id = record.action_card_id
+            active.action_card_version = record.action_card_version
             return active
         alert = AlertEvent(
             mission_id=record.mission_id,

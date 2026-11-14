@@ -13,6 +13,6 @@ def test_health_endpoint_reports_service_is_ready() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "spaceapp-logar-api",
-        "api_version": "0.1.0",
+        "api_version": "0.2.0",
     }
 

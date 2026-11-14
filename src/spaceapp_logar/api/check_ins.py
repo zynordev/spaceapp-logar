@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from spaceapp_logar.db.models import SubjectiveCheckIn
 from spaceapp_logar.db.session import get_session
 from spaceapp_logar.schemas import SubjectiveCheckInCreate, SubjectiveCheckInRead
+from spaceapp_logar.services.rule_engine import evaluate_check_in
 
 router = APIRouter(prefix="/v1/check-ins", tags=["check-ins"])
 
@@ -35,6 +36,10 @@ def create_check_in(
         scenario_id=payload.scenario_id,
     )
     session.add(check_in)
+    session.flush()
+    # Rules that read subjective context (e.g. MULTI_CARDIO_RESP_V1) are
+    # re-evaluated; the check-in alone never raises an alert.
+    evaluate_check_in(session, check_in)
     session.commit()
     return SubjectiveCheckInRead.model_validate(check_in)
 
