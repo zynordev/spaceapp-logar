@@ -153,6 +153,28 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
 - [x] `alert_event` yaşam döngüsü, `GET /v1/alerts` ve `POST /v1/alerts/{id}/acknowledge`
 - [x] `POST /v1/lab-results` ve `GET /v1/crew/{id}/lab-results` periyodik laboratuvar kartı
 
+- [x] Genel ölçüm ucu `POST /v1/measurements` (11 metrik, birim ve hedef türü
+  doğrulaması, isteğe bağlı `activity_state`); zaman serisi, metrik kataloğu ve
+  görev listesi uçları
+- [x] DEMO vital kuralları, kural başına son durum ve genel dikkat seviyesi
+  (`docs/DEMO_RULES.md`)
+- [x] Sentetik demo senaryoları ve gerçek OSDR laboratuvar içe aktarımı
+
+### Genel ölçüm sözleşmesi
+
+`POST /v1/measurements` aynı ortak zarfı kullanır. Her metrik tek bir birim ve
+hedef türüyle doğrulanır (örneğin `HEART_RATE` yalnız `bpm` ve `CREW_MEMBER`).
+`activity_state` (`REST`, `LIGHT`, `EXERCISE`, `SLEEP`) yalnız mürettebat
+ölçümlerinde kullanılabilir ve kuralların bağlamıdır: dinlenme kuralları egzersiz
+verisini kullanmaz. Metrik kataloğundaki fiziksel olarak mümkün aralık dışındaki
+değerler saklanır ama kurallarda kullanılmaz. Cevap, tetiklenen her kuralın
+sonucunu (`evaluations`) döndürür.
+
+`GET /v1/crew/{id}/status` cevabına `rules` (her kuralın son sonucu; başlık,
+metrik, pencere, eşik, kanıt sınıfı, doğrulama durumu, eylem kartı) ve
+`overall_attention` eklendi. Eski `co2` alanı geriye uyumluluk için korunur.
+`environment_target_id` isteğe bağlıdır; verilmezse çevre kuralları raporlanmaz.
+
 ### Alarm olayı yaşam döngüsü
 
 `OPEN → ACKNOWLEDGED → RESOLVED`. Her `POST /v1/observations` değerlendirmesinden
