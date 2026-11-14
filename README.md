@@ -12,6 +12,8 @@ tedavi üretmez.
 
 - [Araştırma ve geliştirme planı](docs/RESEARCH_PLAN.md)
 - [Challenge ve açık veri ön incelemesi](docs/DATA_AUDIT.md)
+- [Birlikte çalışma biçimi ve onay noktaları](docs/COLLABORATION.md)
+- [MVP gösterge kısa listesi](docs/MVP_INDICATORS.md)
 
 ## Temel kaynaklar
 
