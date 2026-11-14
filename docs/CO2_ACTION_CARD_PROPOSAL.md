@@ -2,7 +2,7 @@
 
 Son güncelleme: 14 Kasım 2026
 
-Durum: **Kullanıcı onayı bekliyor**
+Durum: **Onaylandı ve backend'e eklendi (14 Kasım 2026)**
 
 Bu kart yalnızca bir saatlik ortalama kabin `ppCO2` değeri NASA'nın nominal
 `3 mmHg` sınırını aştığında gösterilecek `WATCH` kartıdır. Göreve özel `ALERT` veya
@@ -63,10 +63,25 @@ teşhis/onarım veya ek giderim ekipmanı etkinleştirme gibi düzeltici işleml
 yönettiğini belirtir. Bir saatlik nominal sınır aşıldığında prototipin astronota
 doğrudan cihaz komutu vermesi bu yetki ayrımını ihlal eder.
 
-## Onay bekleyen karar
+## Onay kaydı
 
-Bu üç adımlı `WATCH` kartı aynı metin ve sınırlarla backend'e sürümlü eylem kartı
-olarak eklensin mi?
+14 Kasım 2026 tarihinde proje sahibi, bu üç adımlı `WATCH` kartının aynı metin ve
+sınırlarla backend'e sürümlü eylem kartı olarak eklenmesini onayladı.
+
+## Uygulama
+
+- Kart sabit ve sürümlü olarak `src/spaceapp_logar/rules/action_cards.py` içinde
+  durur; metinler bu belgedeki onaylı metinle aynıdır.
+- Kart yalnızca `ENV_CO2_NOMINAL_V1` kuralı `WATCH` ürettiğinde **ve** veri
+  kalitesi `VALID` olduğunda seçilir. Yetersiz, şüpheli veya hatalı veride kart
+  gösterilmez.
+- Gösterilen kartın kimliği ve sürümü, kural değerlendirmesiyle birlikte
+  `rule_evaluations.action_card_id` ve `action_card_version` alanlarında saklanır
+  (migration `20261114_0004`).
+- `POST /v1/observations` cevabında `action_card`, `GET /v1/crew/{id}/status`
+  cevabında `co2.action_card` alanı döner; kart yoksa `null`.
+- Yalnızca Türkçe metin eklendi (`*_tr` alanları). İngilizce metin ayrıca
+  onaylanıp eklenecek.
 
 ## Resmî kaynaklar
 
