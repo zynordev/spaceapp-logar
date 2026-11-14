@@ -37,6 +37,7 @@ uv run pytest
 - [Birlikte çalışma biçimi ve onay noktaları](docs/COLLABORATION.md)
 - [MVP gösterge kısa listesi](docs/MVP_INDICATORS.md)
 - [Backend teknoloji yığını seçenekleri](docs/BACKEND_STACK_OPTIONS.md)
+- [Açıklanabilir alarm kuralları taslağı](docs/ALARM_RULES_DRAFT.md)
 
 ## Temel kaynaklar
 
