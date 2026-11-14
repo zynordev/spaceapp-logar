@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from spaceapp_logar.rules import DataQuality, HealthAttention
+from spaceapp_logar.schemas.action_cards import ActionCardRead
 from spaceapp_logar.schemas.observations import CO2ObservationRead
 
 
@@ -40,4 +41,5 @@ class CO2ObservationAccepted(BaseModel):
     observation: CO2ObservationRead
     window: CO2WindowRead
     evaluation: RuleEvaluationRead
+    action_card: ActionCardRead | None = None
 
