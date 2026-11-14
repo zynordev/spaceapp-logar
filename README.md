@@ -14,6 +14,7 @@ tedavi üretmez.
 - [Challenge ve açık veri ön incelemesi](docs/DATA_AUDIT.md)
 - [Birlikte çalışma biçimi ve onay noktaları](docs/COLLABORATION.md)
 - [MVP gösterge kısa listesi](docs/MVP_INDICATORS.md)
+- [Backend teknoloji yığını seçenekleri](docs/BACKEND_STACK_OPTIONS.md)
 
 ## Temel kaynaklar
 
