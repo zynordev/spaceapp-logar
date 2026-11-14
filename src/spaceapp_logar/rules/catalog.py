@@ -3,6 +3,13 @@
 from dataclasses import dataclass
 
 from spaceapp_logar.rules.co2 import RULE_ID as CO2_RULE_ID
+from spaceapp_logar.rules.expanded import (
+    ATMOSPHERE_RULE_ID,
+    MOTION_RULE_ID,
+    RADIATION_RULE_ID,
+    SLEEP_RULE_ID,
+    VISION_RULE_ID,
+)
 from spaceapp_logar.rules.red_flags import RED_FLAG_RULE_ID
 from spaceapp_logar.rules.vitals import (
     CARDIO_RESP_RULE_ID,
@@ -36,6 +43,56 @@ RULES: dict[str, RuleInfo] = {
             time_scale="acute",
             evidence_level="E",
             validation_status="APPROVED",
+        ),
+        RuleInfo(
+            rule_id=ATMOSPHERE_RULE_ID,
+            title="Kabin O₂ kısmi basıncı",
+            metric="CABIN_O2_FRACTION",
+            related_metrics=("CABIN_PRESSURE",),
+            target_type="ENVIRONMENT",
+            time_scale="acute",
+            evidence_level="F",
+            validation_status="DEMO_PENDING_REVIEW",
+        ),
+        RuleInfo(
+            rule_id=RADIATION_RULE_ID,
+            title="Radyasyon doz hızı ve kümülatif doz",
+            metric="RADIATION_DOSE_RATE",
+            related_metrics=(),
+            target_type="ENVIRONMENT",
+            time_scale="acute",
+            evidence_level="F",
+            validation_status="DEMO_PENDING_REVIEW",
+        ),
+        RuleInfo(
+            rule_id=SLEEP_RULE_ID,
+            title="Uyku borcu ve yorgunluk",
+            metric="SLEEP_DURATION",
+            related_metrics=(),
+            target_type="CREW_MEMBER",
+            time_scale="subacute",
+            evidence_level="F",
+            validation_status="DEMO_PENDING_REVIEW",
+        ),
+        RuleInfo(
+            rule_id=MOTION_RULE_ID,
+            title="Hareket hastalığı örüntüsü",
+            metric="SUBJECTIVE",
+            related_metrics=(),
+            target_type="CREW_MEMBER",
+            time_scale="acute",
+            evidence_level="F",
+            validation_status="DEMO_PENDING_REVIEW",
+        ),
+        RuleInfo(
+            rule_id=VISION_RULE_ID,
+            title="Görme değişikliği (SANS izlemi)",
+            metric="SUBJECTIVE",
+            related_metrics=(),
+            target_type="CREW_MEMBER",
+            time_scale="chronic",
+            evidence_level="F",
+            validation_status="DEMO_PENDING_REVIEW",
         ),
         RuleInfo(
             rule_id=SPO2_RULE_ID,

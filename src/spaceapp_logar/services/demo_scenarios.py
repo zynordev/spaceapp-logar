@@ -83,14 +83,28 @@ def _add(
     )
 
 
-def _environment(plan: Plan, start: datetime, minutes: int, rng: Random, co2: Callable[[int], float]) -> None:
+def _environment(
+    plan: Plan,
+    start: datetime,
+    minutes: int,
+    rng: Random,
+    co2: Callable[[int], float],
+    *,
+    o2: Callable[[int], float] = lambda m: 21.0,
+    pressure: Callable[[int], float] = lambda m: 101.3,
+    radiation: Callable[[int], float] = lambda m: 25.0,
+    atmosphere_every: int = 5,
+    radiation_every: int = 5,
+) -> None:
     for m in range(minutes):
         when = start + timedelta(minutes=m)
         _add(plan, when, Metric.CABIN_CO2_PARTIAL_PRESSURE, co2(m) + rng.gauss(0, 0.04))
-        if m % 5 == 0:
-            _add(plan, when, Metric.CABIN_O2_FRACTION, 21.0 + rng.gauss(0, 0.05))
-            _add(plan, when, Metric.CABIN_PRESSURE, 101.3 + rng.gauss(0, 0.1))
-            _add(plan, when, Metric.RADIATION_DOSE_RATE, 25.0 + rng.gauss(0, 1.5))
+        if m % atmosphere_every == 0:
+            _add(plan, when, Metric.CABIN_O2_FRACTION, o2(m) + rng.gauss(0, 0.05))
+            _add(plan, when, Metric.CABIN_PRESSURE, pressure(m) + rng.gauss(0, 0.1))
+        if m % radiation_every == 0:
+            rate = radiation(m)
+            _add(plan, when, Metric.RADIATION_DOSE_RATE, max(0.0, rate + rng.gauss(0, rate * 0.05)))
 
 
 def _vitals(
@@ -105,6 +119,7 @@ def _vitals(
     temp: Callable[[int], float],
     activity: Callable[[int], str] = lambda m: "REST",
     spo2_quality: Callable[[int], str] = lambda m: "VALID",
+    nights_h: tuple[float, ...] = (6.9,),
 ) -> None:
     for m in range(minutes):
         when = start + timedelta(minutes=m)
@@ -123,7 +138,10 @@ def _vitals(
         if m % 30 == 0:
             _add(plan, when, Metric.SYSTOLIC_BP, 118 + rng.gauss(0, 3), activity=state)
             _add(plan, when, Metric.DIASTOLIC_BP, 76 + rng.gauss(0, 2), activity=state)
-    _add(plan, start, Metric.SLEEP_DURATION, 6.9, activity="REST")
+    # One sleep record per night; the last night ends at the scenario start.
+    for index, hours in enumerate(nights_h):
+        night = start - timedelta(days=len(nights_h) - 1 - index)
+        _add(plan, night, Metric.SLEEP_DURATION, hours, activity="REST")
 
 
 def _check_in(plan: Plan, when: datetime, **scores: int) -> None:
@@ -300,6 +318,108 @@ def build_chest_pain(start: datetime, rng: Random) -> Plan:
     return plan
 
 
+def build_cabin_o2_drop(start: datetime, rng: Random) -> Plan:
+    minutes = 90
+    plan = Plan()
+    _environment(
+        plan,
+        start,
+        minutes,
+        rng,
+        co2=lambda m: 2.3,
+        o2=lambda m: _ramp(m, 40, 80, 21.0, 16.0),
+        pressure=lambda m: _ramp(m, 40, 85, 101.3, 96.0),
+        atmosphere_every=1,
+    )
+    _vitals(
+        plan,
+        start,
+        minutes,
+        rng,
+        hr=lambda m: _ramp(m, 50, 85, 70, 82),
+        rr=lambda m: _ramp(m, 50, 85, 14, 18),
+        spo2=lambda m: _ramp(m, 50, 85, 98.0, 93.8),
+        temp=lambda m: 36.7,
+    )
+    _check_in(plan, start + timedelta(minutes=75), fatigue=1, dizziness=2, pain=1)
+    _standard_labs(plan, start + timedelta(minutes=minutes))
+    return plan
+
+
+def build_radiation_spe(start: datetime, rng: Random) -> Plan:
+    minutes = 180
+
+    def rate(m: int) -> float:
+        if m < 100:
+            return 25.0
+        if m < 120:
+            return _ramp(m, 100, 120, 25.0, 90.0)
+        if m < 140:
+            return _ramp(m, 120, 140, 90.0, 400.0)
+        return 400.0
+
+    plan = Plan()
+    _environment(plan, start, minutes, rng, co2=lambda m: 2.2, radiation=rate, radiation_every=1)
+    _vitals(
+        plan,
+        start,
+        minutes,
+        rng,
+        hr=lambda m: 70,
+        rr=lambda m: 14,
+        spo2=lambda m: 98.0,
+        temp=lambda m: 36.7,
+    )
+    _standard_labs(plan, start + timedelta(minutes=minutes))
+    return plan
+
+
+def build_sleep_debt(start: datetime, rng: Random) -> Plan:
+    minutes = 120
+    plan = Plan()
+    _environment(plan, start, minutes, rng, co2=lambda m: 2.3)
+    _vitals(
+        plan,
+        start,
+        minutes,
+        rng,
+        hr=lambda m: 74,
+        rr=lambda m: 15,
+        spo2=lambda m: 98.0,
+        temp=lambda m: 36.7,
+        nights_h=(5.4, 4.6, 4.3),
+    )
+    _check_in(plan, start + timedelta(minutes=60), fatigue=3, mood_distress=3, pain=1)
+    _standard_labs(plan, start + timedelta(minutes=minutes))
+    return plan
+
+
+def build_gravity_adaptation(start: datetime, rng: Random) -> Plan:
+    minutes = 120
+    plan = Plan()
+    _environment(plan, start, minutes, rng, co2=lambda m: 2.4)
+    _vitals(
+        plan,
+        start,
+        minutes,
+        rng,
+        hr=lambda m: 76,
+        rr=lambda m: 15,
+        spo2=lambda m: 98.0,
+        temp=lambda m: 36.7,
+    )
+    _check_in(
+        plan, start + timedelta(minutes=30),
+        nausea=2, dizziness=2, congestion=2, back_pain=2, vision_change=0,
+    )
+    _check_in(
+        plan, start + timedelta(minutes=100),
+        fatigue=2, nausea=3, dizziness=3, congestion=3, back_pain=3, vision_change=2,
+    )
+    _standard_labs(plan, start + timedelta(minutes=minutes))
+    return plan
+
+
 SCENARIOS: dict[str, Scenario] = {
     scenario.scenario_id: scenario
     for scenario in (
@@ -387,6 +507,72 @@ SCENARIOS: dict[str, Scenario] = {
             ),
             duration_minutes=90,
             build=build_chest_pain,
+        ),
+        Scenario(
+            scenario_id="cabin-o2-drop",
+            title="Kabin O₂ ve basınç düşüşü",
+            time_scale="acute",
+            description=(
+                "Kabin O₂ oranı ve toplam basınç yavaşça düşer (olası kaçak). Sistem "
+                "O₂ kısmi basıncını hesaplar; ekibin SpO₂'si de düşmeye başlar, "
+                "astronot baş dönmesi bildirir."
+            ),
+            expected=(
+                "Kabin O₂ kısmi basıncı önce İzle, sonra Uyarı (DEMO eşik)",
+                "SpO₂ kuralı İzle; iki kural aynı nedeni farklı açılardan gösterir",
+                "Kart ekibi uyarmayı ve atmosfer prosedürünü öne alır",
+            ),
+            duration_minutes=90,
+            build=build_cabin_o2_drop,
+        ),
+        Scenario(
+            scenario_id="radiation-spe",
+            title="Güneş parçacık olayı: doz hızında ani artış",
+            time_scale="acute",
+            description=(
+                "Modülün doz hızı önce birkaç kat, sonra onlarca kat artar. Sistem "
+                "modülün kendi başlangıcına göre değerlendirir ve görev boyunca "
+                "kümülatif dozu hesaplar."
+            ),
+            expected=(
+                "Radyasyon kuralı önce İzle, sonra Uyarı (DEMO eşik)",
+                "Kart korunaklı bölüme geçiş prosedürünü ve EVA'nın durdurulmasını öne alır",
+                "Açıklamada kümülatif doz ve 600 mSv kariyer sınırı bağlamı",
+            ),
+            duration_minutes=180,
+            build=build_radiation_spe,
+        ),
+        Scenario(
+            scenario_id="sleep-debt",
+            title="Birikmiş uyku borcu ve yorgunluk",
+            time_scale="subacute",
+            description=(
+                "Son üç gece kısa uyunmuştur. Astronot yüksek yorgunluk ve ruh hali "
+                "sıkıntısı bildirince seviye yükselir."
+            ),
+            expected=(
+                "Uyku kuralı önce İzle, öznel kayıttan sonra Uyarı (DEMO eşik)",
+                "Kart kritik görevlerin ekip sağlık sorumlusuyla değerlendirilmesini önerir",
+            ),
+            duration_minutes=120,
+            build=build_sleep_debt,
+        ),
+        Scenario(
+            scenario_id="gravity-adaptation",
+            title="Yerçekimi geçişi sonrası uyum: bulantı, baş dönmesi, görme",
+            time_scale="acute",
+            description=(
+                "Yeni bir yerçekimi ortamına geçişten sonra astronot bulantı, baş "
+                "dönmesi, burun tıkanıklığı ve sırt ağrısı bildirir; ikinci kayıtta "
+                "görme değişikliği de ekler."
+            ),
+            expected=(
+                "Hareket hastalığı örüntüsü İzle (DEMO)",
+                "Görme değişikliği İzle: SANS izlemi kartı (DEMO)",
+                "Sırt ağrısı ve burun tıkanıklığı kayıtlı, kural yok (risk haritasında 'sadece veri')",
+            ),
+            duration_minutes=120,
+            build=build_gravity_adaptation,
         ),
     )
 }

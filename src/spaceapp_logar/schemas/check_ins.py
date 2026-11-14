@@ -25,6 +25,10 @@ class SubjectiveCheckInCreate(BaseModel):
     nausea: SubjectiveScore
     pain: SubjectiveScore
     mood_distress: SubjectiveScore
+    # Optional spaceflight-specific symptoms (0-4); older clients omit them.
+    vision_change: SubjectiveScore | None = None
+    back_pain: SubjectiveScore | None = None
+    congestion: SubjectiveScore | None = None
     observed_at: datetime
     source_type: Literal[SourceType.MANUAL, SourceType.SYNTHETIC]
     source_id: Identifier

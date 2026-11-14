@@ -48,6 +48,10 @@ def test_scenario_catalog_lists_all_scenarios(
         "spo2-drop",
         "sensor-fault",
         "chest-pain-red-flag",
+        "cabin-o2-drop",
+        "radiation-spe",
+        "sleep-debt",
+        "gravity-adaptation",
     }
     assert all(s["expected"] for s in scenarios)
 

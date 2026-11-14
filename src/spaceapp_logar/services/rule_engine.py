@@ -18,6 +18,22 @@ from spaceapp_logar.db.models import (
 )
 from spaceapp_logar.rules import select_action_card
 from spaceapp_logar.rules.models import DataQuality, HealthAttention, RuleEvaluation
+from spaceapp_logar.rules.expanded import (
+    ATMOSPHERE_MIN_SAMPLES,
+    ATMOSPHERE_WINDOW_MINUTES,
+    MOTION_LOOKBACK_HOURS,
+    RADIATION_MIN_SAMPLES,
+    RADIATION_WINDOW_MINUTES,
+    SLEEP_MIN_NIGHTS,
+    SLEEP_NIGHTS,
+    VISION_LOOKBACK_HOURS,
+    SleepSymptoms,
+    evaluate_cabin_atmosphere,
+    evaluate_motion_sickness,
+    evaluate_radiation,
+    evaluate_sleep,
+    evaluate_vision,
+)
 from spaceapp_logar.rules.vitals import (
     CARDIO_RESP_WINDOW_MINUTES,
     HR_JUMP_MAX_SECONDS,
@@ -120,6 +136,7 @@ def personal_baseline(
     metric: Metric,
     before: datetime,
     allowed_activity: frozenset | None = None,
+    min_samples: int = BASELINE_MIN_SAMPLES,
 ) -> float | None:
     """Median of the earliest usable samples of the mission (DEMO policy).
 
@@ -141,7 +158,7 @@ def personal_baseline(
     values = [o.value for o in observations if usable(o, allowed_activity)][
         :BASELINE_SAMPLES
     ]
-    if len(values) < BASELINE_MIN_SAMPLES:
+    if len(values) < min_samples:
         return None
     return float(median(values))
 
@@ -367,13 +384,218 @@ def persist_outcome(
     return record
 
 
-WindowRunner = Callable[[Session, str, str, datetime], RuleOutcome]
+# --- Coverage-expansion rules ------------------------------------------------
+RADIATION_BASELINE_MIN_SAMPLES = 10
+RADIATION_MAX_GAP_MINUTES = 10
+
+
+def _recent_usable(
+    session: Session,
+    *,
+    mission_id: str,
+    target_id: str,
+    metric: Metric,
+    as_of: datetime,
+    minutes: int,
+) -> list[Observation]:
+    rows = session.scalars(
+        select(Observation)
+        .where(
+            Observation.mission_id == mission_id,
+            Observation.target_id == target_id,
+            Observation.metric == metric.value,
+            Observation.observed_at > as_of - timedelta(minutes=minutes),
+            Observation.observed_at <= as_of,
+        )
+        .order_by(Observation.observed_at)
+    ).all()
+    return list(rows)
+
+
+def _sparse_outcome(
+    evaluation: RuleEvaluation,
+    as_of: datetime,
+    minutes: int,
+    usable_count: int,
+    required: int,
+    ignored: int,
+    evidence: list[UUID],
+) -> RuleOutcome:
+    return RuleOutcome(
+        evaluation=evaluation,
+        window_start=as_of - timedelta(minutes=minutes),
+        window_end=as_of,
+        valid_minute_buckets=usable_count,
+        required_minute_buckets=required,
+        longest_missing_run_minutes=0,
+        ignored_observations=ignored,
+        evidence_ids=evidence,
+    )
+
+
+def run_atmosphere(
+    session: Session, mission_id: str, target_id: str, as_of: datetime
+) -> RuleOutcome:
+    o2_rows = _recent_usable(
+        session, mission_id=mission_id, target_id=target_id,
+        metric=Metric.CABIN_O2_FRACTION, as_of=as_of, minutes=ATMOSPHERE_WINDOW_MINUTES,
+    )
+    p_rows = _recent_usable(
+        session, mission_id=mission_id, target_id=target_id,
+        metric=Metric.CABIN_PRESSURE, as_of=as_of, minutes=ATMOSPHERE_WINDOW_MINUTES,
+    )
+    o2 = [row.value for row in o2_rows if usable(row)]
+    pressure = [row.value for row in p_rows if usable(row)]
+    enough = len(o2) >= ATMOSPHERE_MIN_SAMPLES and len(pressure) >= ATMOSPHERE_MIN_SAMPLES
+    evaluation = evaluate_cabin_atmosphere(
+        sum(o2) / len(o2) if enough else None,
+        sum(pressure) / len(pressure) if enough else None,
+        pressure[-1] - pressure[0] if enough else None,
+    )
+    ignored = (len(o2_rows) - len(o2)) + (len(p_rows) - len(pressure))
+    return _sparse_outcome(
+        evaluation, as_of, ATMOSPHERE_WINDOW_MINUTES, min(len(o2), len(pressure)),
+        ATMOSPHERE_MIN_SAMPLES, ignored, [row.id for row in o2_rows + p_rows],
+    )
+
+
+def cumulative_dose_msv(
+    session: Session, mission_id: str, target_id: str, as_of: datetime
+) -> float:
+    """Integrate usable dose-rate samples (uSv/h) over time into mSv."""
+
+    rows = [
+        row
+        for row in session.scalars(
+            select(Observation)
+            .where(
+                Observation.mission_id == mission_id,
+                Observation.target_id == target_id,
+                Observation.metric == Metric.RADIATION_DOSE_RATE.value,
+                Observation.observed_at <= as_of,
+            )
+            .order_by(Observation.observed_at)
+        ).all()
+        if usable(row)
+    ]
+    total_usv = 0.0
+    for current, following in zip(rows, rows[1:]):
+        minutes = min(
+            (following.observed_at - current.observed_at).total_seconds() / 60,
+            RADIATION_MAX_GAP_MINUTES,
+        )
+        total_usv += current.value * minutes / 60
+    return total_usv / 1000
+
+
+def run_radiation(
+    session: Session, mission_id: str, target_id: str, as_of: datetime
+) -> RuleOutcome:
+    rows = _recent_usable(
+        session, mission_id=mission_id, target_id=target_id,
+        metric=Metric.RADIATION_DOSE_RATE, as_of=as_of, minutes=RADIATION_WINDOW_MINUTES,
+    )
+    values = [row.value for row in rows if usable(row)]
+    recent = sum(values) / len(values) if len(values) >= RADIATION_MIN_SAMPLES else None
+    baseline = personal_baseline(
+        session,
+        mission_id=mission_id,
+        target_id=target_id,
+        metric=Metric.RADIATION_DOSE_RATE,
+        before=as_of - timedelta(minutes=RADIATION_WINDOW_MINUTES),
+        min_samples=RADIATION_BASELINE_MIN_SAMPLES,
+    )
+    evaluation = evaluate_radiation(
+        recent, baseline, cumulative_dose_msv(session, mission_id, target_id, as_of)
+    )
+    return _sparse_outcome(
+        evaluation, as_of, RADIATION_WINDOW_MINUTES, len(values),
+        RADIATION_MIN_SAMPLES, len(rows) - len(values), [row.id for row in rows],
+    )
+
+
+def _latest_check_in(
+    session: Session, mission_id: str, crew_member_id: str, as_of: datetime, hours: int
+) -> SubjectiveCheckIn | None:
+    return session.scalar(
+        select(SubjectiveCheckIn)
+        .where(
+            SubjectiveCheckIn.mission_id == mission_id,
+            SubjectiveCheckIn.crew_member_id == crew_member_id,
+            SubjectiveCheckIn.observed_at <= as_of,
+            SubjectiveCheckIn.observed_at >= as_of - timedelta(hours=hours),
+        )
+        .order_by(SubjectiveCheckIn.observed_at.desc())
+        .limit(1)
+    )
+
+
+def run_sleep(
+    session: Session, mission_id: str, target_id: str, as_of: datetime
+) -> RuleOutcome | None:
+    """Sleep debt; skipped (not UNKNOWN) until enough nights are recorded."""
+
+    rows = session.scalars(
+        select(Observation)
+        .where(
+            Observation.mission_id == mission_id,
+            Observation.target_id == target_id,
+            Observation.metric == Metric.SLEEP_DURATION.value,
+            Observation.observed_at <= as_of,
+            Observation.observed_at >= as_of - timedelta(days=SLEEP_NIGHTS + 1),
+        )
+        .order_by(Observation.observed_at.desc())
+        .limit(SLEEP_NIGHTS)
+    ).all()
+    nights = [row for row in rows if usable(row)]
+    if len(nights) < SLEEP_MIN_NIGHTS:
+        return None
+    nights.reverse()
+    check_in = _latest_check_in(session, mission_id, target_id, as_of, 24)
+    evaluation = evaluate_sleep(
+        [row.value for row in nights],
+        SleepSymptoms(
+            fatigue=check_in.fatigue if check_in else None,
+            mood_distress=check_in.mood_distress if check_in else None,
+        ),
+    )
+    return _sparse_outcome(
+        evaluation, as_of, SLEEP_NIGHTS * 24 * 60, len(nights), SLEEP_MIN_NIGHTS,
+        len(rows) - len(nights), [row.id for row in nights],
+    )
+
+
+def run_motion_sickness(session: Session, check_in: SubjectiveCheckIn) -> RuleOutcome:
+    evaluation = evaluate_motion_sickness(
+        check_in.nausea, check_in.dizziness, check_in.observed_at
+    )
+    return _sparse_outcome(
+        evaluation, check_in.observed_at, MOTION_LOOKBACK_HOURS * 60, 1, 1, 0, []
+    )
+
+
+def run_vision(session: Session, check_in: SubjectiveCheckIn) -> RuleOutcome | None:
+    """Only evaluated when the vision question was answered."""
+
+    if check_in.vision_change is None:
+        return None
+    return _sparse_outcome(
+        evaluate_vision(check_in.vision_change),
+        check_in.observed_at, VISION_LOOKBACK_HOURS * 60, 1, 1, 0, [],
+    )
+
+
+WindowRunner = Callable[[Session, str, str, datetime], RuleOutcome | None]
 
 WINDOW_RULES_BY_METRIC: dict[str, tuple[WindowRunner, ...]] = {
     Metric.SPO2.value: (run_spo2,),
     Metric.BODY_TEMPERATURE.value: (run_temperature,),
     Metric.HEART_RATE.value: (run_cardio_resp,),
     Metric.RESPIRATION_RATE.value: (run_cardio_resp,),
+    Metric.CABIN_O2_FRACTION.value: (run_atmosphere,),
+    Metric.CABIN_PRESSURE.value: (run_atmosphere,),
+    Metric.RADIATION_DOSE_RATE.value: (run_radiation,),
+    Metric.SLEEP_DURATION.value: (run_sleep,),
 }
 
 
@@ -405,14 +627,14 @@ def evaluate_observation(
     if observation.metric == Metric.HEART_RATE.value:
         outcomes.append(run_hr_jump(session, observation))
     for runner in WINDOW_RULES_BY_METRIC.get(observation.metric, ()):
-        outcomes.append(
-            runner(
-                session,
-                observation.mission_id,
-                observation.target_id,
-                observation.observed_at,
-            )
+        outcome = runner(
+            session,
+            observation.mission_id,
+            observation.target_id,
+            observation.observed_at,
         )
+        if outcome is not None:
+            outcomes.append(outcome)
     for outcome in outcomes:
         record = persist_outcome(
             session,
@@ -429,7 +651,17 @@ def evaluate_observation(
 def evaluate_check_in(
     session: Session, check_in: SubjectiveCheckIn
 ) -> list[RuleEvaluationRecord]:
-    """Re-run rules that read subjective context when a check-in arrives."""
+    """Run rules that read subjective input when a check-in arrives.
+
+    Symptom-based rules (motion sickness, vision) can raise WATCH on their own.
+    Measurement rules that use symptoms as context (cardio-respiratory, sleep)
+    are re-run only when their measurements exist.
+    """
+
+    outcomes: list[RuleOutcome] = [run_motion_sickness(session, check_in)]
+    vision = run_vision(session, check_in)
+    if vision is not None:
+        outcomes.append(vision)
 
     has_vitals = session.scalar(
         select(Observation.id)
@@ -440,17 +672,27 @@ def evaluate_check_in(
         )
         .limit(1)
     )
-    if has_vitals is None:
-        return []
-    outcome = run_cardio_resp(
+    if has_vitals is not None:
+        outcomes.append(
+            run_cardio_resp(
+                session, check_in.mission_id, check_in.crew_member_id, check_in.observed_at
+            )
+        )
+    sleep = run_sleep(
         session, check_in.mission_id, check_in.crew_member_id, check_in.observed_at
     )
-    record = persist_outcome(
-        session,
-        mission_id=check_in.mission_id,
-        target_id=check_in.crew_member_id,
-        evaluated_at=check_in.observed_at,
-        outcome=outcome,
-    )
-    update_alert_lifecycle(session, record)
-    return [record]
+    if sleep is not None:
+        outcomes.append(sleep)
+
+    records: list[RuleEvaluationRecord] = []
+    for outcome in outcomes:
+        record = persist_outcome(
+            session,
+            mission_id=check_in.mission_id,
+            target_id=check_in.crew_member_id,
+            evaluated_at=check_in.observed_at,
+            outcome=outcome,
+        )
+        update_alert_lifecycle(session, record)
+        records.append(record)
+    return records
