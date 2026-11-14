@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from spaceapp_logar.api.alerts import router as alerts_router
 from spaceapp_logar.api.check_ins import router as check_ins_router
@@ -18,8 +18,16 @@ from spaceapp_logar.api.measurements import router as measurements_router
 from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.red_flags import router as red_flags_router
 from spaceapp_logar.api.status import router as status_router
+from spaceapp_logar.db import session as db_session
 
 WEB_DIR = Path(__file__).parent / "web"
+
+
+class SchemaHealth(BaseModel):
+    state: str
+    database_revision: str | None
+    code_revision: str | None
+    message: str
 
 
 class ServiceHealth(BaseModel):
@@ -28,6 +36,10 @@ class ServiceHealth(BaseModel):
     status: Literal["ok"] = "ok"
     service: str = "spaceapp-logar-api"
     api_version: str = "0.2.0"
+    schema_state: str = Field(alias="schema", serialization_alias="schema")
+    schema_detail: SchemaHealth
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 app = FastAPI(
@@ -71,7 +83,16 @@ app.include_router(status_router)
 def get_service_health() -> ServiceHealth:
     """Confirm that the API process is ready to receive requests."""
 
-    return ServiceHealth()
+    status = db_session.schema_guard.status()
+    return ServiceHealth(
+        schema_state=status.state,
+        schema_detail=SchemaHealth(
+            state=status.state,
+            database_revision=status.database_revision,
+            code_revision=status.code_revision,
+            message=status.message,
+        ),
+    )
 
 
 @app.get("/", include_in_schema=False)

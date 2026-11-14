@@ -1,8 +1,11 @@
 import os
 from collections.abc import Iterator
 
+from fastapi import HTTPException
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
+
+from spaceapp_logar.db.schema_check import OUTDATED, SchemaGuard
 
 DEFAULT_DATABASE_URL = "sqlite:///./spaceapp-logar.db"
 
@@ -32,9 +35,22 @@ engine = create_database_engine(
     os.getenv("SPACEAPP_DATABASE_URL", DEFAULT_DATABASE_URL)
 )
 SessionFactory = sessionmaker(bind=engine, expire_on_commit=False)
+schema_guard = SchemaGuard(engine)
 
 
 def get_session() -> Iterator[Session]:
+    status = schema_guard.status()
+    if status.state == OUTDATED:
+        # Fail fast and clearly instead of crashing with a 500 on a missing column.
+        raise HTTPException(
+            503,
+            {
+                "code": "SCHEMA_OUTDATED",
+                "message": status.message,
+                "database_revision": status.database_revision,
+                "code_revision": status.code_revision,
+            },
+        )
     with SessionFactory() as session:
         yield session
 
