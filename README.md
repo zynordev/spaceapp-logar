@@ -25,6 +25,11 @@ API `http://127.0.0.1:8000` adresinde, etkileşimli dokümantasyon ise
 curl http://127.0.0.1:8000/health
 ```
 
+Ana uçlar: `POST /v1/observations`, `POST /v1/check-ins`, `POST /v1/lab-results`,
+`GET /v1/crew/{id}/status`, `GET /v1/crew/{id}/lab-results`, `GET /v1/alerts`,
+`POST /v1/alerts/{id}/acknowledge`. Ayrıntı için
+[API ve veri modeli](docs/API_DATA_MODEL.md).
+
 Testleri çalıştırmak için:
 
 ```bash

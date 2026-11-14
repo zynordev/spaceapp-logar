@@ -149,6 +149,48 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
 - [x] `POST /v1/observations` ile ham kaydı değiştirmeden saklama
 - [x] Son bir saatlik veri yeterliliği ve dakika-bölmeli ortalama hesaplama
 - [x] CO₂ kuralını çalıştırıp denetlenebilir sonucu döndürme
+- [x] Onaylı CO₂ `WATCH` eylem kartı (`docs/CO2_ACTION_CARD_PROPOSAL.md`)
+- [x] `alert_event` yaşam döngüsü, `GET /v1/alerts` ve `POST /v1/alerts/{id}/acknowledge`
+- [x] `POST /v1/lab-results` ve `GET /v1/crew/{id}/lab-results` periyodik laboratuvar kartı
+
+### Alarm olayı yaşam döngüsü
+
+`OPEN → ACKNOWLEDGED → RESOLVED`. Her `POST /v1/observations` değerlendirmesinden
+sonra aynı transaction içinde güncellenir:
+
+- Eylem kartı gösteren bir `WATCH` değerlendirmesi alarm açar. Aynı görev, hedef ve
+  kural için etkin (`OPEN` veya `ACKNOWLEDGED`) alarm varsa yenisi açılmaz; mevcut
+  alarmın son değerlendirmesi güncellenir (aynı kök neden tek olay altında kalır).
+  Bu kural veritabanında kısmi benzersiz indeksle de korunur.
+- Tam bir geçerli pencerenin `NORMAL` çıkması etkin alarmı `RESOLVED` yapar.
+- `UNKNOWN` (eksik/bozuk veri) alarmı kapatmaz: kötü veri, durumun bittiğinin
+  kanıtı değildir.
+- Etkin alarmın son değerlendirmesinden daha eski bir değerlendirme yok sayılır;
+  geç gelen veri yaşam döngüsünü geri sarmaz.
+- `acknowledge` aynı alarm için tekrarlanırsa ilk onaylayanı korur (idempotent);
+  çözülmüş alarm onaylanamaz (`409`).
+- Çözüldükten sonra CO₂ yeniden yükselirse yeni bir alarm açılır.
+
+`GET /v1/alerts` `mission_id` ister; `status`, `target_id` ve `limit` (1–200)
+isteğe bağlıdır. Her alarm, açan değerlendirmenin açıklamasını ve gösterilen
+eylem kartını taşır.
+
+### Periyodik laboratuvar sonuçları
+
+Çekirdek analitler: glukoz, sodyum, potasyum, kreatinin, WBC, hemoglobin, trombosit,
+ALT, AST. Sonuçlar ham ve değişmezdir; kaynak referans aralığı (`reference_low`,
+`reference_high`) her kayıtla birlikte saklanır, yazılım yeni eşik üretmez.
+
+- Her analit için yalnızca açık birimler kabul edilir. Hemoglobin için yüzde birimi
+  özellikle yoktur: OSD-569 `percent` etiketi özgün dosyayla doğrulanmadan
+  kullanılmaz (`docs/MVP_INDICATORS.md`).
+- `OSDR` kaynağında `source_id` bir dataset kimliği olmalıdır (`OSD-569` gibi);
+  `SYNTHETIC` kayıtta `scenario_id` zorunludur.
+- `GET /v1/crew/{id}/lab-results` her analit için son değeri; kaynak aralığa göre
+  konumu (`BELOW`/`WITHIN`/`ABOVE`); bir önceki değere ve uçuş öncesi (`PRE_FLIGHT`)
+  başlangıç değerine göre değişimi döndürür. Değişim yalnızca aynı birimdeki
+  ölçümler arasında hesaplanır; birim değişirse `null` döner.
+- Laboratuvar sonuçları 7/24 alarm akışına girmez ve alarm üretmez.
 
 CO₂ penceresi 60 adet bir dakikalık bölmeden oluşur. En az 54 geçerli dakika ve
 en fazla beş dakikalık kesintisiz veri boşluğu kabul edilir. Aynı dakika içindeki
