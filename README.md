@@ -1,7 +1,20 @@
-# spaceapp-logar
-  <h1>Nasa Space App Logar Team</h1> 
-     <h2>Create Health Monitoring Software for Astronauts on Space Missions</h2>
-Links:
+# SpaceApp Logar
 
-https://osdr.nasa.gov/bio/repo/search?q=&data_source=cgene,alsda,esa&data_type=study
-https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/?tab=details
+NASA Space Apps Challenge 2026 için geliştirilen açıklanabilir astronot sağlık
+karar-destek aracı.
+
+Projenin amacı astronotun sağlık ve çevre ölçümlerini birlikte izlemek, ölçümün
+kişisel ve görev bağlamına göre dikkat gerektirip gerektirmediğini belirlemek ve
+doğrulanmış eylem kartları sunmaktır. Sistem tıbbi teşhis koymaz ve serbest metin
+tedavi üretmez.
+
+## Araştırma
+
+- [Araştırma ve geliştirme planı](docs/RESEARCH_PLAN.md)
+- [Challenge ve açık veri ön incelemesi](docs/DATA_AUDIT.md)
+
+## Temel kaynaklar
+
+- [NASA Space Apps challenge](https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/?tab=details)
+- [NASA Open Science Data Repository](https://osdr.nasa.gov/bio/repo/search?q=&data_source=cgene,alsda,esa&data_type=study)
+- [NASA Human Research Program](https://www.nasa.gov/hrp/)
