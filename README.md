@@ -113,6 +113,7 @@ sistolik/diyastolik tansiyon, uyku, kabin CO₂/O₂/basınç ve radyasyon doz h
 | `SPACEAPP_AUTH_USERS` | — | Demo kullanıcılar: `id:ROL:parola`, virgülle ayrılmış. |
 | `SPACEAPP_ALEMBIC_INI` | proje kökündeki `alembic.ini` | Şema kontrolünün kodun beklediği revizyonu okuduğu dosya. Bulunamazsa şema durumu `unknown` olur. |
 | `TEST_DATABASE_URL` | — | Yalnız testler: tanımlıysa tüm test seti bu PostgreSQL veritabanında koşar. |
+| `PORT` | `8000` | Yalnız Docker imajı (`Dockerfile` CMD): uvicorn'un dinlediği port. |
 
 İstek kimliği ve JSON loglar için ayrıca bir ortam değişkeni yoktur.
 

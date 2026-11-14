@@ -90,7 +90,10 @@ Kaynak: `git log --oneline -n 60`. Hepsi 14 Kasım 2026.
 - `2e029f7` — 422 hata gövdesi testi yerel veritabanından bağımsız yapıldı; CI
   tekrar yeşil.
 - `8e3e7a3` — isteğe bağlı token auth + roller — alt ajan, cherry-pick.
-  **Henüz push edilmedi.**
+- `aa52bea` — belge commit'i: bu dosya, README, `API_DATA_MODEL.md`,
+  `HANDOFF.md`, `SUBMISSION.md` güncellemesi ve `scripts/test_postgres_local.py`.
+- `9a92a07` — belgeler arası tutarlılık düzeltmeleri (`API_DATA_MODEL.md`).
+- `8e3e7a3`, `aa52bea` ve `9a92a07` `origin/main`'e push edildi.
 
 ## 3. Alınan kararlar ve gerekçeleri
 
@@ -118,22 +121,23 @@ Kaynak: `git log --oneline -n 60`. Hepsi 14 Kasım 2026.
 
 ## 4. Şu anki durum
 
-- Branch: `main`. `HEAD` = `8e3e7a3`; `origin/main` = `2e029f7`.
-  `git rev-list --left-right --count HEAD...origin/main` → `1 0` (bu dosya
-  yazılırken). Push edilmemiş: `8e3e7a3` (auth) + belge commit'i (bu dosya,
-  `scripts/test_postgres_local.py` ve çalışma ağacındaki belge değişiklikleri;
-  aşağıdaki "Çalışma ağacı" maddesine bak); birlikte push edilecek.
+- Branch: `main`. Bu bölüm güncellenirken `HEAD` = `origin/main` = `9a92a07`;
+  `git rev-list --left-right --count HEAD...origin/main` → `0 0`. `8e3e7a3`
+  (auth) ve belge commit'leri (`aa52bea`, `9a92a07`) push edildi. Bu düzeltmeden
+  sonraki belge commit'leri bunun üstüne gelir; push durumunu `git status -sb`
+  ile kontrol et.
 - CI (`.github/workflows/ci.yml`): iki iş — `test` (SQLite) ve `test-postgres`
   (`postgres:16` servisi, `TEST_DATABASE_URL`). `2e029f7` için yeşil; `980c93f`
-  için kırmızıydı. `8e3e7a3` CI'da henüz koşmadı (push edilmedi).
+  için kırmızıydı. `aa52bea` (auth kodunu ve 319 testin tamamını içerir) için
+  iki iş de yeşil (`gh run view 43613836436`). `9a92a07` için de CI yeşil
+  (`gh run list`, koşu `43613887562`).
 - Testler (`8e3e7a3`): 319 test toplanıyor. SQLite: 317 geçti, 2 atlandı
   (`tests/db/test_postgres.py`, yalnız PostgreSQL). Gömülü PostgreSQL 16.2
   (pgserver): 319 geçti.
 - Yerel PostgreSQL doğrulaması: makinede PostgreSQL/Docker yok.
   `uv run --with pgserver python scripts/test_postgres_local.py` gömülü
   PostgreSQL başlatıp `TEST_DATABASE_URL` ile tüm seti koşar.
-  `scripts/test_postgres_local.py` çalışma ağacında hazır (henüz izlenmiyor) ve
-  belge commit'iyle birlikte ekleniyor.
+  `scripts/test_postgres_local.py` `aa52bea` ile repoya eklendi.
 - Yerel sunucu: bir terminal sekmesinde
   `uv run uvicorn spaceapp_logar.main:app --reload` çalışıyor. `/` → `/ui/`
   yönlendirir; API belgeleri `/docs`; sağlık `/health`.
@@ -150,12 +154,9 @@ Kaynak: `git log --oneline -n 60`. Hepsi 14 Kasım 2026.
 - Dağıtım: `Dockerfile` CMD = `alembic upgrade head` → OSDR içe aktarma →
   uvicorn (`$PORT`, varsayılan 8000). `render.yaml`: tek web servisi (docker,
   free, frankfurt), yalnız `SPACEAPP_CORS_ORIGINS="*"`; veritabanı tanımı yok.
-- Çalışma ağacı (bu dosya yazılırken): `.claude/` (alt ajan worktree'leri,
-  commit'lenmez), `scripts/test_postgres_local.py` ve `docs/SESSION_STATUS.md`
-  izlenmiyor. Değiştirilmiş (commit'lenmemiş): `docs/SUBMISSION.md` (319 test,
-  isteğe bağlı auth, ortam bağlamı + kişisel normal, Render'da DB yok),
-  `README.md`, `docs/API_DATA_MODEL.md`, `docs/HANDOFF.md` (belge güncellemesi).
-  `.claude/` dışındakiler belge commit'iyle birlikte commit'lenecek.
+- Çalışma ağacı (`9a92a07` anında): izlenmeyen tek şey `.claude/` (alt ajan
+  worktree'leri, commit'lenmez). Belge güncellemeleri ve
+  `scripts/test_postgres_local.py` `aa52bea` / `9a92a07` ile commit'lendi.
 
 ## 5. Paralel oturumlar / ajanlar ve branch'leri
 
@@ -169,14 +170,17 @@ Kaynak: `git log --oneline -n 60`. Hepsi 14 Kasım 2026.
 
 ## 6. Açık işler ve bekleyen kararlar
 
-- **Push:** `8e3e7a3` + belge commit'i (bölüm 4'teki çalışma ağacı değişiklikleri dahil); `GIT_WORKFLOW.md` sırasına göre (MAIN
-  BENDE / MAIN SERBEST). — piebio
+- **Push:** `8e3e7a3`, `aa52bea`, `9a92a07` push edildi. Sonraki belge
+  commit'leri de `GIT_WORKFLOW.md` sırasına göre (MAIN BENDE / MAIN SERBEST)
+  push edilir. — piebio
 - **PR #1 / `infra/mvp-exit`:** PR kapalı görünüyor; uzak branch ve
   `../spaceapp-logar-infra` worktree'si silinsin mi? — piebio
 - **`docs/WORK_BOARD.md`'ye satır eklemek:** önce piebio'ya sorulacak;
   koordinatör Halil. — piebio / Halil
-- **Render'da veritabanı:** karar yok; `render.yaml`'a DB eklenmedi. Free planda
-  SQLite dosyası kalıcı olmayabilir (Render belgesinden doğrulanmadı). — ekip
+- **Render'da veritabanı:** karar yok; `render.yaml`'a DB eklenmedi. Render
+  belgesine göre (`render.com/docs/free`) ücretsiz web servislerinin dosya
+  sistemi geçicidir ve kalıcı disk eklenemez; yeniden dağıtım, yeniden başlatma
+  veya uyku sonrası SQLite dosyası kaybolur. — ekip
 - **Panelde giriş akışı yok:** auth bayrağı açıkken panel çalışmaz. — backend
 - **Token iptal/yenileme yok;** rol kuralı yalnız kırmızı bayrak elle kapatmada
   (`require_role` tek kullanım: `api/alerts.py`). — backend
@@ -194,7 +198,8 @@ Kaynak: `git log --oneline -n 60`. Hepsi 14 Kasım 2026.
 
 - Herkes aynı `main`'de: push öncesi `git fetch` +
   `git rev-list --left-right --count HEAD...origin/main`; **asla force-push**.
-- `8e3e7a3` CI'da koşmadı; push sonrası iki CI işini (test, test-postgres) kontrol et.
+- Her push sonrası iki CI işini (test, test-postgres) kontrol et (`gh run list`).
+  Auth kodu (`8e3e7a3`) `aa52bea` koşusunda iki işte de yeşil.
 - Auth açılırsa (`SPACEAPP_AUTH_REQUIRED=true`) panel ve frontend 401 alır.
   Demo/teslimde kapalı tut. Gerçek secret/parola repoya yazılmaz.
 - Token'lar demo kimliğidir: iptal yok, yenileme yok, parola özeti yok.

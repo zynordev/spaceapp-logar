@@ -23,9 +23,10 @@ doğrulaması bekler.
 ## Devir anındaki Git durumu
 
 - Herkes aynı `main` dalında çalışır.
-- `origin/main` = `2e029f7` (CI'daki `test` ve `test-postgres` işleri yeşil).
-- Yerelde push edilmemiş: `8e3e7a3` (isteğe bağlı token auth + roller) ve bu
-  belge güncellemesini içeren belge commit'i. İkisi birlikte push edilecek.
+- `8e3e7a3` (isteğe bağlı token auth + roller) ve belge commit'leri (`aa52bea`,
+  `9a92a07`) `origin/main`'e push edildi; bu belge güncellenirken
+  `HEAD` = `origin/main` = `9a92a07`. Sonraki belge commit'leri bunun üstüne gelir.
+- CI: `aa52bea` için `test` ve `test-postgres` yeşil; `9a92a07` için de CI yeşil.
 - Proje klasöründeki `.claude/` dizini alt ajanların worktree'lerini barındırır
   (`worktree-agent-ad4cee321b7ed7d95`: toplu ölçüm/CSV ve log/hata gövdesi;
   `worktree-agent-af568f6b7abd41ec4`: auth). İkisinin işi de `main`'e alındı;
@@ -95,6 +96,7 @@ Ortam değişkenleri (kaynak koddan doğrulandı):
 | `SPACEAPP_AUTH_USERS` | yok | `id:ROL:passcode` girdileri, virgülle ayrılmış; parolalar yalnız ortamda tutulur, repoya yazılmaz |
 | `SPACEAPP_ALEMBIC_INI` | repo kökündeki `alembic.ini` | Şema kontrolünün kod head'ini okuduğu dosya |
 | `TEST_DATABASE_URL` | yok | Testleri PostgreSQL'e karşı koşturur |
+| `PORT` | `8000` | Yalnız Docker imajı: uvicorn portu (`Dockerfile` CMD) |
 
 ## Çalışan backend kapsamı
 
@@ -188,8 +190,8 @@ gerekir.
 
 - SQLite: **317 geçti, 2 atlandı** (atlananlar PostgreSQL'e özgü 2 test).
 - Gömülü PostgreSQL 16.2 (`pgserver`): **319 geçti**.
-- CI'da `origin/main` (`2e029f7`) için `test` ve `test-postgres` yeşil;
-  `8e3e7a3` henüz push edilmediği için CI'da koşmadı.
+- CI'da `aa52bea` (auth kodunu ve 319 testi içerir) için `test` ve
+  `test-postgres` yeşil.
 
 Makinede PostgreSQL veya Docker yoksa tüm test seti gömülü bir PostgreSQL'e
 karşı şöyle koşulur (betik geçici bir veritabanı başlatır, `TEST_DATABASE_URL`
@@ -222,8 +224,8 @@ uv run --with pgserver python scripts/test_postgres_local.py
 
 ## Devralan geliştirici için önerilen sonraki adımlar
 
-1. Bekleyen push: `8e3e7a3` + belge commit'i (sıra alınarak, fetch + ayrışma
-   kontrolüyle).
+1. Push edilmemiş commit kaldıysa push etmek (sıra alınarak, fetch + ayrışma
+   kontrolüyle) ve son commit'te iki CI işinin yeşil olduğunu doğrulamak.
 2. `infra/mvp-exit` uzak dalının ve `spaceapp-logar-infra` worktree'sinin
    temizlenmesi (`piebio` kararı).
 3. [WORK_BOARD.md](WORK_BOARD.md)'ye bugünkü işler için satır eklemek — önce
