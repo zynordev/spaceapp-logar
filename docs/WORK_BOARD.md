@@ -11,8 +11,7 @@ kanalında `MAIN BENDE` diyerek yazma sırasını alır. Ayrıntılı Git kurall
 
 | İş | Sahip | Dosya/sınır | Durum |
 |---|---|---|---|
-| Sentetik CO2 demo çalıştırıcısı | Sonraki geliştirici | Mevcut API ve onaylı CO2 davranışı; yeni eşik yok | Planlandı |
-| Push tabanlı test kontrolü | Sonraki geliştirici | CI yapılandırması; uygulama davranışı değişmez | Sonraki |
+| Modern frontend ve CDSS arayüzü | Halil & Codex | Arayüz yığını ve kullanıcı deneyimi | Devam ediyor |
 
 ## Tamamlanan işler
 
@@ -21,6 +20,9 @@ kanalında `MAIN BENDE` diyerek yazma sırasını alır. Ayrıntılı Git kurall
 | Ortak `main` işbirliği düzeni | Codex | `5d2acf7` | Belge denetimi geçti |
 | CO2 WATCH eylem kartı | piebio | `3ebb073`, `f1fc478` | 72 test geçti |
 | CO2 biyoloji senaryo testleri | piebio | `b704e59` | Tam paket 86 test geçti |
+| Sentetik demo senaryoları ve OSDR lab verisi | piebio | `233abbc`, `c5aa47c` | 177 test geçti |
+| Frontend için CORS desteği (5173 / 3000) | piebio | `871caea` | 180 test geçti |
+| Push tabanlı test kontrolü (GitHub Actions CI) | Antigravity | `.github/workflows/ci.yml` | 180 test geçti |
 
 ## İş devri şablonu
 
