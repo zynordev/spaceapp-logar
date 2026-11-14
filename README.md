@@ -38,6 +38,7 @@ uv run pytest
 - [MVP gösterge kısa listesi](docs/MVP_INDICATORS.md)
 - [Backend teknoloji yığını seçenekleri](docs/BACKEND_STACK_OPTIONS.md)
 - [Açıklanabilir alarm kuralları](docs/ALARM_RULES.md)
+- [API ve veri modeli seçenekleri](docs/API_DATA_MODEL_OPTIONS.md)
 
 ## Temel kaynaklar
 
