@@ -18,6 +18,37 @@ interface DemoRunLite {
   scenario_id: string;
 }
 
+interface MissionLite {
+  mission_id: string;
+  scenario_id: string | null;
+  last_observed_at: string | null;
+  crew_member_ids: string[];
+  environment_target_ids: string[];
+}
+
+/**
+ * Prefer a mission the server already seeded for this scenario (the live demo
+ * seeds them at boot): running a scenario again is slow on small hosts.
+ * Falls back to running the scenario when none exists.
+ */
+async function findSeededMission(scenarioId: string): Promise<DemoRunLite | null> {
+  try {
+    const missions = await api<MissionLite[]>('GET', '/v1/missions');
+    const match = missions
+      .filter((m) => m.scenario_id === scenarioId && m.crew_member_ids.length > 0)
+      .sort((a, b) => (b.last_observed_at ?? '').localeCompare(a.last_observed_at ?? ''))[0];
+    if (!match) return null;
+    return {
+      mission_id: match.mission_id,
+      crew_member_id: match.crew_member_ids.includes('crew-01') ? 'crew-01' : match.crew_member_ids[0],
+      environment_target_id: match.environment_target_ids[0] ?? '',
+      scenario_id: scenarioId,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export interface TourState {
   tour: TourId | null;
   step: number;
@@ -47,12 +78,15 @@ export const useTour = create<TourState>((set, get) => ({
     // The tour begins on the ship screen.
     if (window.location.hash.startsWith('#/yer')) window.location.hash = '#/';
     try {
-      const r = await api<DemoRunLite>(
-        'POST',
-        `/v1/demo/scenarios/${encodeURIComponent(TOUR_SCENARIO[id].scenarioId)}/run`,
-        undefined,
-        120_000,
-      );
+      const scenarioId = TOUR_SCENARIO[id].scenarioId;
+      const r =
+        (await findSeededMission(scenarioId)) ??
+        (await api<DemoRunLite>(
+          'POST',
+          `/v1/demo/scenarios/${encodeURIComponent(scenarioId)}/run`,
+          undefined,
+          120_000,
+        ));
       if (seq !== runSeq || get().tour !== id) return; // stopped or restarted meanwhile
       useApp.getState().setSelection({
         missionId: r.mission_id,
