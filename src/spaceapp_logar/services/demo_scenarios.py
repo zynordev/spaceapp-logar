@@ -138,7 +138,9 @@ def _vitals(
         if m % 30 == 0:
             # Synthetic HRV (data only; no rule reads it); varies with activity.
             hrv = {"EXERCISE": 22.0, "SLEEP": 62.0}.get(state, 45.0)
-            _add(plan, when, Metric.HRV_RMSSD, hrv + rng.gauss(0, 4), activity=state)
+            # Separate deterministic stream so other metrics' noise is unchanged.
+            hrv_noise = Random(f"hrv:{start.isoformat()}:{m}").gauss(0, 4)
+            _add(plan, when, Metric.HRV_RMSSD, hrv + hrv_noise, activity=state)
             _add(plan, when, Metric.SYSTOLIC_BP, 118 + rng.gauss(0, 3), activity=state)
             _add(plan, when, Metric.DIASTOLIC_BP, 76 + rng.gauss(0, 2), activity=state)
     # One sleep record per night; the last night ends at the scenario start.

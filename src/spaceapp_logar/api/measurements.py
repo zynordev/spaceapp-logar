@@ -1,3 +1,4 @@
+from math import isfinite
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any, Literal
 
@@ -22,7 +23,6 @@ from spaceapp_logar.schemas.measurements import (
     MissionRead,
     TrendBucket,
 )
-from spaceapp_logar.services.rule_engine import usable
 from spaceapp_logar.schemas.status import RuleStatusRead
 from spaceapp_logar.services.ingest import store_measurement
 from spaceapp_logar.services.rule_engine import evaluate_observation
@@ -173,7 +173,7 @@ def list_measurements(
 
 
 MAX_TREND_BUCKETS = 1000
-MAX_TREND_ROWS = 200_000
+TREND_FETCH_BATCH = 5000
 _BUCKET_SIZE = {"hour": timedelta(hours=1), "day": timedelta(days=1)}
 _DEFAULT_WINDOW = {"hour": timedelta(days=7), "day": timedelta(days=30)}
 
@@ -234,20 +234,34 @@ def measurement_trend(
             detail=f"En fazla {MAX_TREND_BUCKETS} dilim istenebilir; aralığı daraltın.",
         )
 
-    rows = session.scalars(
-        select(Observation)
+    spec = METRIC_SPECS[metric]
+    stream = session.execute(
+        select(Observation.observed_at, Observation.value)
         .where(
             *base,
             Observation.observed_at >= since_utc,
             Observation.observed_at < until_utc,
+            Observation.reported_quality == "VALID",
+            Observation.value >= spec.plausible_min,
+            Observation.value <= spec.plausible_max,
         )
         .order_by(Observation.observed_at)
-        .limit(MAX_TREND_ROWS)
-    ).all()
+        .execution_options(yield_per=TREND_FETCH_BATCH)
+    )
+    # Running aggregates per bucket: [count, sum, min, max]; no row cap.
     groups: dict[datetime, list[float]] = {}
-    for row in rows:
-        if usable(row):
-            groups.setdefault(floor(_as_utc(row.observed_at)), []).append(row.value)
+    for observed_at, value in stream:
+        if not isfinite(value):
+            continue
+        key = floor(_as_utc(observed_at))
+        agg = groups.get(key)
+        if agg is None:
+            groups[key] = [1, value, value, value]
+        else:
+            agg[0] += 1
+            agg[1] += value
+            agg[2] = min(agg[2], value)
+            agg[3] = max(agg[3], value)
     return MeasurementTrendRead(
         mission_id=mission_id,
         target_id=target_id,
@@ -260,12 +274,12 @@ def measurement_trend(
             TrendBucket(
                 start=start,
                 end=start + size,
-                count=len(values),
-                mean=sum(values) / len(values),
-                min=min(values),
-                max=max(values),
+                count=int(agg[0]),
+                mean=agg[1] / agg[0],
+                min=agg[2],
+                max=agg[3],
             )
-            for start, values in sorted(groups.items())
+            for start, agg in sorted(groups.items())
         ],
     )
 

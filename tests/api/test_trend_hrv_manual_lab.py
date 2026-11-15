@@ -141,3 +141,21 @@ def test_manual_glucose_entry_accepts_both_units(
     assert response.status_code == 201
     body = response.json()
     assert body["unit"] == unit and body["source_type"] == "MANUAL"
+
+
+def test_trend_has_no_silent_row_cap(
+    api_client: tuple[TestClient, Engine], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from spaceapp_logar.api import measurements
+
+    monkeypatch.setattr(measurements, "TREND_FETCH_BATCH", 2)
+    client, _ = api_client
+    for minute in range(10):
+        assert _post(
+            client, observed_at=f"2026-11-14T0{minute // 5 + 8 if minute < 5 else 9}:{(minute % 5) * 10:02d}:00Z"
+        ).status_code == 201
+
+    body = _trend(client, since="2026-11-14T00:00:00Z", until="2026-11-15T00:00:00Z").json()
+
+    assert sum(b["count"] for b in body["buckets"]) == 10
+    assert body["buckets"][-1]["start"] == "2026-11-14T09:00:00Z"
