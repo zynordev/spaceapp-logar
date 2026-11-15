@@ -1,15 +1,15 @@
 import os
-from pathlib import Path
 from typing import Literal
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
+from spaceapp_logar.api.activities import router as activities_router
 from spaceapp_logar.api.alerts import router as alerts_router
 from spaceapp_logar.api.auth import router as auth_router
+from spaceapp_logar.api.body_map import router as body_map_router
 from spaceapp_logar.api.check_ins import router as check_ins_router
 from spaceapp_logar.api.coverage import router as coverage_router
 from spaceapp_logar.api.demo import router as demo_router
@@ -18,12 +18,13 @@ from spaceapp_logar.api.lab_results import router as lab_results_router
 from spaceapp_logar.api.measurements import router as measurements_router
 from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.red_flags import router as red_flags_router
+from spaceapp_logar.api.routines import router as routines_router
 from spaceapp_logar.api.status import router as status_router
+from spaceapp_logar.api.sync import router as sync_router
 from spaceapp_logar.auth import current_user
+from spaceapp_logar.dashboard import UI_DIST, DashboardFiles
 from spaceapp_logar.db import session as db_session
 from spaceapp_logar.observability import REQUEST_ID_HEADER, install_observability
-
-WEB_DIR = Path(__file__).parent / "web"
 
 
 class SchemaHealth(BaseModel):
@@ -85,7 +86,9 @@ app.include_router(auth_router)
 # (default) a request without a token runs as an anonymous demo user, so the
 # offline dashboard and demo scenarios keep working; see spaceapp_logar.auth.
 AUTHENTICATED = [Depends(current_user)]
+app.include_router(activities_router, dependencies=AUTHENTICATED)
 app.include_router(alerts_router, dependencies=AUTHENTICATED)
+app.include_router(body_map_router, dependencies=AUTHENTICATED)
 app.include_router(check_ins_router, dependencies=AUTHENTICATED)
 app.include_router(coverage_router, dependencies=AUTHENTICATED)
 app.include_router(demo_router, dependencies=AUTHENTICATED)
@@ -94,7 +97,9 @@ app.include_router(lab_results_router, dependencies=AUTHENTICATED)
 app.include_router(measurements_router, dependencies=AUTHENTICATED)
 app.include_router(observations_router, dependencies=AUTHENTICATED)
 app.include_router(red_flags_router, dependencies=AUTHENTICATED)
+app.include_router(routines_router, dependencies=AUTHENTICATED)
 app.include_router(status_router, dependencies=AUTHENTICATED)
+app.include_router(sync_router, dependencies=AUTHENTICATED)
 
 
 @app.get("/health", response_model=ServiceHealth, tags=["operations"])
@@ -118,9 +123,6 @@ def open_dashboard() -> RedirectResponse:
     return RedirectResponse(url="/ui/")
 
 
-# Offline dashboard: plain static files, no CDN or build step.
-app.mount(
-    "/ui",
-    StaticFiles(directory=WEB_DIR, html=True, check_dir=False),
-    name="ui",
-)
+# Offline dashboard: the React build in frontend/dist (no CDN). Without a
+# build, /ui/ shows a built-in page explaining `npm ci && npm run build`.
+app.mount("/ui", DashboardFiles(UI_DIST), name="ui")

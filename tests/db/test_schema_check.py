@@ -54,7 +54,8 @@ def test_outdated_schema_returns_clear_503_not_500(
     assert "alembic upgrade head" in data.json()["detail"]["message"]
     assert health.status_code == 200
     assert health.json()["schema"] == "outdated"
-    assert ui.status_code == 200  # the static dashboard still loads
+    assert ui.status_code == 200  # the dashboard (or its build hint page) still loads
+    assert "SpaceApp Logar" in ui.text
 
 
 def test_guard_recovers_after_migration(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

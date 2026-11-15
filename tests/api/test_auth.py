@@ -187,8 +187,11 @@ def test_health_and_dashboard_need_no_token(
     client, _ = api_client
 
     assert client.get("/health").status_code == 200
-    assert client.get("/ui/").status_code == 200
-    root = client.get("/", follow_redirects=False)
+    page = client.get("/ui/")
+    assert page.status_code == 200
+    # Built React app (frontend/dist) or the built-in "npm run build" page.
+    assert 'id="root"' in page.text or "npm run build" in page.text
+    root =client.get("/", follow_redirects=False)
     assert root.status_code in {302, 307}
 
 
@@ -428,3 +431,65 @@ def test_token_role_is_enforced_even_when_flag_is_off(
     )
 
     assert response.status_code == 403
+
+
+def test_config_reports_flag_and_secret(
+    api_client: tuple[TestClient, Engine], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, _ = api_client
+    monkeypatch.delenv("SPACEAPP_AUTH_SECRET", raising=False)
+    monkeypatch.delenv("SPACEAPP_AUTH_REQUIRED", raising=False)
+    assert client.get("/v1/auth/config").json() == {
+        "auth_required": False,
+        "auth_configured": False,
+    }
+
+    monkeypatch.setenv("SPACEAPP_AUTH_SECRET", FAKE_SECRET)
+    monkeypatch.setenv("SPACEAPP_AUTH_REQUIRED", "true")
+    response = client.get("/v1/auth/config")  # needs no token even when required
+    assert response.status_code == 200
+    assert response.json() == {"auth_required": True, "auth_configured": True}
+
+
+def test_me_is_anonymous_when_flag_off(
+    api_client: tuple[TestClient, Engine], auth_env: pytest.MonkeyPatch
+) -> None:
+    client, _ = api_client
+
+    response = client.get("/v1/auth/me")
+
+    assert response.status_code == 200
+    assert response.json() == {"user_id": "demo-anonymous", "role": None, "anonymous": True}
+
+
+def test_me_returns_role_for_valid_token(
+    api_client: tuple[TestClient, Engine], required: pytest.MonkeyPatch
+) -> None:
+    client, _ = api_client
+
+    response = client.get("/v1/auth/me", headers=bearer(client, MEDIC))
+
+    assert response.status_code == 200
+    assert response.json() == {"user_id": MEDIC, "role": "CREW_MEDICAL_OFFICER", "anonymous": False}
+
+
+def test_me_without_token_is_401_when_flag_on(
+    api_client: tuple[TestClient, Engine], required: pytest.MonkeyPatch
+) -> None:
+    client, _ = api_client
+
+    assert client.get("/v1/auth/me").status_code == 401
+
+
+def test_me_invalid_token_401_when_on_anonymous_when_off(
+    api_client: tuple[TestClient, Engine], auth_env: pytest.MonkeyPatch
+) -> None:
+    client, _ = api_client
+    headers = {"Authorization": "Bearer not-a-real-token"}
+
+    anonymous = client.get("/v1/auth/me", headers=headers)
+    assert anonymous.status_code == 200
+    assert anonymous.json()["anonymous"] is True
+
+    auth_env.setenv("SPACEAPP_AUTH_REQUIRED", "true")
+    assert client.get("/v1/auth/me", headers=headers).status_code == 401

@@ -20,6 +20,7 @@ EXPECTED_COLUMNS = {
     "scenario_id",
     "reported_quality",
     "activity_state",
+    "activity_source",
     "ingested_at",
 }
 
@@ -57,7 +58,7 @@ def test_first_migration_upgrades_and_downgrades_cleanly(
     assert {
         constraint["name"]
         for constraint in inspector.get_check_constraints("observations")
-    } == {"ck_observations_synthetic_scenario"}
+    } == {"ck_observations_synthetic_scenario", "ck_observations_activity_source"}
     assert {
         "action_card_id",
         "action_card_version",

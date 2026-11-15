@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from spaceapp_logar.db.models import AlertEvent, RuleEvaluationRecord
 from spaceapp_logar.rules import AlertStatus, HealthAttention
+from spaceapp_logar.services.ground_sync import create_escalation
 
 ACTIVE_STATUSES = (AlertStatus.OPEN.value, AlertStatus.ACKNOWLEDGED.value)
 ALERTING_LEVELS = (
@@ -58,6 +59,7 @@ def update_alert_lifecycle(
             active.health_attention = record.health_attention
             active.action_card_id = record.action_card_id
             active.action_card_version = record.action_card_version
+            create_escalation(session, active, record)  # ALERT/CRITICAL only, once per alert
             return active
         alert = AlertEvent(
             mission_id=record.mission_id,
@@ -74,6 +76,7 @@ def update_alert_lifecycle(
         )
         session.add(alert)
         session.flush()
+        create_escalation(session, alert, record)  # ALERT/CRITICAL only, once per alert
         return alert
 
     if record.health_attention == HealthAttention.NORMAL.value and active is not None:

@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Float,
     ForeignKey,
@@ -42,6 +43,10 @@ class Observation(Base):
             "observed_at",
         ),
         Index("ix_observations_observed_at", "observed_at"),
+        CheckConstraint(
+            "activity_source IS NULL OR activity_source IN ('SENSOR', 'DECLARED')",
+            name="ck_observations_activity_source",
+        ),
     )
     id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
@@ -60,6 +65,8 @@ class Observation(Base):
     scenario_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     reported_quality: Mapped[str] = mapped_column(String(32))
     activity_state: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # SENSOR = sent with the measurement, DECLARED = stamped from a crew declaration.
+    activity_source: Mapped[str | None] = mapped_column(String(16), nullable=True)
     ingested_at: Mapped[datetime] = mapped_column(
         UTCDateTime(),
         default=utc_now,
@@ -501,3 +508,156 @@ class BaselineProfileActivation(Base):
     activated_by: Mapped[str] = mapped_column(String(100))
     reason: Mapped[str] = mapped_column(String(500))
     activated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class ActivityDeclaration(Base):
+    """Crew-declared activity context (e.g. EXERCISE for 45 minutes)."""
+
+    __tablename__ = "activity_declarations"
+    __table_args__ = (
+        CheckConstraint(
+            "activity_state IN ('REST', 'LIGHT', 'EXERCISE', 'SLEEP')",
+            name="ck_activity_declarations_state",
+        ),
+        CheckConstraint(
+            "(source_type = 'SYNTHETIC' AND scenario_id IS NOT NULL) OR "
+            "(source_type <> 'SYNTHETIC' AND scenario_id IS NULL)",
+            name="ck_activity_declarations_synthetic_scenario",
+        ),
+        Index(
+            "ix_activity_declarations_lookup",
+            "mission_id",
+            "crew_member_id",
+            "started_at",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    crew_member_id: Mapped[str] = mapped_column(String(100))
+    activity_state: Mapped[str] = mapped_column(String(32))
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    expected_end_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    ended_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    source_type: Mapped[str] = mapped_column(String(32))
+    source_id: Mapped[str] = mapped_column(String(100))
+    scenario_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+_ROUTINE_KINDS = (
+    "HYDRATION",
+    "EXERCISE",
+    "SLEEP_WINDOW",
+    "CHECK_IN",
+    "BODY_MASS_WEEKLY",
+    "GRIP_STRENGTH_WEEKLY",
+    "MUSCULOSKELETAL_ASSESSMENT_BIWEEKLY",
+)
+
+
+class RoutineSchedule(Base):
+    """A recurring reminder for one crew member (fixed catalogue kinds)."""
+
+    __tablename__ = "routine_schedules"
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN (" + ", ".join(f"'{k}'" for k in _ROUTINE_KINDS) + ")",
+            name="ck_routine_schedules_kind",
+        ),
+        CheckConstraint(
+            "interval_minutes >= 30 AND interval_minutes <= 20160",
+            name="ck_routine_schedules_interval",
+        ),
+        Index("ix_routine_schedules_lookup", "mission_id", "crew_member_id", "kind"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    crew_member_id: Mapped[str] = mapped_column(String(100))
+    kind: Mapped[str] = mapped_column(String(64))
+    interval_minutes: Mapped[int] = mapped_column(Integer)
+    anchor_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class RoutineCompletion(Base):
+    """Append-only record that a routine was done."""
+
+    __tablename__ = "routine_completions"
+    __table_args__ = (
+        CheckConstraint(
+            "source_type IN ('MANUAL')", name="ck_routine_completions_source"
+        ),
+        Index("ix_routine_completions_schedule", "schedule_id", "completed_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    schedule_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("routine_schedules.id", ondelete="RESTRICT"),
+    )
+    crew_member_id: Mapped[str] = mapped_column(String(100))
+    completed_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    source_type: Mapped[str] = mapped_column(String(32), default="MANUAL")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class GroundSyncAck(Base):
+    """Append-only: a ground team confirmed receipt of a sync packet.
+
+    The latest ``until`` per mission and recipient is that team's cursor.
+    """
+
+    __tablename__ = "ground_sync_acks"
+    __table_args__ = (
+        CheckConstraint(
+            "recipient IN ('FLIGHT_SURGEON', 'LIFE_SUPPORT', 'RADIATION', "
+            "'MISSION_CONTROL')",
+            name="ck_ground_sync_acks_recipient",
+        ),
+        Index("ix_ground_sync_acks_lookup", "mission_id", "recipient", "until"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    recipient: Mapped[str] = mapped_column(String(32))
+    packet_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True))
+    sha256: Mapped[str] = mapped_column(String(64))
+    until: Mapped[datetime] = mapped_column(UTCDateTime())
+    acked_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+    acked_by: Mapped[str] = mapped_column(String(100))
+
+
+class GroundEscalation(Base):
+    """Priority packet created once when an ALERT/CRITICAL alert opens."""
+
+    __tablename__ = "ground_escalations"
+    __table_args__ = (
+        CheckConstraint(
+            "priority IN ('ALERT', 'CRITICAL')",
+            name="ck_ground_escalations_priority",
+        ),
+        CheckConstraint(
+            "status IN ('PENDING', 'ACKED')",
+            name="ck_ground_escalations_status",
+        ),
+        Index("uq_ground_escalations_alert", "alert_id", unique=True),
+        Index("ix_ground_escalations_lookup", "mission_id", "status", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    alert_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("alert_events.id", ondelete="RESTRICT"),
+    )
+    crew_member_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    priority: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(16))
+    summary_tr: Mapped[str] = mapped_column(String(500))
+    packet: Mapped[dict] = mapped_column(JSON)
+    packet_sha256: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+    acked_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
