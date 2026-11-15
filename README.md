@@ -111,6 +111,8 @@ Panelin üst şeridinden:
    dosyalarından Inspiration4 mürettebatının gerçek laboratuvar değerlerini yükler
    (252 değer; uçuş öncesi 108, uçuş sonrası 144 — uçuş sırasında örnek yoktur).
    Ayrıntı: [veri notu](data/osdr/README.md).
+   Gerçek NASA DONKI (Mayıs 2024 SEP) olay zamanları radyasyon senaryosunun
+   zamanlamasını belirler; doz değerleri sentetiktir ([veri notu](data/nasa/README.md)).
 3. Öznel durum formunu doldurun, alarmları "Gördüm" ile onaylayın, eylem
    kartındaki adımları "Yaptım" ile kaydedin ve "Neden bu durum?" panelinden her
    kararın kural, pencere, eşik ve kaynağını gösterin. "Risk kapsamı" bölümü
@@ -338,6 +340,7 @@ Tüm uçlar (koddan; ayrıntılı şema `/docs` ve [API ve veri modeli](docs/API
 | `GET /v1/demo/scenarios` | Demo senaryoları |
 | `POST /v1/demo/scenarios/{scenario_id}/run` | Senaryoyu yeni görev olarak üretir |
 | `POST /v1/demo/osdr-labs/import` | Gerçek OSDR lab verisini yükler |
+| `GET /v1/space-weather/events?month=2024-05` | Gerçek NASA DONKI SEP olay zamanları (akı/doz yok) |
 
 Cihaz verisi için `spaceapp_logar.services.adapters` içinde CSV telemetri
 adaptörü (`CsvTelemetryAdapter`, gerekli sütunlar: `timestamp, mission_id,
@@ -385,6 +388,7 @@ varsa 422 ile kendi sonuç gövdesini (`mode`, `accepted`, `rejected`,
 - [Backend teknoloji yığını seçenekleri](docs/BACKEND_STACK_OPTIONS.md)
 - [NASA Space Apps teslim paketi (İngilizce)](docs/SUBMISSION.md)
 - [Gerçek OSDR laboratuvar verisi](data/osdr/README.md)
+- [Gerçek NASA DONKI olay zamanlaması (radyasyon senaryosu)](data/nasa/README.md)
 
 ## Temel kaynaklar
 

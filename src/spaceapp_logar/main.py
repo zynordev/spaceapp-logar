@@ -19,6 +19,7 @@ from spaceapp_logar.api.measurements import router as measurements_router
 from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.red_flags import router as red_flags_router
 from spaceapp_logar.api.routines import router as routines_router
+from spaceapp_logar.api.space_weather import router as space_weather_router
 from spaceapp_logar.api.status import router as status_router
 from spaceapp_logar.api.sync import router as sync_router
 from spaceapp_logar.auth import current_user
@@ -98,6 +99,7 @@ app.include_router(measurements_router, dependencies=AUTHENTICATED)
 app.include_router(observations_router, dependencies=AUTHENTICATED)
 app.include_router(red_flags_router, dependencies=AUTHENTICATED)
 app.include_router(routines_router, dependencies=AUTHENTICATED)
+app.include_router(space_weather_router, dependencies=AUTHENTICATED)
 app.include_router(status_router, dependencies=AUTHENTICATED)
 app.include_router(sync_router, dependencies=AUTHENTICATED)
 
