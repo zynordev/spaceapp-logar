@@ -16,7 +16,7 @@ import type {
 
 export const LAB_LABELS: Record<LabAnalyte, string> = {
   GLUCOSE: 'Glukoz', SODIUM: 'Sodyum', POTASSIUM: 'Potasyum', CREATININE: 'Kreatinin',
-  WBC: 'Beyaz kan hücresi', HEMOGLOBIN: 'Hemoglobin', PLATELETS: 'Trombosit', ALT: 'ALT', AST: 'AST',
+  WBC: 'White blood cells', HEMOGLOBIN: 'Hemoglobin', PLATELETS: 'Platelets', ALT: 'ALT', AST: 'AST',
 };
 const ANALYTES = Object.keys(LAB_LABELS) as LabAnalyte[];
 
@@ -38,12 +38,12 @@ const UNIT_DISPLAY: Record<string, string> = {
 export const unitText = (u: string | null | undefined) => (u ? UNIT_DISPLAY[u] ?? u : '');
 
 const PHASE: Record<SamplePhase, string> = {
-  PRE_FLIGHT: 'Uçuş öncesi', IN_FLIGHT: 'Uçuş sırasında', POST_FLIGHT: 'Uçuş sonrası',
+  PRE_FLIGHT: 'Pre-flight', IN_FLIGHT: 'In flight', POST_FLIGHT: 'Post-flight',
 };
 const POSITION: Record<'BELOW' | 'WITHIN' | 'ABOVE', { label: string; icon: IconName }> = {
-  BELOW: { label: 'Referansın altında', icon: 'arrow-down' },
-  WITHIN: { label: 'Referans aralığında', icon: 'dot' },
-  ABOVE: { label: 'Referansın üstünde', icon: 'arrow-up' },
+  BELOW: { label: 'Below reference', icon: 'arrow-down' },
+  WITHIN: { label: 'Within reference range', icon: 'dot' },
+  ABOVE: { label: 'Above reference', icon: 'arrow-up' },
 };
 
 /** Parse "5,4" or "5.4"; returns null for empty/invalid. */
@@ -87,11 +87,11 @@ export function LabsSection() {
     const hi = parseNum(high);
     const sampled = new Date(sampledAt);
     const errs: string[] = [];
-    if (v === null || v < 0) errs.push('Değer: 0 veya daha büyük bir sayı girin.');
-    if (lo === null || lo < 0) errs.push('Referans alt sınırı: rapordaki değeri girin.');
-    if (hi === null || hi < 0) errs.push('Referans üst sınırı: rapordaki değeri girin.');
-    if (lo !== null && hi !== null && lo > hi) errs.push('Referans alt sınırı üst sınırdan büyük olamaz.');
-    if (!sampledAt || Number.isNaN(sampled.getTime())) errs.push('Örnek zamanı: geçerli bir tarih/saat seçin.');
+    if (v === null || v < 0) errs.push('Value: enter a number of 0 or more.');
+    if (lo === null || lo < 0) errs.push('Reference lower limit: enter the value from the report.');
+    if (hi === null || hi < 0) errs.push('Reference upper limit: enter the value from the report.');
+    if (lo !== null && hi !== null && lo > hi) errs.push('The reference lower limit cannot be greater than the upper limit.');
+    if (!sampledAt || Number.isNaN(sampled.getTime())) errs.push('Sample time: select a valid date and time.');
     setLocalErr(errs);
     if (errs.length) return;
     const r = await entry.run(
@@ -119,9 +119,9 @@ export function LabsSection() {
       () => api<OsdrImportRead>('POST', '/v1/demo/osdr-labs/import', undefined, 60000),
       (res) => ({
         kind: 'ok',
-        text: `Gerçek OSDR verisi: ${res.imported} yeni, ${res.skipped_existing} zaten vardı, ${res.skipped_unusable} kullanılamadı. Görev ${res.mission_id} seçildi.`,
+        text: `Real OSDR data: ${res.imported} new, ${res.skipped_existing} already present, ${res.skipped_unusable} unusable. Mission ${res.mission_id} selected.`,
       }),
-      'OSDR verisi yüklenemedi',
+      'OSDR data could not be loaded',
     );
     if (r?.mission_id) {
       setSelection({ missionId: r.mission_id, crewId: r.crew_member_ids[0] ?? null, environmentTargetId: null });
@@ -135,13 +135,13 @@ export function LabsSection() {
     <Section
       id="lgi-labs"
       title="Laboratuvar"
-      hint="Periyodik lab değerini rapordan girin. Referans aralığını da rapordan kopyalayın; yazılım eşik üretmez."
+      hint="Enter the periodic lab value from the report. Copy the reference range from the report too; the software does not set thresholds."
     >
       <div className="lgi-actions lgi-actions--top">
         <button type="button" className="lgi-btn" onClick={importOsdr} disabled={osdr.busy} aria-busy={osdr.busy}>
-          <Icon name="download" size={14} />{' '}{osdr.busy ? 'Yükleniyor…' : 'Gerçek OSDR lab verisi (Inspiration4)'}
+          <Icon name="download" size={14} />{' '}{osdr.busy ? 'Loading…' : 'Real OSDR lab data (Inspiration4)'}
         </button>
-        <span className="lgi-muted">NASA OSDR’den gerçek değerleri ayrı bir göreve yükler ve onu seçer.</span>
+        <span className="lgi-muted">Loads real values from NASA OSDR into a separate mission and selects it.</span>
       </div>
       <InlineMsg msg={osdr.msg} />
 
@@ -161,7 +161,7 @@ export function LabsSection() {
             </div>
             <div className="lgi-field-row">
               <div className="lgi-field">
-                <label htmlFor="lgi-lab-value">Değer</label>
+                <label htmlFor="lgi-lab-value">Value</label>
                 <input
                   id="lgi-lab-value"
                   className="lgi-input lgi-input--big"
@@ -169,7 +169,7 @@ export function LabsSection() {
                   autoComplete="off"
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
-                  placeholder="örn. 92"
+                  placeholder="e.g. 92"
                   aria-describedby="lgi-lab-unit-legend"
                 />
               </div>
@@ -183,14 +183,14 @@ export function LabsSection() {
               />
             </div>
             <fieldset className="lgi-fieldset">
-              <legend>Rapordaki referans aralığı ({unitText(unit)})</legend>
+              <legend>Reference range from the report ({unitText(unit)})</legend>
               <div className="lgi-field-row">
                 <div className="lgi-field">
-                  <label htmlFor="lgi-lab-low">Alt sınır</label>
+                  <label htmlFor="lgi-lab-low">Lower limit</label>
                   <input id="lgi-lab-low" className="lgi-input" inputMode="decimal" autoComplete="off" value={low} onChange={(e) => setLow(e.target.value)} />
                 </div>
                 <div className="lgi-field">
-                  <label htmlFor="lgi-lab-high">Üst sınır</label>
+                  <label htmlFor="lgi-lab-high">Upper limit</label>
                   <input id="lgi-lab-high" className="lgi-input" inputMode="decimal" autoComplete="off" value={high} onChange={(e) => setHigh(e.target.value)} />
                 </div>
               </div>
@@ -204,9 +204,9 @@ export function LabsSection() {
               options={(Object.keys(PHASE) as SamplePhase[]).map((p) => ({ value: p, label: PHASE[p] }))}
             />
             <div className="lgi-field lgi-field--inline">
-              <label htmlFor="lgi-lab-at">Örnek alınma zamanı</label>
+              <label htmlFor="lgi-lab-at">Sample time</label>
               <input id="lgi-lab-at" className="lgi-input" type="datetime-local" value={sampledAt} onChange={(e) => setSampledAt(e.target.value)} />
-              <button type="button" className="lgi-btn lgi-btn--small" onClick={() => setSampledAt(localInputValue(new Date()))}>Şimdi</button>
+              <button type="button" className="lgi-btn lgi-btn--small" onClick={() => setSampledAt(localInputValue(new Date()))}>Now</button>
             </div>
             {localErr.length > 0 && (
               <div className="lgi-msg lgi-msg--err" role="alert">
@@ -222,10 +222,10 @@ export function LabsSection() {
             <InlineMsg msg={entry.msg} />
           </form>
 
-          <h4 className="lgi-subhead">Son sonuçlar</h4>
-          {panel.loading && !panel.data && <p className="lgi-muted">Yükleniyor…</p>}
-          {panel.error && !panel.data && <Notice kind="err">Lab sonuçları alınamadı ({panel.error.message}).</Notice>}
-          {panel.data && order.length === 0 && <p className="lgi-muted">Bu ekip üyesi için lab sonucu yok.</p>}
+          <h4 className="lgi-subhead">Recent results</h4>
+          {panel.loading && !panel.data && <p className="lgi-muted">Loading…</p>}
+          {panel.error && !panel.data && <Notice kind="err">Lab results could not be loaded ({panel.error.message}).</Notice>}
+          {panel.data && order.length === 0 && <p className="lgi-muted">No lab results for this crew member.</p>}
           {order.length > 0 && (
             <ul className="lgi-labgrid">
               {order.map((a) => {
@@ -235,7 +235,7 @@ export function LabsSection() {
             </ul>
           )}
           {panel.data && panel.data.limitations.length > 0 && (
-            <ul className="lgi-limits" aria-label="Sınırlamalar">
+            <ul className="lgi-limits" aria-label="Limitations">
               {panel.data.limitations.map((t) => <li key={t}>{t}</li>)}
             </ul>
           )}
@@ -266,13 +266,13 @@ function LabCard({ r }: { r: LabAnalyteSummary }) {
       <div
         className="lgi-refbar"
         role="img"
-        aria-label={`Değer ${fmtNum(r.value)} ${u}, referans aralığı ${fmtNum(lo)}–${fmtNum(hi)}; konum: ${pos?.label ?? '—'}`}
+        aria-label={`Value ${fmtNum(r.value)} ${u}, reference range ${fmtNum(lo)}–${fmtNum(hi)}; position: ${pos?.label ?? '—'}`}
       >
         <div className="lgi-refbar__band" style={{ left: `${pct(lo)}%`, width: `${pct(hi) - pct(lo)}%` }} />
         <div className="lgi-refbar__marker" style={{ left: `${pct(r.value)}%` }} />
       </div>
       <div className="lgi-muted">Referans: {fmtNum(lo)}–{fmtNum(hi)} {u}</div>
-      <div className="lgi-muted">Öncekine göre: {signed(r.change_from_previous)} · Başlangıca göre: {signed(r.change_from_baseline)}</div>
+      <div className="lgi-muted">Vs. previous: {signed(r.change_from_previous)} · Vs. baseline: {signed(r.change_from_baseline)}</div>
       <div className="lgi-muted">
         {PHASE[r.phase] ?? r.phase} · {fmtDateTime(r.sampled_at)} · {r.source_id}{' '}
         {src ? <SourceBadge kind={src.kind} detail={src.detail} size="xs" /> : `(${r.source_type})`}

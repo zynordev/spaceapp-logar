@@ -13,9 +13,9 @@ import type { ActivityCurrentRead, ActivityRead, ActivityState } from './types';
 
 export const ACTIVITY_LABELS: Record<ActivityState, { label: string; icon: IconName; sub: string }> = {
   EXERCISE: { label: 'Egzersiz', icon: 'run', sub: 'Antrenman' },
-  LIGHT: { label: 'Hafif iş', icon: 'wrench', sub: 'Görev, bakım' },
-  REST: { label: 'Dinlenme', icon: 'chair', sub: 'Uyanık, sakin' },
-  SLEEP: { label: 'Uyku', icon: 'moon', sub: 'Uyku dönemi' },
+  LIGHT: { label: 'Light work', icon: 'wrench', sub: 'Tasks, maintenance' },
+  REST: { label: 'Rest', icon: 'chair', sub: 'Awake, calm' },
+  SLEEP: { label: 'Sleep', icon: 'moon', sub: 'Sleep period' },
 };
 const STATES: ActivityState[] = ['EXERCISE', 'LIGHT', 'REST', 'SLEEP'];
 const PRESETS = [15, 30, 45, 60, 90];
@@ -78,7 +78,7 @@ export function ActivitySection() {
     if (MOCK) {
       mockActivity.start(state, mins);
       setMockVer((v) => v + 1);
-      setMsg({ kind: 'ok', text: `${ACTIVITY_LABELS[state].label} başladı: ${mins} dk (önizleme, sunucuya gönderilmedi).` });
+      setMsg({ kind: 'ok', text: `${ACTIVITY_LABELS[state].label} started: ${mins} min (preview, not sent to the server).` });
       return;
     }
     if (!missionId || !crewId) return;
@@ -91,8 +91,8 @@ export function ActivitySection() {
         source_type: 'MANUAL',
         source_id: SOURCE_ID,
       }),
-      (r) => ({ kind: 'ok', text: `${ACTIVITY_LABELS[r.activity_state]?.label ?? r.activity_state} başladı; beklenen bitiş ${fmtDateTime(r.expected_end_at)}.` }),
-      'aktivite başlatılamadı',
+      (r) => ({ kind: 'ok', text: `${ACTIVITY_LABELS[r.activity_state]?.label ?? r.activity_state} started; expected end ${fmtDateTime(r.expected_end_at)}.` }),
+      'the activity could not be started',
     );
   };
 
@@ -100,7 +100,7 @@ export function ActivitySection() {
     if (MOCK) {
       mockActivity.end();
       setMockVer((v) => v + 1);
-      setMsg({ kind: 'ok', text: 'Aktivite bitirildi (önizleme).' });
+      setMsg({ kind: 'ok', text: 'Activity ended (preview).' });
       return;
     }
     await run(
@@ -118,14 +118,14 @@ export function ActivitySection() {
     <Section
       id="lgi-activity"
       title="Aktivite"
-      hint="Neden önemli: dinlenme kuralları yalnızca “dinlenme” olarak beyan edilen döneme ait veriyi kullanır; egzersizdeki yüksek nabız yanlış alarm üretmez."
-      badge={MOCK ? <span className="lgi-chip">Önizleme verisi</span> : null}
+      hint="Why it matters: rest rules use only data from periods declared as “rest”; a high heart rate during exercise does not raise a false alarm."
+      badge={MOCK ? <span className="lgi-chip">Preview data</span> : null}
     >
       {!ready ? <NeedSelection /> : (
         <>
           {missing && (
             <Notice kind="warn">
-              Aktivite beyanı sunucuda henüz yok. Arayüzü önizlemek için adrese <code>?mock=1</code> ekleyin.
+              Activity declarations are not on the server yet. To preview the interface, add <code>?mock=1</code> to the address.
             </Notice>
           )}
           {!missing && (
@@ -146,7 +146,7 @@ export function ActivitySection() {
           >
             <Segmented<ActivityState>
               name="lgi-act-state"
-              legend="Şu an ne yapıyorsunuz?"
+              legend="What are you doing right now?"
               value={pick}
               onChange={setPick}
               options={STATES.map((s) => ({
@@ -158,14 +158,14 @@ export function ActivitySection() {
             />
             <Segmented<number>
               name="lgi-act-min"
-              legend="Planlanan süre"
+              legend="Planned duration"
               value={custom !== '' ? null : minutes}
               onChange={(v) => { setMinutes(v); setCustom(''); }}
               compact
               options={PRESETS.map((m) => ({ value: m, label: `${m}`, sub: 'dk', aria: `${m} dakika` }))}
             />
             <div className="lgi-field lgi-field--inline">
-              <label htmlFor="lgi-act-custom">Özel süre (5–240 dk)</label>
+              <label htmlFor="lgi-act-custom">Custom duration (5–240 min)</label>
               <input
                 id="lgi-act-custom"
                 className="lgi-input lgi-input--short"
@@ -180,7 +180,7 @@ export function ActivitySection() {
                 onChange={(e) => setCustom(e.target.value)}
               />
               <span id="lgi-act-custom-help" className={custom !== '' && !customValid ? 'lgi-err-text' : 'lgi-muted'}>
-                {custom !== '' && !customValid ? '5 ile 240 arasında tam sayı girin.' : 'Boş bırakırsanız seçili hazır süre kullanılır.'}
+                {custom !== '' && !customValid ? 'Enter a whole number between 5 and 240.' : 'If left empty, the selected preset duration is used.'}
               </span>
             </div>
             <div className="lgi-actions">
@@ -190,10 +190,10 @@ export function ActivitySection() {
                 disabled={busy || missing || effectiveMinutes === null}
                 aria-busy={busy}
               >
-                {busy ? 'Gönderiliyor…' : `Başlat: ${ACTIVITY_LABELS[pick].label}${effectiveMinutes ? `, ${effectiveMinutes} dk` : ''}`}
+                {busy ? 'Sending…' : `Start: ${ACTIVITY_LABELS[pick].label}${effectiveMinutes ? `, ${effectiveMinutes} min` : ''}`}
               </button>
               {current?.activity && current.state !== 'NONE' && (
-                <span className="lgi-muted">Yeni beyan, açık olanı otomatik bitirir.</span>
+                <span className="lgi-muted">A new declaration automatically ends the open one.</span>
               )}
             </div>
             <InlineMsg msg={msg} />
@@ -213,14 +213,14 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
   onEnd: (a: ActivityRead) => void;
   onRestart: (a: ActivityRead) => void;
 }) {
-  if (loading) return <p className="lgi-muted">Güncel aktivite yükleniyor…</p>;
+  if (loading) return <p className="lgi-muted">Loading current activity…</p>;
   if (!current || current.state === 'NONE' || !current.activity) {
     return (
       <div className="lgi-activity lgi-activity--none">
         <span className="lgi-activity__icon" aria-hidden="true"><Icon name="circle" size={28} /></span>
         <div>
-          <strong>Beyan edilmiş aktivite yok.</strong>
-          <div className="lgi-muted">{current?.message_tr || 'Aktivite bağlamı bilinmiyor; aşağıdan seçin.'}</div>
+          <strong>No declared activity.</strong>
+          <div className="lgi-muted">{current?.message_tr || 'Activity context is unknown; choose below.'}</div>
         </div>
       </div>
     );
@@ -234,18 +234,18 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
       <div className="lgi-activity lgi-activity--expired" role="alert">
         <span className="lgi-activity__icon" aria-hidden="true"><Icon name="warning" size={28} /></span>
         <div className="lgi-activity__body">
-          <strong className="lgi-activity__big">Beyan edilen süre doldu — aktivite bağlamı bilinmiyor</strong>
+          <strong className="lgi-activity__big">The declared time has run out — activity context is unknown</strong>
           {current.message_tr && current.state === 'EXPIRED' && !current.message_tr.startsWith('Beyan edilen süre doldu') && (
             <div>{current.message_tr}</div>
           )}
           <div className="lgi-muted">
-            Son beyan: {meta.label}, {planned} dk · başlangıç {fmtDateTime(a.started_at)} · beklenen bitiş {fmtDateTime(a.expected_end_at)}
+            Last declaration: {meta.label}, {planned} min · started {fmtDateTime(a.started_at)} · expected end {fmtDateTime(a.expected_end_at)}
           </div>
           <div className="lgi-actions">
             <button type="button" className="lgi-btn lgi-btn--primary" disabled={busy} onClick={() => onRestart(a)}>
-              <Icon name="refresh" size={14} />{' '}Yeniden başlat: {meta.label}, {planned} dk
+              <Icon name="refresh" size={14} />{' '}Restart: {meta.label}, {planned} min
             </button>
-            <button type="button" className="lgi-btn" disabled={busy} onClick={() => onEnd(a)}>Bitir</button>
+            <button type="button" className="lgi-btn" disabled={busy} onClick={() => onEnd(a)}>End</button>
           </div>
         </div>
       </div>
@@ -260,16 +260,16 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
       <div className="lgi-activity__body">
         <div className="lgi-activity__row">
           <strong className="lgi-activity__big">{meta.label}</strong>
-          <span className="lgi-countdown" aria-label={remaining === null ? 'Kalan süre bilinmiyor' : `Kalan süre ${Math.ceil(remaining / 60)} dakika`}>
+          <span className="lgi-countdown" aria-label={remaining === null ? 'Time remaining unknown' : `${Math.ceil(remaining / 60)} minutes remaining`}>
             {remaining === null ? '—' : fmtClock(remaining)}
-            <span className="lgi-muted"> kaldı</span>
+            <span className="lgi-muted"> left</span>
           </span>
         </div>
-        <div className="lgi-progress" role="progressbar" aria-label="Beyan edilen sürenin geçen kısmı" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)}>
+        <div className="lgi-progress" role="progressbar" aria-label="Elapsed part of the declared time" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)}>
           <div className="lgi-progress__bar" style={{ width: `${pct}%` }} />
         </div>
         <div className="lgi-muted">
-          {planned} dk planlandı · başlangıç {fmtDateTime(a.started_at)} · beklenen bitiş {fmtDateTime(a.expected_end_at)}
+          {planned} min planned · started {fmtDateTime(a.started_at)} · expected end {fmtDateTime(a.expected_end_at)}
         </div>
         {current.message_tr && <div className="lgi-muted">{current.message_tr}</div>}
         <div className="lgi-actions">

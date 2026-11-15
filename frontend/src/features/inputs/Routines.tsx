@@ -14,11 +14,11 @@ import type {
 
 const STATE_META: Record<RoutineState, { label: string; icon: IconName }> = {
   OVERDUE: { label: 'Gecikti', icon: 'bell' },
-  DUE: { label: 'Zamanı geldi', icon: 'dot' },
-  UPCOMING: { label: 'Yaklaşan', icon: 'circle' },
+  DUE: { label: 'Due now', icon: 'dot' },
+  UPCOMING: { label: 'Upcoming', icon: 'circle' },
 };
 const ORDER: Record<RoutineState, number> = { OVERDUE: 0, DUE: 1, UPCOMING: 2 };
-const CATEGORY_LABEL: Record<RoutineCategory, string> = { DAILY: 'Günlük', PERIODIC_TEST: 'Periyodik test' };
+const CATEGORY_LABEL: Record<RoutineCategory, string> = { DAILY: 'Daily', PERIODIC_TEST: 'Periodic test' };
 const FALLBACK_CATEGORY = Object.fromEntries(
   ROUTINE_CATALOG_FALLBACK.map((c) => [c.kind, c.category]),
 ) as Record<RoutineKind, RoutineCategory>;
@@ -53,14 +53,14 @@ export function RoutinesSection() {
     if (MOCK) {
       mockRoutines.defaults();
       setMockVer((v) => v + 1);
-      setMsg({ kind: 'ok', text: 'Örnek plan kuruldu (önizleme).' });
+      setMsg({ kind: 'ok', text: 'Sample plan set up (preview).' });
       return;
     }
     if (!missionId || !crewId) return;
     await run(
       () => api<RoutineScheduleRead[]>('POST', '/v1/routines/defaults', { mission_id: missionId, crew_member_id: crewId }),
-      (r) => ({ kind: 'ok', text: `Örnek plan kuruldu: ${r.length} rutin.` }),
-      'örnek plan kurulamadı',
+      (r) => ({ kind: 'ok', text: `Sample plan set up: ${r.length} routines.` }),
+      'the sample plan could not be set up',
     );
   };
 
@@ -72,13 +72,13 @@ export function RoutinesSection() {
       setMockVer((v) => v + 1);
       setJustDone(id);
       setTimeout(() => setJustDone((x) => (x === id ? null : x)), 2500);
-      setMsg({ kind: 'ok', text: `“${title}” işaretlendi. Seri: ${res?.current_streak ?? '—'} (önizleme).` });
+      setMsg({ kind: 'ok', text: `“${title}” marked. Streak: ${res?.current_streak ?? '—'} (preview).` });
       return;
     }
     const res = await run(
       () => api<RoutineDueRead>('POST', `/v1/routines/${encodeURIComponent(id)}/complete`, { crew_member_id: crewId ?? undefined }),
-      (d) => ({ kind: 'ok', text: `“${title}” işaretlendi. Seri: ${d.current_streak}, en iyi: ${d.best_streak}. Sonraki: ${relTime(d.next_due_at)}.` }),
-      'işaretlenemedi',
+      (d) => ({ kind: 'ok', text: `“${title}” marked. Streak: ${d.current_streak}, best: ${d.best_streak}. Next: ${relTime(d.next_due_at)}.` }),
+      'could not be marked',
     );
     if (res) {
       setJustDone(id);
@@ -90,26 +90,26 @@ export function RoutinesSection() {
     <Section
       id="lgi-routines"
       title="Rutinler"
-      hint="Günlük alışkanlıklar ve periyodik testler. Seri sayacı yalnızca motivasyon içindir; sağlık değerlendirmesi değildir. İlaç hatırlatması içermez."
-      badge={<span className="lgi-chip lgi-chip--demo" title="Uçuş tıbbı tarafından doğrulanmamış örnek plan">DEMO plan</span>}
+      hint="Daily habits and periodic tests. The streak counter is for motivation only; it is not a health assessment. It contains no medication reminders."
+      badge={<span className="lgi-chip lgi-chip--demo" title="Sample plan not validated by flight medicine">DEMO plan</span>}
     >
       {!ready ? <NeedSelection /> : missing ? (
         <Notice kind="warn">
-          Rutin servisi sunucuda henüz yok. Arayüzü önizlemek için adrese <code>?mock=1</code> ekleyin.
+          The routine service is not on the server yet. To preview the interface, add <code>?mock=1</code> to the address.
         </Notice>
       ) : (
         <>
-          {!MOCK && due.loading && !due.data && <p className="lgi-muted">Rutinler yükleniyor…</p>}
+          {!MOCK && due.loading && !due.data && <p className="lgi-muted">Loading routines…</p>}
           {!MOCK && due.error && !due.error.notFound && !due.data && (
-            <Notice kind="err">Rutinler alınamadı ({due.error.forbidden ? 'yetki yok' : due.error.message}).</Notice>
+            <Notice kind="err">Routines could not be loaded ({due.error.forbidden ? 'no permission' : due.error.message}).</Notice>
           )}
           {items && items.length === 0 && (
             <div className="lgi-empty">
-              <p>Henüz rutin planı yok.</p>
+              <p>No routine plan yet.</p>
               <button type="button" className="lgi-btn lgi-btn--primary" onClick={setupDefaults} disabled={busy} aria-busy={busy}>
-                {busy ? 'Kuruluyor…' : 'Örnek planı kur'}
+                {busy ? 'Setting up…' : 'Set up sample plan'}
               </button>
-              <p className="lgi-muted">Su, egzersiz, uyku penceresi, öznel kayıt ve haftalık testlerden oluşan DEMO plan.</p>
+              <p className="lgi-muted">A DEMO plan of water, exercise, a sleep window, subjective entries and weekly tests.</p>
             </div>
           )}
           {sorted.length > 0 && (
@@ -136,7 +136,7 @@ export function RoutinesSection() {
                         <strong className="lgi-routine__title">{r.schedule.title_tr}</strong>
                         {desc && <span className="lgi-muted">{desc}</span>}
                         <span className="lgi-muted">
-                          {r.state === 'UPCOMING' ? 'Sırada: ' : 'Hedef zaman: '}
+                          {r.state === 'UPCOMING' ? 'Next: ' : 'Target time: '}
                           <time dateTime={r.next_due_at} title={fmtDateTime(r.next_due_at)}>{relTime(r.next_due_at, now)}</time>
                           {r.last_completed_at && <> · son: {relTime(r.last_completed_at, now)}</>}
                         </span>
@@ -146,9 +146,9 @@ export function RoutinesSection() {
                         className={`lgi-btn lgi-btn--done${done ? ' is-done' : ''}`}
                         onClick={() => complete(r)}
                         disabled={busy || done}
-                        aria-label={done ? `${r.schedule.title_tr}: kaydedildi` : `${r.schedule.title_tr}: yaptım`}
+                        aria-label={done ? `${r.schedule.title_tr}: recorded` : `${r.schedule.title_tr}: done`}
                       >
-                        <Icon name="check" size={14} />{' '}{done ? 'Kaydedildi' : 'Yaptım'}
+                        <Icon name="check" size={14} />{' '}{done ? 'Recorded' : 'Done'}
                       </button>
                     </li>
                   );
@@ -168,7 +168,7 @@ function Streak({ current, best, pulse }: { current: number; best: number; pulse
     <span
       className={`lgi-streak${pulse ? ' is-pulse' : ''}`}
       aria-label={`Seri ${current}, en iyi ${best}`}
-      title="Arka arkaya zamanında tamamlama sayısı"
+      title="Consecutive on-time completions"
     >
       <span aria-hidden="true"><Icon name="flame" size={14} />{' '}{current}</span>
       <span className="lgi-streak__best" aria-hidden="true">en iyi {best}</span>

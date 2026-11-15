@@ -10,12 +10,12 @@ import {
 import type { CheckInKey, CheckInRead, CrewStatusLite } from './types';
 
 export const CHECKIN_FIELDS: [CheckInKey, string][] = [
-  ['fatigue', 'Yorgunluk'], ['dizziness', 'Baş dönmesi'], ['nausea', 'Bulantı'],
-  ['pain', 'Ağrı'], ['mood_distress', 'Ruh hali sıkıntısı'],
-  ['vision_change', 'Görme değişikliği'], ['back_pain', 'Sırt ağrısı'],
-  ['congestion', 'Burun tıkanıklığı / yüz şişkinliği'],
+  ['fatigue', 'Fatigue'], ['dizziness', 'Dizziness'], ['nausea', 'Nausea'],
+  ['pain', 'Pain'], ['mood_distress', 'Mood distress'],
+  ['vision_change', 'Vision change'], ['back_pain', 'Back pain'],
+  ['congestion', 'Nasal congestion / facial swelling'],
 ];
-export const SEVERITY_WORDS = ['Yok', 'Hafif', 'Orta', 'Şiddetli', 'Çok şiddetli'];
+export const SEVERITY_WORDS = ['None', 'Mild', 'Moderate', 'Severe', 'Very severe'];
 
 const CHECK_DUE_MS = 4 * 60 * 60 * 1000;
 
@@ -53,7 +53,7 @@ export function CheckInSection() {
         source_type: 'MANUAL',
         source_id: SOURCE_ID,
       }),
-      (r) => ({ kind: 'ok', text: `Kaydedildi (${fmtDateTime(r.observed_at)}). Öznel girişler yalnızca bağlamdır; tek başına alarm üretmez.` }),
+      (r) => ({ kind: 'ok', text: `Saved (${fmtDateTime(r.observed_at)}). Subjective entries are context only; they do not raise an alarm on their own.` }),
       'kaydedilemedi',
     );
   };
@@ -63,9 +63,9 @@ export function CheckInSection() {
   return (
     <Section
       id="lgi-checkin"
-      title="Öznel durum"
-      hint="Her belirti için şu anki şiddeti seçin. 0 = yok, 4 = çok şiddetli."
-      badge={due ? <span className="lgi-chip lgi-chip--warn"><Icon name="bell" size={14} />{' '}Kontrol zamanı geldi</span> : null}
+      title="Subjective state"
+      hint="Choose the current severity of each symptom. 0 = none, 4 = very severe."
+      badge={due ? <span className="lgi-chip lgi-chip--warn"><Icon name="bell" size={14} />{' '}Check-in due</span> : null}
     >
       {!missionId || !crewId ? <NeedSelection /> : (
         <>
@@ -90,9 +90,9 @@ export function CheckInSection() {
                 {busy ? 'Kaydediliyor…' : 'Durumu kaydet'}
               </button>
               <button type="button" className="lgi-btn" onClick={() => setScores(ZERO)} disabled={busy}>
-                Tümünü “Yok” yap
+                Set all to “None”
               </button>
-              <span className="lgi-muted">{nonZero ? `${nonZero} belirti işaretli` : 'Hiç belirti işaretli değil'}</span>
+              <span className="lgi-muted">{nonZero ? `${nonZero} symptoms marked` : 'No symptoms marked'}</span>
             </div>
             <InlineMsg msg={msg} />
           </form>
@@ -103,9 +103,9 @@ export function CheckInSection() {
 }
 
 function LatestCheckIn({ latest, now, due, loading }: { latest: CheckInRead | null; now: number; due: boolean; loading: boolean }) {
-  if (loading) return <p className="lgi-muted">Son kayıt yükleniyor…</p>;
+  if (loading) return <p className="lgi-muted">Loading the last entry…</p>;
   if (!latest) {
-    return <Notice kind="warn">Henüz öznel kayıt yok. Kontrol zamanı geldi: aşağıdan ilk kaydı girin.</Notice>;
+    return <Notice kind="warn">No subjective entry yet. A check-in is due: enter the first entry below.</Notice>;
   }
   const reported = CHECKIN_FIELDS
     .map(([k, label]) => [label, latest[k]] as const)
@@ -113,11 +113,11 @@ function LatestCheckIn({ latest, now, due, loading }: { latest: CheckInRead | nu
   return (
     <div className={`lgi-latest${due ? ' is-due' : ''}`}>
       <div className="lgi-latest__head">
-        <strong>Son kayıt:</strong> {fmtDateTime(latest.observed_at)} ({relTime(latest.observed_at, now)})
-        {due && <span className="lgi-latest__due"> · 4 saatten eski, kontrol zamanı geldi</span>}
+        <strong>Last entry:</strong> {fmtDateTime(latest.observed_at)} ({relTime(latest.observed_at, now)})
+        {due && <span className="lgi-latest__due"> · older than 4 hours, check-in due</span>}
       </div>
       {reported.length === 0 ? (
-        <p className="lgi-muted">Tüm belirtiler “Yok” olarak bildirilmiş.</p>
+        <p className="lgi-muted">All symptoms were reported as “None”.</p>
       ) : (
         <ul className="lgi-taglist">
           {reported.map(([label, v]) => (

@@ -16,11 +16,11 @@ import './inputs.css';
 
 type TabKey = 'checkin' | 'activity' | 'routines' | 'labs' | 'redflag';
 const TABS: { key: TabKey; label: string; icon: IconName }[] = [
-  { key: 'checkin', label: 'Öznel durum', icon: 'smile' },
+  { key: 'checkin', label: 'Subjective state', icon: 'smile' },
   { key: 'activity', label: 'Aktivite', icon: 'clock' },
   { key: 'routines', label: 'Rutinler', icon: 'check' },
   { key: 'labs', label: 'Laboratuvar', icon: 'flask' },
-  { key: 'redflag', label: 'Kırmızı bayrak', icon: 'warning' },
+  { key: 'redflag', label: 'Red flag', icon: 'warning' },
 ];
 
 export function InputsPanel() {
@@ -46,13 +46,13 @@ export function InputsPanel() {
   return (
     <section className="lgi lgi-panel" aria-labelledby="lgi-panel-h">
       <header className="lgi-panel__head">
-        <h2 id="lgi-panel-h" className="lgi-panel__title">Veri girişi</h2>
+        <h2 id="lgi-panel-h" className="lgi-panel__title">Data entry</h2>
         <span className="lgi-muted">
-          {missionId && crewId ? <>Görev <b>{missionId}</b> · Ekip üyesi <b>{crewId}</b></> : 'Görev seçilmedi'}
+          {missionId && crewId ? <>Mission <b>{missionId}</b> · Crew member <b>{crewId}</b></> : 'No mission selected'}
         </span>
-        {MOCK && <span className="lgi-chip">?mock=1 önizleme</span>}
+        {MOCK && <span className="lgi-chip">?mock=1 preview</span>}
       </header>
-      <div className="lgi-tabs" role="tablist" aria-label="Veri girişi bölümleri" onKeyDown={onKey}>
+      <div className="lgi-tabs" role="tablist" aria-label="Data entry sections" onKeyDown={onKey}>
         {TABS.map((t) => (
           <button
             key={t.key}

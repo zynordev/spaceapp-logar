@@ -38,10 +38,10 @@ export function RedFlagsSection() {
       (res) => ({
         kind: 'ok',
         text: res.alert_id
-          ? 'Acil durum bildirildi: KRİTİK alarm açıldı. Eylem kartını uygulayın ve ekip sağlık sorumlusuna haber verin.'
-          : 'Acil durum bildirildi (alarm zaten açık). Eylem kartını uygulayın ve ekip sağlık sorumlusuna haber verin.',
+          ? 'Emergency reported: a CRITICAL alarm was opened. Carry out the action card and inform the crew health officer.'
+          : 'Emergency reported (alarm already open). Carry out the action card and inform the crew health officer.',
       }),
-      'bildirilemedi. Ekibe sözlü olarak haber verin',
+      'could not be reported. Inform the team verbally',
     );
     setConfirming(false);
     if (r) {
@@ -53,20 +53,20 @@ export function RedFlagsSection() {
   return (
     <Section
       id="lgi-redflag"
-      title="Kırmızı bayrak"
-      hint="Bu belirtilerden biri varsa seçip bildirin. Bildirim hemen KRİTİK alarm açar: ortalama, zaman penceresi ya da sensör onayı beklenmez. Bu bir teşhis değildir."
+      title="Red flag"
+      hint="If any of these symptoms is present, select it and report. A report opens a CRITICAL alarm immediately: no averaging, time window or sensor confirmation is awaited. This is not a diagnosis."
       badge={<span className="lgi-chip lgi-chip--crit"><Icon name="warning" size={14} />{' '}Acil</span>}
     >
       {!missionId || !crewId ? <NeedSelection /> : (
         <>
-          {catalog.loading && !catalog.data && <p className="lgi-muted">Belirti listesi yükleniyor…</p>}
+          {catalog.loading && !catalog.data && <p className="lgi-muted">Loading the symptom list…</p>}
           {catalog.error && !catalog.data && (
             <Notice kind="err">
-              Belirti listesi alınamadı ({catalog.error.message}). Acil bir durum varsa ekibe sözlü olarak haber verin.
+              The symptom list could not be loaded ({catalog.error.message}). If there is an emergency, inform the team verbally.
             </Notice>
           )}
           {catalog.data && (
-            <ul className="lgi-flags" aria-label="Kırmızı bayrak belirtileri">
+            <ul className="lgi-flags" aria-label="Red flag symptoms">
               {catalog.data.map((c) => {
                 const on = selected.includes(c.flag);
                 return (
@@ -80,7 +80,7 @@ export function RedFlagsSection() {
                     >
                       <span className="lgi-flag__box" aria-hidden="true">{on ? <Icon name="check" size={20} /> : null}</span>
                       <span className="lgi-flag__label">{c.label}</span>
-                      <span className="lgi-flag__state" aria-hidden="true">{on ? 'Seçildi' : 'Seç'}</span>
+                      <span className="lgi-flag__state" aria-hidden="true">{on ? 'Selected' : 'Select'}</span>
                     </button>
                   </li>
                 );
@@ -97,15 +97,15 @@ export function RedFlagsSection() {
                 onClick={() => setConfirming(true)}
               >
                 <Icon name="warning" size={14} />{' '}
-                {selected.length ? `Acil durumu bildir (${selected.length} belirti)` : 'Önce belirti seçin'}
+                {selected.length ? `Report emergency (${selected.length} symptoms)` : 'Select a symptom first'}
               </button>
               {selected.length > 0 && (
-                <button type="button" className="lgi-btn" onClick={() => setSelected([])} disabled={busy}>Seçimi temizle</button>
+                <button type="button" className="lgi-btn" onClick={() => setSelected([])} disabled={busy}>Clear selection</button>
               )}
             </div>
           ) : (
             <div className="lgi-confirm" role="alertdialog" aria-labelledby="lgi-rf-confirm-h" aria-describedby="lgi-rf-confirm-d">
-              <strong id="lgi-rf-confirm-h">Emin misiniz? KRİTİK alarm hemen açılacak.</strong>
+              <strong id="lgi-rf-confirm-h">Are you sure? A CRITICAL alarm will open immediately.</strong>
               <div id="lgi-rf-confirm-d">
                 Bildirilecek: <ul>{selected.map((f) => <li key={f}>{labelOf(f)}</li>)}</ul>
               </div>
@@ -113,7 +113,7 @@ export function RedFlagsSection() {
                 <button type="button" className="lgi-btn lgi-btn--danger" onClick={send} disabled={busy} aria-busy={busy} autoFocus>
                   {busy ? 'Bildiriliyor…' : 'Evet, acil bildir'}
                 </button>
-                <button type="button" className="lgi-btn" onClick={() => setConfirming(false)} disabled={busy}>Vazgeç</button>
+                <button type="button" className="lgi-btn" onClick={() => setConfirming(false)} disabled={busy}>Cancel</button>
               </div>
             </div>
           )}
