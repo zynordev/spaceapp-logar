@@ -222,12 +222,12 @@
 .shell-details__sub { color: var(--text-faint); font-size: var(--fs-sm); }
 .shell-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(400px, 1fr);
-  grid-template-areas: 'vitals alerts';
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'alerts' 'vitals';
   gap: var(--sp-4);
   align-items: start;
 }
-.shell-grid__alerts { grid-area: alerts; position: sticky; top: calc(var(--topbar-real, var(--topbar-h)) + var(--sp-3)); }
+.shell-grid__alerts { grid-area: alerts; }
 .shell-grid__vitals { grid-area: vitals; }
 .shell-slot { display: flex; flex-direction: column; min-width: 0; }
 .shell-slot > * { flex: 1; }

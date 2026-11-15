@@ -1,11 +1,9 @@
 import { useEffect } from 'react';
 import { useApp } from '../../lib/store';
-import { AttBadge, Skeleton } from './Badges';
+import { Skeleton } from './Badges';
 import { ChartSection } from './ChartSection';
-import { attInfo } from './copy';
 import { targetFor, useAlerts, useCrewStatus, useMetrics, useSelection, useVitalsUi, worst } from './data';
 import { fmtClock, relTime } from './format';
-import { MetricTile } from './MetricTiles';
 import { RuleList } from './RuleList';
 import { Icon } from '../../ui';
 
@@ -55,7 +53,6 @@ export function VitalsPanel() {
     { key: 'vital', title: 'Vital', list: metrics.filter((m) => m.category !== 'environment') },
     { key: 'environment', title: 'Çevre', list: metrics.filter((m) => m.category === 'environment') },
   ];
-  const overall = status.data?.overall_attention;
 
   return (
     <section className="vt-panel" aria-label="Ölçümler ve kurallar">
@@ -65,12 +62,6 @@ export function VitalsPanel() {
           <p className="vt-muted vt-small">Açıklanabilir kurallar: her seviye için gözlenen değer, eşik ve “neden”.</p>
         </div>
         <div className="vt-head-right">
-          {overall && (
-            <span className="vt-overall" title={attInfo(overall).desc}>
-              <span className="vt-muted vt-small">Genel durum</span>
-              <AttBadge att={overall} size="lg" />
-            </span>
-          )}
           <Freshness at={status.data?.generated_at} error={!!status.error} />
         </div>
       </header>
@@ -82,23 +73,25 @@ export function VitalsPanel() {
         </p>
       )}
 
-      {groups.map((g) => g.list.length > 0 && (
-        <div key={g.key} className="vt-tile-group">
-          <h3 className="vt-h3">{g.title}</h3>
-          <div className="vt-tiles">
-            {g.list.map((m) => (
-              <MetricTile
-                key={m.metric}
-                def={m}
-                rules={rules}
-                selected={selectedMetric === m.metric}
-                onSelect={() => select(m.metric)}
-                targetMissing={!targetFor(m, crewId, environmentTargetId)}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
+      <div className="vt-picker">
+        <label htmlFor="vt-metric-pick" className="vt-picker__label">Grafikteki ölçüm</label>
+        <select
+          id="vt-metric-pick"
+          className="vt-picker__select"
+          value={selectedMetric ?? ''}
+          onChange={(e) => select(e.target.value || null)}
+        >
+          {groups.map((g) => g.list.length > 0 && (
+            <optgroup key={g.key} label={g.title}>
+              {g.list.map((m) => (
+                <option key={m.metric} value={m.metric} disabled={!targetFor(m, crewId, environmentTargetId)}>
+                  {m.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
 
       {def && <ChartSection def={def} rules={rules} alerts={alerts.data ?? []} selectedRuleId={ruleId} />}
 

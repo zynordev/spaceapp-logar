@@ -279,3 +279,8 @@
 
 .gp-signal-body { fill: var(--surface-2, #162032); stroke: var(--line-strong, #334155); stroke-width: 1.5; }
 .gp-signal-grid { fill: none; stroke: var(--line-strong, #334155); stroke-width: 1; }
+
+/* Header strip like the other panels. */
+.gp-root { border-color: var(--line-strong, #334155); }
+.gp-head h2 { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, #cbd5e1); }
+.gp-head-mark { color: var(--text-faint, #94a3b8); }

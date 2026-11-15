@@ -392,3 +392,36 @@
 .vt-panel .ui-icon, .vt-dialog .ui-icon { display: inline-block; vertical-align: -0.15em; flex: none; }
 .vt-empty-icon .ui-icon { display: block; }
 .vt-fault-x { stroke: var(--vt-critical); stroke-width: 2; stroke-linecap: round; fill: none; }
+
+/* ===== Flat layout (square, one frame per panel, dividers inside) ===== */
+.vt-panel { padding: 0 0 var(--sp-4, 16px); gap: var(--sp-4, 16px); border-color: var(--vt-border-strong); border-radius: 0; }
+.vt-panel > :not(.vt-panel-head) { margin-left: var(--sp-4, 16px); margin-right: var(--sp-4, 16px); }
+.vt-panel-head {
+  align-items: center; padding: 10px var(--sp-4, 16px);
+  background: var(--bg-2, #0c1322); border-bottom: 1px solid var(--vt-border-strong);
+}
+.vt-panel-head p { margin-top: 2px; }
+.vt-h2 { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--vt-muted); }
+.vt-panel .vt-card { background: none; border: 0; border-top: 1px solid var(--vt-border); border-radius: 0; padding: var(--sp-4, 16px) 0 0; }
+.vt-picker { display: flex; align-items: center; gap: 12px; }
+.vt-picker__label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--vt-muted); }
+.vt-picker__select {
+  min-height: 36px; min-width: 260px; padding: 4px 10px; border-radius: 0;
+  background: var(--surface-2, #162032); color: var(--vt-text); border: 1px solid var(--vt-border-strong); font: inherit;
+}
+.vt-picker__select:hover { border-color: var(--text-faint, #94a3b8); }
+/* alerts: rows, not cards */
+.vt-alerts { gap: 0; border-top: 1px solid var(--vt-border); }
+.vt-alert { border: 0; border-bottom: 1px solid var(--vt-border); border-radius: 0; background: none; padding: 12px 12px 12px 16px; animation: none; }
+.vt-alert::before { width: 3px; }
+.vt-alert-critical { background: color-mix(in srgb, var(--vt-critical) 6%, transparent); }
+.vt-alerts-layout { grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.4fr); gap: 24px; }
+/* action card: one frame, sections split by hairlines */
+.vt-ac { border-radius: 0; }
+.vt-step { background: none; border: 0; border-top: 1px solid var(--vt-border); border-radius: 0; padding: 10px 0; }
+.vt-ac-situation, .vt-ac-cond, .vt-reassess { background: var(--bg-2, #0c1322); border-radius: 0; }
+.vt-ac-considerations { border-radius: 0; }
+.vt-empty-state { border-radius: 0; border-style: solid; border-color: var(--vt-border); }
+.vt-note, .vt-callout { border-radius: 0; }
+/* rules: table rows */
+.vt-rule { border-radius: 0; }
