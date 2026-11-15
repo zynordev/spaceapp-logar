@@ -271,7 +271,7 @@ function LabCard({ r }: { r: LabAnalyteSummary }) {
         <div className="lgi-refbar__band" style={{ left: `${pct(lo)}%`, width: `${pct(hi) - pct(lo)}%` }} />
         <div className="lgi-refbar__marker" style={{ left: `${pct(r.value)}%` }} />
       </div>
-      <div className="lgi-muted">Referans: {fmtNum(lo)}–{fmtNum(hi)} {u}</div>
+      <div className="lgi-muted">Reference: {fmtNum(lo)}–{fmtNum(hi)} {u}</div>
       <div className="lgi-muted">Vs. previous: {signed(r.change_from_previous)} · Vs. baseline: {signed(r.change_from_baseline)}</div>
       <div className="lgi-muted">
         {PHASE[r.phase] ?? r.phase} · {fmtDateTime(r.sampled_at)} · {r.source_id}{' '}

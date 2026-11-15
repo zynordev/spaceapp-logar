@@ -1,4 +1,4 @@
-// One side of the link: "Gemi (anlık)" or "Dünya (gecikmeli)".
+// One side of the link: "Ship (live)" or "Earth (delayed)".
 import type { ReactNode } from 'react';
 import { AttentionBadge, EmptyState, Icon, attentionClass } from '../../ui';
 import { clock, formatCountdown } from './delay';

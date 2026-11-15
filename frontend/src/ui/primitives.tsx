@@ -99,7 +99,7 @@ export interface FieldProps {
   /** Pass one control element (Input/Select/Textarea/native); id + aria are wired automatically. */
   children: ReactElement;
   className?: string;
-  /** Show "(isteğe bağlı)" after the label. */
+  /** Show "(optional)" after the label. */
   optional?: boolean;
 }
 

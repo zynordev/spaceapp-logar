@@ -216,7 +216,7 @@ export function RecipientCard(props: {
 
           <div className="gp-actions">
             <button type="button" className="gp-btn gp-btn--ghost" onClick={() => download(packet)}>
-              <Icon name="download" size={14} />{' '}JSON indir
+              <Icon name="download" size={14} />{' '}Download JSON
             </button>
             <button
               type="button"

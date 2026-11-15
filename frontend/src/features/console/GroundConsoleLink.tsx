@@ -1,4 +1,4 @@
-// Small entry point to the ground console (#/yer) for the HUD / top bar.
+// Small entry point to the ground console (#/ground) for the HUD / top bar.
 // Import it from this file (not the folder index) to keep the console in its
 // own lazily loaded chunk: import { GroundConsoleLink } from '../console/GroundConsoleLink';
 import { Icon } from '../../ui';

@@ -13,7 +13,7 @@ export interface StepCtx {
   waitFor: (selector: string, timeoutMs?: number) => Promise<HTMLElement | null>;
   /** True once the user left this step (stop async work). */
   left: () => boolean;
-  /** Short status line under the caption ("Paket hazırlanıyor…"). */
+  /** Short status line under the caption ("Preparing packet…"). */
   note: (text: string | null) => void;
 }
 
@@ -72,7 +72,7 @@ async function escalationNote(ctx: StepCtx, none: string) {
 /** Console steps: say when the current delay makes the travel invisible. */
 async function delayNote(ctx: StepCtx) {
   try {
-    // The console uses the server delay only with its "Sunucu ayarı" preset (the default).
+    // The console uses the server delay only with its "Server setting" preset (the default).
     const preset = (JSON.parse(sessionStorage.getItem('logar.console.delay') ?? '{}') as { preset?: string }).preset ?? 'server';
     if (preset !== 'server') return;
     const s = await api<{ link_delay_seconds: number | null }>('GET', `/v1/sync/status${qs({ mission_id: ctx.missionId })}`);

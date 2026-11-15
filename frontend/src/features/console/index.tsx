@@ -1,4 +1,4 @@
-// Public surface of the ground mission-control console (#/yer).
+// Public surface of the ground mission-control console (#/ground).
 // main.tsx lazy-loads GroundConsoleApp; the HUD should import
 // GroundConsoleLink from './GroundConsoleLink' directly (keeps the chunk split).
 export { GroundConsoleApp } from './GroundConsoleApp';

@@ -87,7 +87,7 @@ export const RULE_TITLES: Record<string, string> = {
   DATA_HR_JUMP_V1: 'Heart rate sensor quality',
 };
 
-// "Bu ölçüm neden önemli?" — general information, no diagnosis/treatment language.
+// "Why does this measurement matter?" — general information, no diagnosis/treatment language.
 export const GENERIC_NEXT = ' For what to do next, see the action card and the mission procedure.';
 export const METRIC_INFO: Record<string, { why: string; watch: string }> = {
   HEART_RATE: {
@@ -159,6 +159,6 @@ export const FALLBACK_METRICS = [
 export function displayUnit(unit: string | null | undefined): string {
   if (!unit) return '';
   if (unit === 'uSv/h') return 'µSv/h';
-  if (unit === 'breaths/min') return '/dk';
+  if (unit === 'breaths/min') return '/min';
   return unit;
 }

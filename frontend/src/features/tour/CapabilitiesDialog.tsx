@@ -1,4 +1,4 @@
-// "Ne gerçek, ne simüle?" dialog: honest status per capability + the
+// "What is real, what is simulated?" dialog: honest status per capability + the
 // provenance badge legend used across the screens.
 import { Dialog, SourceBadge } from '../../ui';
 import { CAPABILITIES, CAP_STATE } from './capabilities';

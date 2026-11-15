@@ -6,7 +6,7 @@ import './styles/base.css';
 import App from './App';
 import { useTour } from './features/tour/store';
 
-// "#/ground" (old: "#/yer") opens the full-screen ground mission-control console instead of the app.
+// "#/ground" (old link: "#/yer") opens the full-screen ground mission-control console instead of the app.
 const GroundConsoleApp = lazy(() => import('./features/console/GroundConsoleApp').then((m) => ({ default: m.GroundConsoleApp })));
 const isConsole = () => /^#\/(ground|yer)/.test(window.location.hash);
 // Guided jury tour overlay: lives above both views so it survives the route change.
@@ -48,3 +48,11 @@ createRoot(document.getElementById('root')!).render(
     <Root />
   </StrictMode>,
 );
+
+// Jury link: the CO₂ + headache scenario tour starts by itself as soon as the
+// page opens, with auto-advance on. `?autoplay=0` opens the app without it;
+// the tour's close button or Esc stops it.
+if (!isConsole() && new URLSearchParams(window.location.search).get('autoplay') !== '0') {
+  useTour.getState().setAuto(true);
+  void useTour.getState().start('co2');
+}

@@ -166,7 +166,7 @@ function MetricColumn({
   // rule (e.g. ppO2 shown under cabin pressure) gets its name instead.
   const own = !!top && (top.metric === def.metric || (!!pair && top.metric === pair.metric));
   const thr = top && own && Number.isFinite(top.threshold) ? `${cmpSymbol(top.comparison)} ${fmtAuto(top.threshold)} ${displayUnit(top.unit)}` : top ? 'related' : '';
-  // Provenance: the threshold (STANDART / DEMO) and the value (SENTETİK; in the
+  // Provenance: the threshold (STANDARD / DEMO) and the value (SYNTHETIC; in the
   // radiation-spe scenario the event timing is a real NASA DONKI record).
   const thrSrc = ruleSource(top);
   const valueSrc: SourceKind | null = last ? measurementSource(scenarioId) : null;
@@ -344,7 +344,7 @@ function CrewCard({
   const labRes = labs.data?.results ?? [];
   const outRef = labRes.filter((r) => r.position_vs_reference !== 'WITHIN').length;
   const blood = labs.data ? (labRes.length ? `${labRes.length} results · ${outRef} out of range` : 'No lab results') : labs.error ? 'Not loaded' : '…';
-  // One badge per lab source present (GERÇEK = NASA OSDR, ELLE = manual entry).
+  // One badge per lab source present (REAL = NASA OSDR, MANUAL = manual entry).
   const labSrcs = [...new Set(labRes.map((r) => r.source_type ?? ''))]
     .map((t) => labSource(t))
     .filter((x): x is NonNullable<ReturnType<typeof labSource>> => !!x);

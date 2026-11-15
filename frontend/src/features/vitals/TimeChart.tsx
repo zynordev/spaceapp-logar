@@ -287,7 +287,7 @@ export function TimeChart(props: Props) {
           {active.kind === 'bucket' ? (
             <>
               <div className="vt-tip-time">{fmtDateTime(active.start)} – {fmtClock(active.end)}</div>
-              <div className="vt-tip-val">{fmtAuto(active.v)} <small>{unit} ort.</small></div>
+              <div className="vt-tip-val">{fmtAuto(active.v)} <small>{unit} avg.</small></div>
               <div className="vt-tip-sub">lowest {fmtAuto(active.lo)} · highest {fmtAuto(active.hi)}</div>
               <div className="vt-tip-sub">{active.count} readings</div>
             </>

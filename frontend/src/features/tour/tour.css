@@ -128,7 +128,7 @@
 .tour__dots li.is-done { background: var(--text-faint); }
 .tour__dots li.is-on { background: var(--text); }
 
-/* Top-bar jury strip (buttons + profile + "Ne gerçek?") */
+/* Top-bar jury strip (buttons + profile + "Real or simulated?") */
 .tour-strip {
   display: flex;
   align-items: center;
@@ -162,7 +162,7 @@
   .tour-strip__short { display: inline; }
 }
 
-/* "Ne gerçek, ne simüle?" table */
+/* "What is real, what is simulated?" table */
 .cap-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .cap-table th,
 .cap-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }

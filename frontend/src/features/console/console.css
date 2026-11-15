@@ -1,4 +1,4 @@
-/* Ground mission-control console (#/yer). Tokens only; 8px grid.
+/* Ground mission-control console (#/ground). Tokens only; 8px grid.
  * Amber (--data) = items travelling down the link; ice blue (--accent) =
  * acknowledgements travelling up. Attention always via AttentionBadge. */
 

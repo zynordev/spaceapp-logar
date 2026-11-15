@@ -12,8 +12,8 @@ your own CSS classes with your feature name (`body3d-…`, `vitals-…`); `ui-` 
 - Turkish copy, plain language for non-doctor astronauts. No diagnosis/treatment wording.
 - Mark DEMO thresholds with `<Chip tone="demo">DEMO</Chip>`.
 - Call the backend only via `api()` / `usePolling()` (`src/lib/api.ts`).
-  Render failures with `<ErrorNote error={e} />` (404 shows a calm "Bu özellik sunucuda henüz yok").
-  After a failed write: `notifyError(e, 'Kayıt')` (403 -> toast "Bu işlem için yetkiniz yok").
+  Render failures with `<ErrorNote error={e} />` (404 shows a calm "This feature is not on the server yet").
+  After a failed write: `notifyError(e, 'Save')` (403 -> toast "You do not have permission for this action").
 - Your panel is mounted inside the shell grid; it should render its own `<Panel>` and fill its width.
   BodyMapPanel/VitalsPanel/AlertsPanel/InputsPanel/GroundPanel are lazy-loaded behind `Suspense`.
 
@@ -36,7 +36,7 @@ your own CSS classes with your feature name (`body3d-…`, `vitals-…`); `ui-` 
 | `Dialog` | `open, title, onClose?, children, footer?, width?` (native `<dialog>`) |
 | `Tabs` | `tabs: {id,label,badge?}[], value, onChange, label, children` |
 | `Icon` | `name: IconName, size?` (inline SVG, offline) |
-| `SourceBadge` | `kind: 'REAL'\|'STANDARD'\|'DEMO'\|'SYNTHETIC'\|'MANUAL', detail?, size?: 'xs'\|'sm'` — provenance of a value/threshold (GERÇEK / STANDART / DEMO / SENTETİK / ELLE); border style + icon + word |
+| `SourceBadge` | `kind: 'REAL'\|'STANDARD'\|'DEMO'\|'SYNTHETIC'\|'MANUAL', detail?, size?: 'xs'\|'sm'` — provenance of a value/threshold (REAL / STANDARD / DEMO / SYNTHETIC / MANUAL); border style + icon + word |
 | `ruleSource(rule)`, `measurementSource(scenarioId)`, `labSource(sourceType)` | derive the SourceBadge kind from data (rule validation_status, mission scenario, lab source_type) |
 | `formatDateTime(v, withSeconds?)`, `formatTime`, `formatRelative`, `formatDuration(sec)`, `formatNumber(v, digits?)`, `roleLabel(role)`, `ROLE_LABEL` | Turkish formatting |
 

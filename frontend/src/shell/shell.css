@@ -91,7 +91,7 @@
 }
 .shell-user__role { font-size: var(--fs-xs); color: var(--accent-strong); }
 
-/* Jury strip: guided tours, mission profile, "Ne gerçek, ne simüle?". */
+/* Jury strip: guided tours, mission profile, "What is real, what is simulated?". */
 .shell-jury {
   order: 10;
   flex: 1 1 100%;

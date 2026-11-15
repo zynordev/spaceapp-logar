@@ -1,4 +1,4 @@
-// 5. Kırmızı bayrak: serious symptoms that open a CRITICAL alert immediately.
+// 5. Red flag: serious symptoms that open a CRITICAL alert immediately.
 import { useState } from 'react';
 import { api, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
@@ -107,7 +107,7 @@ export function RedFlagsSection() {
             <div className="lgi-confirm" role="alertdialog" aria-labelledby="lgi-rf-confirm-h" aria-describedby="lgi-rf-confirm-d">
               <strong id="lgi-rf-confirm-h">Are you sure? A CRITICAL alarm will open immediately.</strong>
               <div id="lgi-rf-confirm-d">
-                Bildirilecek: <ul>{selected.map((f) => <li key={f}>{labelOf(f)}</li>)}</ul>
+                To be reported: <ul>{selected.map((f) => <li key={f}>{labelOf(f)}</li>)}</ul>
               </div>
               <div className="lgi-actions">
                 <button type="button" className="lgi-btn lgi-btn--danger" onClick={send} disabled={busy} aria-busy={busy} autoFocus>

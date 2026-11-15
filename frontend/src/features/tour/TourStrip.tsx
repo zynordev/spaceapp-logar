@@ -1,5 +1,5 @@
 // Top-bar jury strip: the two guided-tour buttons, the mission profile
-// selector and the "Ne gerçek, ne simüle?" dialog.
+// selector and the "What is real, what is simulated?" dialog.
 import { useState } from 'react';
 import { Button } from '../../ui';
 import { ProfileSelector } from '../profile';

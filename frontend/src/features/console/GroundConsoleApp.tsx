@@ -1,4 +1,4 @@
-// "Yer kontrol konsolu": full-screen Earth mission-control view (#/yer).
+// "Ground control console": full-screen Earth mission-control view (#/ground).
 // The onboard system works on its own; this screen shows the same events
 // the ground sees, but only after the one-way light delay. The delay is a
 // display-only simulation on this client — the API itself answers instantly.
@@ -156,7 +156,7 @@ export function GroundConsoleApp() {
         className="skip-link"
         href="#console-main"
         onClick={(e) => {
-          // The hash is the route (#/yer): move focus without touching it.
+          // The hash is the route (#/ground): move focus without touching it.
           e.preventDefault();
           document.getElementById('console-main')?.focus();
         }}

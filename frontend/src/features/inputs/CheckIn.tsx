@@ -1,4 +1,4 @@
-// 1. Öznel durum (subjective check-in): 8 fields, 0–4 severity each.
+// 1. Subjective check-in: 8 fields, 0–4 severity each.
 import { useState, type FormEvent } from 'react';
 import { api, qs, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';

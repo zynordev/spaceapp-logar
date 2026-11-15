@@ -1,4 +1,4 @@
-// Action card V2: pre-written steps with reasons, "Yaptım", re-evaluation
+// Action card V2: pre-written steps with reasons, "Done", re-evaluation
 // counter, escalation / closing conditions, possible explanations and the
 // live situation. All texts come from the server and are rendered as text.
 import { useState } from 'react';

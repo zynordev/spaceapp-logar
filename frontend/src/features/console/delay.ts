@@ -14,7 +14,7 @@ export interface Preset {
 }
 
 // One-way light time. Mars varies with orbital geometry; the rounded presets
-// follow the brief (en yakın ~4 min, ortalama ~12,5 min, en uzak ~24 min).
+// follow the brief (closest ~4 min, average ~12.5 min, farthest ~24 min).
 export const PRESETS: Preset[] = [
   { id: 'leo', label: 'Earth orbit', seconds: 0, hint: '≈ 0 s' },
   { id: 'moon', label: 'Moon', seconds: 1.3, hint: '≈ 1.3 s' },

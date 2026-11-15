@@ -30,8 +30,8 @@ Other exports: `ECG_LABEL` (the fixed label text), `loadEcg()` / `ECG_URL`
 `ECG_ATTRIBUTION_URL`, type `EcgRecord`.
 
 ## Behaviour
-- Always visible label: "Kayıtlı örnek EKG — MIT-BIH NSR 16265 (PhysioNet) ·
-  canlı sensör değil · ritim yorumu yapılmaz", a "Kayıt · canlı değil" tag
+- Always visible label: "Recorded sample ECG — MIT-BIH NSR 16265 (PhysioNet) ·
+  not a live sensor · no rhythm interpretation", a "Recording · not live" tag
   (clock icon + text) and a local link to `ATTRIBUTION.md` (works offline).
 - Scale: grid minor box 0.2 s × 0.5 mV, kept at the 25 mm/s : 10 mm/mV paper
   ratio. One nominal mm is 96/25.4 px and shrinks only when the strip is too
@@ -40,12 +40,12 @@ Other exports: `ECG_LABEL` (the fixed label text), `loadEcg()` / `ECG_URL`
   is broken at the loop restart and a short dashed tick marks it.
 - Canvas is DPR-aware (capped at 3) and redrawn on resize (ResizeObserver).
 - Animation pauses when the tab is hidden or the strip is scrolled off screen;
-  a "Durdur / Oynat" button (WCAG 2.2.2) pauses it manually.
+  a "Pause / Play" button (WCAG 2.2.2) pauses it manually.
 - `prefers-reduced-motion: reduce`: no animation; the whole 30 s is drawn
   statically fitted to the width (time lines drop to 1 s if 0.2 s would be
   < 4 px apart) and the scale line says so.
 - Loading: skeleton. Missing/invalid file (including an HTML fallback page):
-  honest `EmptyState` with "Tekrar dene"; no synthetic waveform is ever drawn.
+  honest `EmptyState` with "Try again"; no synthetic waveform is ever drawn.
 - Colours come from tokens (`--data` trace, `--hud-line*` grid, `--bg-2`
   screen); no glow, no gradients.
 
@@ -53,7 +53,7 @@ Other exports: `ECG_LABEL` (the fixed label text), `loadEcg()` / `ECG_URL`
 - Self-contained; renders its own `<figure>`, no `<Panel>`. Put it inside a
   HUD card or a `Panel` and give it a width; it fills the parent width.
 - Suggested: a HUD card below/next to the heart-rate tile titled e.g.
-  "Örnek EKG (kayıt)", `<EcgStrip compact />`. Keep it visually separate from
+  "Sample ECG (recording)", `<EcgStrip compact />`. Keep it visually separate from
   the live heart-rate value.
 - Data files live in `public/ecg/` and are copied to `dist/ecg/` by Vite;
   FastAPI serves them under `/ui/ecg/`.

@@ -1,4 +1,4 @@
-// "Ne gerçek, ne simüle?" — one honest line per capability. Same table as
+// "What is real, what is simulated?" — one honest line per capability. Same table as
 // docs/CAPABILITIES.md (keep both in sync).
 export type CapState = 'works' | 'sim' | 'planned' | 'none';
 

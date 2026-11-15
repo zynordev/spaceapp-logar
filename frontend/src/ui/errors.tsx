@@ -31,7 +31,7 @@ export interface ErrorNoteProps {
 }
 
 /**
- * Inline error box. 404 renders as a calm info note ("sunucuda henüz yok"),
+ * Inline error box. 404 renders as a calm info note ("not on the server yet"),
  * since in the parallel build an endpoint may simply not be merged yet.
  */
 export function ErrorNote({ error, what, onRetry, compact }: ErrorNoteProps) {
@@ -56,7 +56,7 @@ export function ErrorNote({ error, what, onRetry, compact }: ErrorNoteProps) {
 
 /**
  * Call from a catch block after a write. Shows a toast with a friendly
- * message (403 -> "Bu işlem için yetkiniz yok"). Returns the description.
+ * message (403 -> "You do not have permission for this action"). Returns the description.
  */
 export function notifyError(error: unknown, what?: string) {
   const d = describeError(error, what);

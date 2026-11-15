@@ -1,4 +1,4 @@
-// 2. Aktivite beyanı (contract B): what the crew member is doing right now and
+// 2. Activity declaration (contract B): what the crew member is doing right now and
 // for how long. Rest-only rules use only data declared as rest.
 import { useEffect, useRef, useState } from 'react';
 import { api, qs, usePolling } from '../../lib/api';

@@ -6,7 +6,7 @@
 //   arrival   = departure + delay / compression.
 // An item whose own timestamp is already older than the (real, uncompressed)
 // one-way delay when the console first sees it has, physically, already
-// arrived: it is shown as "konsol açılmadan önce ulaştı" instead of being
+// arrived: it is shown as "arrived before the console opened" instead of being
 // held back again. "Yeniden oynat" replays every known item from now.
 import { useCallback, useEffect, useRef, useState } from 'react';
 

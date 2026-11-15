@@ -88,7 +88,7 @@ export function SignalLink({ inTransit, delaySeconds, compression, reducedMotion
                   {e.attention && <AttentionBadge level={e.attention} size="sm" />}
                 </span>
                 <span className="console-queue__eta">
-                  kalan <span className="console-num console-num--md">{formatCountdown(e.transit.remainingMs)}</span>
+                  remaining <span className="console-num console-num--md">{formatCountdown(e.transit.remainingMs)}</span>
                   <span className="console-muted"> · arrival {clock(e.transit.arriveAt)}</span>
                 </span>
                 <span
