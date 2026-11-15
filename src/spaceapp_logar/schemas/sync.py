@@ -3,7 +3,7 @@ from enum import StrEnum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from spaceapp_logar.schemas.observations import Identifier
 
@@ -70,7 +70,7 @@ class SyncAckCreate(BaseModel):
     recipient: Recipient
     packet_id: UUID
     sha256: str = Field(min_length=64, max_length=64)
-    until: datetime
+    until: AwareDatetime
 
 
 class SyncAckRead(BaseModel):

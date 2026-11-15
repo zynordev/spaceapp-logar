@@ -340,3 +340,13 @@ def test_watch_alert_does_not_escalate(api_client: tuple[TestClient, Engine]) ->
     assert client.get("/v1/sync/escalations", params={"mission_id": mission}).json() == []
     life = packet(client, "LIFE_SUPPORT", mission)
     assert "ALERT" in kinds(life) and "TREND" in kinds(life)
+
+
+def test_ack_rejects_naive_until(api_client: tuple[TestClient, Engine]) -> None:
+    client, _ = api_client
+    red_flag(client)
+    pkt = packet(client, "FLIGHT_SURGEON")
+
+    response = client.post("/v1/sync/ack", json=ack_body(pkt, until="2026-11-14T10:00:00"))
+
+    assert response.status_code == 422

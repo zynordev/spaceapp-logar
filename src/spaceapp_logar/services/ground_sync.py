@@ -492,7 +492,8 @@ def _trend_items(
         return []
     groups: dict[tuple[str, str, datetime], list[float]] = defaultdict(list)
     units: dict[str, str] = {}
-    for row in session.scalars(select(Observation).where(*conditions)).all():
+    for row in session.scalars(select(Observation).where(*conditions).order_by(Observation.observed_at, Observation.id)
+    ).all():
         hour = row.observed_at.replace(minute=0, second=0, microsecond=0)
         groups[(row.metric, row.target_id, hour)].append(row.value)
         units[row.metric] = row.unit
