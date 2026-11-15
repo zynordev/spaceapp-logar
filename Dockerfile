@@ -38,4 +38,4 @@ EXPOSE 8000
 
 # Run migrations, import OSDR Inspiration4 data, optionally seed the demo
 # scenarios (SPACEAPP_SEED_DEMO=true) and start uvicorn
-CMD ["sh", "-c", "uv run alembic upgrade head && uv run python -m spaceapp_logar.services.osdr_import && if [ \"$SPACEAPP_SEED_DEMO\" = \"true\" ]; then uv run python -m spaceapp_logar.seed_demo; fi && uv run uvicorn spaceapp_logar.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uv run alembic upgrade head && uv run python -m spaceapp_logar.services.osdr_import && if [ \"$SPACEAPP_SEED_DEMO\" = \"true\" ]; then uv run python -m spaceapp_logar.seed_demo || echo seed failed, continuing; fi && uv run uvicorn spaceapp_logar.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

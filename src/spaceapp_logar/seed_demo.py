@@ -38,8 +38,20 @@ def _existing_mission(session: Session, scenario_id: str) -> str | None:
 
 
 def set_mission_profile(mission_id: str, profile: str) -> bool:
-    """Set the mission profile through the API if that route exists."""
+    """Set the mission profile through the API if that route exists.
 
+    Never raises: the production image has no dev dependencies (httpx), and the
+    seed must not abort the boot.
+    """
+
+    try:
+        return _set_mission_profile(mission_id, profile)
+    except Exception as exc:  # noqa: BLE001 - seed must never abort boot
+        logger.warning("could not set profile %s on %s: %s", profile, mission_id, exc)
+        return False
+
+
+def _set_mission_profile(mission_id: str, profile: str) -> bool:
     from fastapi.testclient import TestClient
 
     from spaceapp_logar.auth import Role, auth_configured, issue_token

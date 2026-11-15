@@ -22,3 +22,13 @@ def test_seed_demo_is_idempotent(database_url, make_alembic_config) -> None:
     assert set(first) == set(SEED_SCENARIOS) and first == second
     assert count > 0 and labs > 0
     engine.dispose()
+
+
+def test_set_mission_profile_never_raises(monkeypatch):
+    from spaceapp_logar import seed_demo as mod
+
+    def boom(*args, **kwargs):
+        raise ImportError("httpx missing")
+
+    monkeypatch.setattr(mod, "_set_mission_profile", boom)
+    assert mod.set_mission_profile("demo-x", "MARS") is False
