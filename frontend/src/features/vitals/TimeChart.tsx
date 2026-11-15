@@ -194,7 +194,7 @@ export function TimeChart(props: Props) {
           <g key={`y${v}`}>
             <line className="vt-grid" x1={m.l} x2={W - m.r} y1={Y(v)} y2={Y(v)} />
             <text className="vt-axis" x={m.l - 8} y={Y(v) + 4} textAnchor="end">
-              {v.toLocaleString('tr-TR', { minimumFractionDigits: dec, maximumFractionDigits: dec })}
+              {v.toLocaleString('en-GB', { minimumFractionDigits: dec, maximumFractionDigits: dec })}
             </text>
           </g>
         ))}

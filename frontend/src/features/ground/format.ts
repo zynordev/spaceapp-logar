@@ -12,7 +12,7 @@ export function formatDuration(totalSeconds: number): string {
   return sec > 0 ? `${m} dk ${sec} sn` : `${m} dk`;
 }
 
-const DATE_FMT = new Intl.DateTimeFormat('tr-TR', {
+const DATE_FMT = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
   month: 'short',
   hour: '2-digit',

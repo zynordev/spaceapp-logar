@@ -1,7 +1,7 @@
 // Turkish formatting helpers shared by all panels.
 import type { Role } from '../lib/store';
 
-const TR = 'tr-TR';
+const TR = 'en-GB';
 
 export const ROLE_LABEL: Record<Role, string> = {
   ASTRONAUT: 'Astronot',

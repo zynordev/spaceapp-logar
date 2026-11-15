@@ -72,7 +72,7 @@ function pick(list: MetricDef[], order: string[]): MetricDef[] {
   return order.map((m) => list.find((d) => d.metric === m)).filter((d): d is MetricDef => !!d);
 }
 
-const upperTr = (s: string) => s.toLocaleUpperCase('tr-TR');
+const upperTr = (s: string) => s.toLocaleUpperCase('en-GB');
 
 /* --------------------------------------------------------------- pieces */
 

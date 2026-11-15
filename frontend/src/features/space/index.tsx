@@ -226,7 +226,7 @@ export function MissionSpaceView({ active, onOpenGround }: MissionSpaceViewProps
             <dd>
               {link.escalations ? (
                 <>
-                  <span className={`sp__flag sp__flag--${link.level.toLowerCase()}`}>{levelWord?.toLocaleUpperCase('tr-TR')}</span> {link.escalations} bekliyor
+                  <span className={`sp__flag sp__flag--${link.level.toLowerCase()}`}>{levelWord?.toLocaleUpperCase('en-GB')}</span> {link.escalations} bekliyor
                 </>
               ) : link.pending == null ? (
                 '…'

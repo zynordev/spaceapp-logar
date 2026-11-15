@@ -79,7 +79,7 @@ async function delayNote(ctx: StepCtx) {
     if (ctx.left()) return;
     const d = s.link_delay_seconds;
     if (d == null) ctx.note('Sunucuda gecikme ayarlı değil (0 sn kabul edilir). Konsoldan “Mars ortalama” seçin ya da görev profilini Mars yapın.');
-    else if (d < 5) ctx.note(`Tek yön gecikme ≈${d.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} sn: sinyal hemen ulaşır. Mars profilinde ≈12,5 dk (60× gösterimde ≈12,5 sn).`);
+    else if (d < 5) ctx.note(`Tek yön gecikme ≈${d.toLocaleString('en-GB', { maximumFractionDigits: 1 })} sn: sinyal hemen ulaşır. Mars profilinde ≈12,5 dk (60× gösterimde ≈12,5 sn).`);
   } catch {
     /* the console shows its own status */
   }

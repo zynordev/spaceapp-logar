@@ -1,4 +1,4 @@
-const TR = 'tr-TR';
+const TR = 'en-GB';
 
 export const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 

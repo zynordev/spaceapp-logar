@@ -82,7 +82,7 @@ export function resolveDelay(settings: DelaySettings, serverSeconds: number | nu
   return PRESETS.find((p) => p.id === settings.preset)?.seconds ?? null;
 }
 
-const nf1 = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 });
+const nf1 = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 });
 
 /** 0 -> "0 sn", 1.3 -> "1,3 sn", 750 -> "12 dk 30 sn", 3600 -> "1 sa". */
 export function formatDelay(seconds: number | null | undefined): string {
@@ -112,7 +112,7 @@ export function formatCountdown(ms: number): string {
 /** "08:45:34" local clock time; "—" for invalid. */
 export function clock(ms: number | null | undefined): string {
   if (ms === null || ms === undefined || !Number.isFinite(ms)) return '—';
-  return new Date(ms).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 export function parseTime(v: string | null | undefined): number | null {

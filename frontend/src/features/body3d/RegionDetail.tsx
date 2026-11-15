@@ -5,9 +5,9 @@ import { ATTENTION, COVERAGE_TEXT, QUALITY_TEXT } from './meta';
 import { RegionIcon } from './icons';
 import type { Attention, BodyLatestValue, BodyRegionRead, RegionKey } from './types';
 
-const timeFmt = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit' });
-const dateFmt = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-const numFmt = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
+const timeFmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' });
+const dateFmt = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const numFmt = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 
 export function formatWhen(iso: string | null | undefined): string {
   if (!iso) return 'zaman bilinmiyor';

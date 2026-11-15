@@ -143,7 +143,7 @@ export function relTime(iso: string | null | undefined, now = Date.now()): strin
 export function fmtDateTime(iso: string | null | undefined): string {
   const t = toMs(iso);
   if (t === null) return '—';
-  return new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return new Date(t).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 export function fmtClock(totalSeconds: number): string {
@@ -157,7 +157,7 @@ export function fmtClock(totalSeconds: number): string {
 
 export function fmtNum(v: number | null | undefined, digits = 2): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return '—';
-  return Number(v.toFixed(digits)).toLocaleString('tr-TR');
+  return Number(v.toFixed(digits)).toLocaleString('en-GB');
 }
 
 /** `<input type="datetime-local">` value for a Date, in local time. */
