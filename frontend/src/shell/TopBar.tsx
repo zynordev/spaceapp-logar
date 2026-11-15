@@ -4,6 +4,8 @@ import { Button, Chip, Icon, Select, Skeleton, formatDateTime, roleLabel } from 
 import { FeatureBoundary } from './FeatureBoundary';
 // From the file, not the folder index: the tour overlay stays a lazy chunk.
 import { TourStrip } from '../features/tour/TourStrip';
+// From the file, not the folder index: the console stays its own lazy chunk.
+import { GroundConsoleLink } from '../features/console/GroundConsoleLink';
 import { DemoScenarioControl } from './lazyFeatures';
 import { selectMission, type AuthInfo, type MissionsInfo } from './useBootstrap';
 
@@ -119,6 +121,7 @@ export function TopBar({ missions, auth, onLogin, onLogout }: TopBarProps) {
         </div>
       </div>
 
+      <GroundConsoleLink className="shell-console" />
       <UserChip auth={auth} onLogin={onLogin} onLogout={onLogout} />
 
       <div className="shell-jury">

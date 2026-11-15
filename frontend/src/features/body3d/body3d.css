@@ -349,3 +349,8 @@
   .b3d-bar button { padding: 0 6px; }
   .b3d-bar__group + .b3d-bar__group { padding-left: 2px; margin-left: 0; }
 }
+
+/* Bare mode (design screens): body only, still or interactive. */
+.b3d-panel.is-bare .b3d-hud-bottom[hidden] { display: none; }
+.b3d-panel.is-still .b3d-canvas { pointer-events: none; }
+.b3d-panel.is-bare .b3d-attrib { left: auto; right: 8px; bottom: 4px; font-size: 9px; opacity: 0.8; }

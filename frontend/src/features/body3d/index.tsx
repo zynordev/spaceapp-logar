@@ -70,7 +70,15 @@ const MODE_TAG = {
   neutral: { text: 'NÖTR', cls: 'is-neutral' },
 } as const;
 
-export function BodyMapPanel() {
+export interface BodyMapPanelProps {
+  /** Design screens: body only (no toolbar, labels or detail card). The
+   * BodyParts3D attribution line always stays. */
+  bare?: boolean;
+  /** Bare mode: allow rotating / zooming (person screen) or keep it still (crew window). */
+  interactive?: boolean;
+}
+
+export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelProps = {}) {
   const data = useBodyMap();
   const reducedMotion = useReducedMotion();
   const webgl = useMemo(detectWebGL, []);
@@ -145,7 +153,7 @@ export function BodyMapPanel() {
 
   return (
     <section
-      className={`b3d-panel b3d-hud${region ? ' has-detail' : ''}`}
+      className={`b3d-panel b3d-hud${region && !bare ? ' has-detail' : ''}${bare ? ' is-bare' : ''}${bare && !interactive ? ' is-still' : ''}`}
       aria-labelledby="b3d-title"
       onKeyDown={(e) => {
         if (e.key === 'Escape' && selected) clear();
@@ -171,7 +179,8 @@ export function BodyMapPanel() {
                 layers={layers}
                 onModel={onModel}
                 onFail={onFail}
-                detailOpen={!!region}
+                detailOpen={!!region && !bare}
+                bare={bare}
               />
             </Suspense>
           </SceneBoundary>
@@ -185,7 +194,7 @@ export function BodyMapPanel() {
       <h2 id="b3d-title" className="b3d-sr">
         Vücut haritası
       </h2>
-      {(data.note || fallbackReason || data.stale) && (
+      {!bare && (data.note || fallbackReason || data.stale) && (
         <p className={`b3d-note is-${data.mode}`} role="status">
           {[data.stale && data.generatedAt ? `Son güncelleme ${formatWhen(data.generatedAt)} (eski).` : null, data.note, fallbackReason]
             .filter(Boolean)
@@ -194,14 +203,14 @@ export function BodyMapPanel() {
       )}
 
       {/* right: region detail (only when a region is selected) */}
-      {region && (
+      {region && !bare && (
         <div className="b3d-hud-detail">
           <RegionDetail region={region} onClose={clear} />
         </div>
       )}
 
       {/* bottom: one compact toolbar (view, layers, regions list, data mode) */}
-      <div className="b3d-hud-bottom">
+      <div className="b3d-hud-bottom" hidden={bare}>
         {regionsOpen && (
           <div className="b3d-regions" id="b3d-regions">
             <RegionChips

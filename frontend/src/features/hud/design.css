@@ -1,0 +1,341 @@
+/* Mission screens in design pixels (1920x1080 stage, scaled to fit).
+ * Colours sampled from the design team's frames. Prefix: dz- */
+
+.dz-fit {
+  --dz-page: #006663;
+  --dz-panel: #004240;
+  --dz-strip: #09817e;
+  --dz-rule: #8b8b8b;
+  --dz-sep: #697c77;
+  --dz-warn-head: #920000;
+  --dz-warn-body: #570000;
+  --dz-green: #3ad44c;
+  --dz-ink: #002d05;
+  --dz-text: #f3fbfa;
+  position: relative;
+  width: 100%;
+  height: calc(100vh - var(--chrome-h, 96px));
+  height: calc(100dvh - var(--chrome-h, 96px));
+  min-height: 420px;
+  overflow: hidden;
+  background: var(--dz-page);
+}
+.dz-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+  color: var(--dz-text);
+  font-family: var(--font-mono);
+}
+.dz-stage--top { z-index: 3; pointer-events: none; }
+.dz-stage--top > * { pointer-events: auto; }
+.dz-layer { position: absolute; inset: 0; transition: filter var(--dur) var(--ease); }
+.dz-layer.is-blurred { filter: blur(7px) brightness(0.92); }
+.dz-backdrop { position: absolute; inset: 0; z-index: 2; border: 0; padding: 0; background: rgba(0, 40, 38, 0.15); cursor: default; }
+.dz-abs, .dz-stage [style*='left'] { position: absolute; }
+
+/* -------------------------------------------------------------- panel */
+.dz-card {
+  position: absolute;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: var(--dz-panel);
+  color: var(--dz-text);
+  font: inherit;
+  text-align: left;
+}
+button.dz-card { cursor: pointer; }
+button.dz-card:hover .dz-strip { background: #0b928e; }
+.dz-strip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 38px;
+  margin: 0;
+  padding: 0 10px;
+  background: var(--dz-strip);
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 38px;
+  letter-spacing: 0.01em;
+  color: var(--dz-text);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.dz-strip--lg { height: 42px; padding: 0 18px; font-size: 34px; line-height: 44px; }
+.dz-rule { position: absolute; background: var(--dz-rule); border-radius: 2px; }
+.dz-vsep { position: absolute; background: var(--dz-sep); }
+.dz-vsep--thin { background: #8b8b8b; }
+
+/* status bar */
+.dz-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.dz-bar--normal { background: var(--dz-green); color: var(--dz-ink); }
+.dz-bar--watch { background: #ffcc00; color: #2f2600; }
+.dz-bar--alert { background: #f59a3a; color: #331a00; }
+.dz-bar--critical { background: #b42323; color: #ffffff; }
+.dz-bar--unknown { background: #a9b8b6; color: #102624; outline: 2px dashed #e4ecea; outline-offset: -5px; }
+.dz-bar--none { background: transparent; color: #b5cfcb; border: 2px solid var(--dz-sep); }
+
+/* level text */
+.dz-stage .t-normal { color: #8ff09a; }
+.dz-stage .t-unknown { color: #e4ecea; }
+.dz-stage .t-watch { color: #fde68a; }
+.dz-stage .t-alert { color: #fed7aa; }
+.dz-stage .t-critical { color: #fecaca; }
+
+/* ring */
+.dz-ring { position: relative; display: inline-grid; place-items: center; flex: none; }
+.dz-ring svg { position: absolute; inset: 0; }
+.dz-ring__disc { fill: #ffffff; }
+.dz-ring__track { fill: none; stroke: #e2e2e2; }
+.dz-ring__arc { fill: none; stroke: #a9b8b6; }
+.dz-ring--normal .dz-ring__arc { stroke: #2ecc4f; }
+.dz-ring--watch .dz-ring__arc { stroke: #ffc400; }
+.dz-ring--alert .dz-ring__arc { stroke: #f59a3a; }
+.dz-ring--critical .dz-ring__arc { stroke: #ef3b46; }
+.dz-ring__num { position: relative; font-family: var(--font-display); font-weight: 600; color: #3a3a3a; line-height: 1; }
+.dz-ring__num sup { font-size: 0.5em; vertical-align: 0.8em; }
+.dz-ring--normal .dz-ring__num sup { color: #2ecc4f; }
+.dz-ring--watch .dz-ring__num sup { color: #ffc400; }
+.dz-ring--alert .dz-ring__num sup, .dz-ring--critical .dz-ring__num sup { color: #ef3b46; }
+
+/* ---------------------------------------------------------- crew card */
+.dz-crew__name { font-size: 32px; padding: 0 10px; }
+.dz-crew__photo {
+  position: absolute;
+  left: 11px;
+  top: 45px;
+  width: 156px;
+  height: 194px;
+  display: grid;
+  place-items: center;
+  background: #08090b;
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 500;
+  color: #9fb3b0;
+}
+.dz-crew__label { position: absolute; font-size: 19px; line-height: 30px; letter-spacing: 0.06em; color: var(--dz-text); }
+.dz-crew__emergency {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
+  font-size: 17px;
+  line-height: 26px;
+  letter-spacing: 0.06em;
+  color: #d8ece9;
+  overflow: hidden;
+}
+.dz-crew__emergency.is-active { color: #ffb4b4; font-weight: 500; }
+.dz-crew__list { position: absolute; display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 19px; color: #d8ece9; white-space: nowrap; }
+.dz-crew__list b { font-weight: 500; }
+.dz-crew__resume { position: absolute; overflow: hidden; font-size: 13px; line-height: 20px; letter-spacing: 0.02em; color: #d8ece9; }
+.dz-crew__resume b { font-weight: 500; }
+
+/* ------------------------------------------------------ room conditions */
+.dz-room__col {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dz-text);
+  font: inherit;
+  cursor: pointer;
+}
+.dz-room__col.is-unmeasured { cursor: default; }
+button.dz-room__col:hover { background: rgba(255, 255, 255, 0.04); }
+.dz-room__label {
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 26px;
+  letter-spacing: 0.02em;
+}
+.dz-room__value { margin-top: 10px; font-family: var(--font-display); font-size: 84px; font-weight: 600; line-height: 82px; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; }
+.dz-room__value.is-empty { color: #9fb3b0; }
+.dz-room__unit { font-family: var(--font-display); font-size: 33px; font-weight: 400; line-height: 40px; }
+.dz-room__bar { width: 166px; height: 36px; margin-top: 8px; font-size: 28px; }
+.dz-room__src { margin-top: 8px; font-family: var(--font-display); font-size: 14px; letter-spacing: 0.04em; white-space: nowrap; }
+.dz-room__src.is-demo { color: #ffe3a3; }
+.dz-room__icon { margin-top: 6px; color: #b9c4c2; }
+
+/* main panel (empty, as in the design) */
+.dz-main__demo { position: absolute; right: 22px; bottom: 16px; font-size: 13px; letter-spacing: 0.06em; color: #ffe3a3; opacity: 0.85; }
+
+/* ------------------------------------------------------------ crew window */
+.dz-window { position: absolute; overflow: hidden; border-radius: 20px; background: var(--dz-panel); box-shadow: 0 30px 80px rgba(0, 30, 28, 0.55); }
+.dz-window__body { position: absolute; border: 0; padding: 0; background: var(--dz-panel); cursor: pointer; }
+.dz-window__label {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  padding: 0 0 0 7px;
+  border: 0;
+  border-top: 1px solid #097c77;
+  background: var(--dz-strip);
+  color: var(--dz-text);
+  font-family: var(--font-display);
+  font-size: 31px;
+  font-weight: 400;
+  line-height: 38px;
+  text-align: left;
+  cursor: pointer;
+}
+.dz-window__label:hover { background: #0b928e; }
+.dz-window__ring { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.dz-window__caption { max-width: 190px; font-size: 15px; line-height: 22px; letter-spacing: 0.04em; text-align: center; color: #e6f4f2; }
+
+/* ------------------------------------------------------------ person screen */
+.dz-warn .dz-strip { height: 35px; line-height: 36px; font-size: 31px; padding: 0 15px; }
+.dz-warn.is-red { background: var(--dz-warn-body); }
+.dz-warn.is-red .dz-strip { background: var(--dz-warn-head); }
+.dz-warn__list { position: absolute; left: 14px; right: 20px; top: 52px; margin: 0; padding: 0; list-style: none; }
+.dz-warn__list li { margin-bottom: 26px; }
+.dz-warn__list button {
+  display: block;
+  padding: 0 0 0 20px;
+  border: 0;
+  background: none;
+  color: var(--dz-text);
+  font-family: var(--font-mono);
+  font-size: 26px;
+  line-height: 43px;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-indent: -20px;
+  cursor: pointer;
+}
+.dz-warn__mark { display: inline-block; width: 20px; text-indent: 0; }
+.dz-warn__none { font-size: 26px; line-height: 43px; letter-spacing: 0.08em; }
+.dz-warn__more { position: absolute; left: 0; right: 0; bottom: 40px; margin: 0; text-align: center; font-size: 20px; letter-spacing: 0.08em; color: #f0d6d6; }
+
+.dz-params { position: absolute; left: 16px; right: 24px; top: 60px; margin: 0; padding: 0; list-style: none; }
+.dz-params li { margin-bottom: 9px; }
+.dz-params__line { display: flex; align-items: baseline; gap: 6px; font-size: 20px; line-height: 30px; letter-spacing: 0.04em; color: #d8ece9; }
+.dz-params__line > span:first-child { flex: none; }
+.dz-params__dots { flex: 1; min-width: 20px; border-bottom: 3px dotted #9fb3b0; transform: translateY(-6px); }
+.dz-params__line b { flex: none; font-weight: 500; font-size: 18px; }
+.dz-params__sub { display: block; padding-left: 18px; font-size: 13px; line-height: 18px; color: #9fc7c2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.dz-pcol {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dz-text);
+  font: inherit;
+  cursor: pointer;
+}
+.dz-pcol:hover { background: rgba(255, 255, 255, 0.04); }
+.dz-pcol__title { margin-top: 8px; font-family: var(--font-display); font-size: 19px; line-height: 24px; letter-spacing: 0.01em; white-space: nowrap; }
+.dz-pcol__value { margin-top: 2px; font-family: var(--font-display); font-size: 58px; font-weight: 500; line-height: 62px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dz-pcol__value.is-empty { color: #9fb3b0; }
+.dz-pcol__unit { font-family: var(--font-display); font-size: 24px; line-height: 28px; }
+.dz-pcol__bar { width: 134px; height: 26px; margin-top: 6px; font-size: 21px; }
+.dz-pcol__cap { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 146px; margin-top: 10px; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.02em; color: #e6f4f2; white-space: nowrap; }
+.dz-pcol__cap span { overflow: hidden; text-overflow: ellipsis; }
+.dz-pcol__cap .ui-icon { color: #b9c4c2; }
+.dz-pcol__demo { position: absolute; top: 6px; right: 4px; font-size: 9px; letter-spacing: 0.06em; color: #ffe3a3; }
+.dz-pcol--blood .dz-pcol__title { font-size: 18px; }
+.dz-pcol__ringwrap { margin-top: 6px; height: 82px; }
+.dz-pcol--blood .dz-pcol__bar { margin-top: 8px; }
+.dz-pcol__fine { margin-top: 6px; max-width: 130px; font-family: var(--font-display); font-size: 9px; line-height: 12px; text-align: center; letter-spacing: 0.02em; }
+
+.dz-ecg { position: absolute; padding: 6px 14px; border-radius: 20px; background: var(--dz-panel); }
+.dz-ecg .ecg-strip, .dz-ecg figure { margin: 0; }
+
+.dz-subj { position: absolute; left: 22px; right: 22px; top: 62px; margin: 0; padding: 0; list-style: none; font-size: 20px; line-height: 32px; letter-spacing: 0.04em; color: #d8ece9; }
+.dz-subj li + li { margin-top: 16px; }
+.dz-subj__time { font-size: 15px; color: #9fc7c2; }
+.dz-subj__msg {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px 0 14px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--dz-strip);
+  color: #a9d4cf;
+  font-family: var(--font-sans);
+  font-size: 26px;
+  cursor: pointer;
+}
+.dz-subj__msg svg { color: #0a2e2c; }
+.dz-subj__msg:hover { background: #0b928e; color: #e6f4f2; }
+
+/* ------------------------------------------------------------- body slot */
+.dz-body { position: absolute; z-index: 4; overflow: hidden; border-radius: 0; }
+.dz-fit[data-screen='person'] .dz-body { border-radius: 14px; }
+.dz-body.is-still { cursor: pointer; }
+.dz-body.is-still .b3d-panel { pointer-events: none; }
+
+/* -------------------------------------------------------------- nav strip */
+.dz-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 32px;
+  padding: 0 12px;
+  background: #004240;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--dz-text);
+}
+.dz-nav button { padding: 0 10px; height: 24px; border: 0; background: var(--dz-strip); color: var(--dz-text); font: inherit; cursor: pointer; }
+.dz-nav__demo { margin-left: auto; color: #ffe3a3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dz-layer { transition: none; }
+}
+
+/* fit fixes: long data strings stay inside the design boxes */
+.dz-crew__emergency { font-size: 15px; line-height: 23px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; text-align: right; padding-top: 6px; }
+.dz-crew__list { font-size: 12px; line-height: 18px; overflow: hidden; }
+.dz-crew__list > span { overflow: hidden; text-overflow: ellipsis; }
+.dz-crew__resume { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.dz-room__label { font-size: 23px; padding: 0 4px; }
+.dz-pcol__demo { position: static; height: 12px; margin-top: 2px; font-size: 10px; line-height: 12px; letter-spacing: 0.06em; color: #ffe3a3; }
+.dz-pcol__cap { margin-top: 4px; }
+.dz-pcol__title { font-size: 18px; letter-spacing: 0; }
+.dz-ecg { padding: 2px 14px; overflow: hidden; }
+
+/* provenance badges (ui/SourceBadge) inside the design columns */
+.dz-room__src { display: flex; align-items: center; justify-content: center; gap: 4px; }
+.dz-pcol__demo { display: flex; justify-content: center; gap: 3px; height: 16px; }
+.dz-stage .ui-src { transform: scale(1.15); transform-origin: center; }

@@ -10,6 +10,7 @@ export const DemoScenarioControl = lazy(() =>
   import('../features/inputs').then((m) => ({ default: m.DemoScenarioControl })),
 );
 export const HudOverlay = lazy(() => import('../features/hud').then((m) => ({ default: m.HudOverlay })));
+export const MissionScreens = lazy(() => import('../features/hud').then((m) => ({ default: m.MissionScreens })));
 export const GroundPanel = lazy(() => import('../features/ground').then((m) => ({ default: m.GroundPanel })));
 
 /** Start downloading the heavy chunks once the shell is idle. */

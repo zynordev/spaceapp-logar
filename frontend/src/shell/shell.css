@@ -347,3 +347,5 @@
 .shell-details__sub { font-family: var(--font-mono); color: var(--text-muted); }
 .shell-footer { font-family: var(--font-mono); color: var(--text-muted); border-top: 0; }
 .shell-user__avatar { border-radius: 0; }
+.shell-console { margin-left: auto; flex: none; }
+.shell-console + .shell-user { margin-left: var(--sp-2); }

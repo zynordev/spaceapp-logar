@@ -8,7 +8,7 @@ import { FeatureBoundary } from './shell/FeatureBoundary';
 import { LoginDialog } from './shell/LoginDialog';
 import { useDetailTabRequest } from './shell/detailTab';
 import { TopBar } from './shell/TopBar';
-import { AlertsPanel, BodyMapPanel, GroundPanel, HudOverlay, InputsPanel, VitalsPanel, prefetchFeatures } from './shell/lazyFeatures';
+import { AlertsPanel, GroundPanel, InputsPanel, MissionScreens, VitalsPanel, prefetchFeatures } from './shell/lazyFeatures';
 import { useAuthBootstrap, useMissions } from './shell/useBootstrap';
 import './shell/shell.css';
 
@@ -74,16 +74,7 @@ export default function App() {
   const offline = useApp((s) => s.offline);
   const [loginOpen, setLoginOpen] = useState(false);
   const [tab, setTab] = useState<DetailTab | null>(null);
-  // The big panel stays empty (as in the design) until a crew card is clicked.
-  const [bodyOpen, setBodyOpen] = useState(false);
-  const openCrew = useCallback((id: string) => {
-    const current = useApp.getState().crewId;
-    if (current === id) setBodyOpen((o) => !o);
-    else {
-      useApp.getState().setSelection({ crewId: id });
-      setBodyOpen(true);
-    }
-  }, []);
+
 
   useEffect(() => prefetchFeatures(), []);
   // Guided tour (or any other caller) asks for a detail tab.
@@ -156,33 +147,16 @@ export default function App() {
           </EmptyState>
         ) : (
           <>
-            <section className={`hud${bodyOpen ? ' is-open' : ''}`} aria-label="Görev ekranı" data-tour="hud">
-              <div className="hud__scene" data-tour="scene" data-open={bodyOpen ? 'true' : undefined}>
-                {bodyOpen ? (
-                  <Slot name="3D vücut haritası" height={560} className="hud__body">
-                    <BodyMapPanel />
-                  </Slot>
-                ) : (
-                  <p className="hud__hint">
-                    <span>
-                      3D vücut modelini ve vital bulguları açmak için soldan bir <strong>mürettebat kartına</strong> tıklayın.
-                    </span>
-                  </p>
-                )}
-              </div>
-              <div className="hud__overlay">
-                <FeatureBoundary name="Görev ekranı">
-                  <Suspense fallback={null}>
-                    <HudOverlay
-                      scenarioId={missions.current?.scenario_id ?? null}
-                      crewIds={missions.current?.crew_member_ids ?? (crewId ? [crewId] : [])}
-                      onOpen={openDetails}
-                      bodyOpen={bodyOpen}
-                      onOpenCrew={openCrew}
-                    />
-                  </Suspense>
-                </FeatureBoundary>
-              </div>
+            <section className="hud-screens" aria-label="Görev ekranı" data-tour="hud">
+              <FeatureBoundary name="Görev ekranı">
+                <Suspense fallback={<PanelSkeleton title="Görev ekranı" height={600} />}>
+                  <MissionScreens
+                    scenarioId={missions.current?.scenario_id ?? null}
+                    crewIds={missions.current?.crew_member_ids ?? (crewId ? [crewId] : [])}
+                    onOpen={openDetails}
+                  />
+                </Suspense>
+              </FeatureBoundary>
             </section>
 
             <section id="details" className="shell-details" aria-labelledby="details-title" tabIndex={-1}>

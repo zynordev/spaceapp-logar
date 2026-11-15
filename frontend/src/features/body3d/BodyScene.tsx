@@ -52,6 +52,8 @@ export interface BodySceneProps {
   onFail: () => void;
   /** The floating detail card covers the right side: shift the view left. */
   detailOpen?: boolean;
+  /** Design screens: no DOM labels / leader lines. */
+  bare?: boolean;
 }
 
 const noRaycast = () => null;
@@ -395,10 +397,13 @@ const VIEW_H = 2.05;
 const VIEW_W = 1.7;
 const HOME_DIST_DEFAULT = 3.7;
 
-function homeDistance(width: number, height: number): number {
+function homeDistance(width: number, height: number, bare = false): number {
   const t = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
   const aspect = height > 0 ? width / height : 1;
-  return Math.max(VIEW_H / (2 * t), VIEW_W / (2 * t * aspect));
+  // Bare (design screens): no cabin rings, so frame the figure alone, tighter.
+  const vh = bare ? 1.9 : VIEW_H;
+  const vw = bare ? 0.95 : VIEW_W;
+  return Math.max(vh / (2 * t), vw / (2 * t * aspect));
 }
 
 interface ControlsLike {
@@ -413,12 +418,13 @@ function CameraRig({
   view,
   reducedMotion,
   layout,
-}: Pick<BodySceneProps, 'selected' | 'view' | 'reducedMotion'> & { layout: Layout }) {
+  bare = false,
+}: Pick<BodySceneProps, 'selected' | 'view' | 'reducedMotion'> & { layout: Layout; bare?: boolean }) {
   const controls = useThree((s) => s.controls) as unknown as ControlsLike | null;
   const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
   const size = useThree((s) => s.size);
-  const homeDist = homeDistance(size.width, size.height);
+  const homeDist = homeDistance(size.width, size.height, bare);
   const homeRef = useRef(homeDist);
   homeRef.current = homeDist;
   const touched = useRef(false);
@@ -637,7 +643,7 @@ function Scene(
             </Suspense>
           </GlbBoundary>
         )}
-        <Cabin mats={cabin} />
+        {!props.bare && <Cabin mats={cabin} />}
       </group>
 
       <ContactShadows position={[0, 0.004, 0]} scale={1.8} blur={2.6} far={1.2} opacity={0.6} resolution={256} frames={1} color="#000814" />
@@ -665,7 +671,7 @@ function Scene(
         rotateSpeed={0.7}
         zoomSpeed={0.8}
       />
-      <CameraRig selected={selected} view={view} reducedMotion={reducedMotion} layout={layout} />
+      <CameraRig selected={selected} view={view} reducedMotion={reducedMotion} layout={layout} bare={props.bare} />
       <ViewShift open={!!props.detailOpen} />
       <Projector els={els} lines={lines} layout={layoutRef} states={statesRef} />
     </>
@@ -705,7 +711,9 @@ export default function BodyScene(props: BodySceneProps) {
       >
         <Scene {...props} els={els} lines={lines} layoutRef={layoutRef} statesRef={statesRef} />
       </Canvas>
-      <Markers states={states} selected={selected} hovered={hovered} onHover={onHover} onSelect={onSelect} els={els} lines={lines} />
+      {!props.bare && (
+        <Markers states={states} selected={selected} hovered={hovered} onHover={onHover} onSelect={onSelect} els={els} lines={lines} />
+      )}
     </div>
   );
 }
