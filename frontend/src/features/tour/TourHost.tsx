@@ -135,10 +135,24 @@ export function TourHost() {
         setTarget(el);
       }
       setReady(true);
-      // Panels above may still be growing (lazy chunks, data): settle once more.
-      setTimeout(() => {
-        if (!left && el?.isConnected) scrollToTarget(el, true);
-      }, 700);
+      // Panels may still be growing or re-mounting (lazy chunks, data, the 3D
+      // body opening): find the target again and settle twice.
+      const settle = () => {
+        if (left) return;
+        let fresh: HTMLElement | null = null;
+        for (const sel of def.target) {
+          fresh = document.querySelector<HTMLElement>(sel);
+          if (fresh) break;
+        }
+        if (!fresh) return;
+        if (fresh !== el) {
+          el = fresh;
+          setTarget(fresh);
+        }
+        scrollToTarget(fresh, true);
+      };
+      setTimeout(settle, 700);
+      setTimeout(settle, 1600);
       try {
         await def.enter?.(ctx);
       } catch {
@@ -157,6 +171,15 @@ export function TourHost() {
     let prevBox: Box | null = null;
     const measure = () => {
       if (!target.isConnected) {
+        // The element was re-mounted (e.g. the 3D body opened): follow the new one.
+        const sels = def?.target ?? [];
+        for (const sel of sels) {
+          const fresh = document.querySelector<HTMLElement>(sel);
+          if (fresh) {
+            setTarget(fresh);
+            return;
+          }
+        }
         setBox(null);
         return;
       }
@@ -184,7 +207,7 @@ export function TourHost() {
       clearInterval(iv);
       window.removeEventListener('scroll', onScroll, { capture: true });
     };
-  }, [target]);
+  }, [target, def]);
 
   // Keyboard.
   useEffect(() => {
