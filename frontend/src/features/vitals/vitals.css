@@ -121,7 +121,7 @@
 .vt-callout-proc { border-color: color-mix(in srgb, var(--vt-alert) 45%, transparent); font-weight: 600; }
 .vt-callout-info { color: var(--vt-muted); }
 .vt-inline-err { margin-top: 8px !important; color: var(--vt-critical); font-size: 0.84rem; font-weight: 600; }
-.vt-inline-err::before { content: '✖ '; }
+
 .vt-empty-state { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 28px 16px; border: 1px dashed var(--vt-border-strong); border-radius: var(--vt-radius); color: var(--vt-muted); }
 .vt-empty-small { padding: 20px 14px; }
 .vt-empty-icon { font-size: 1.6rem; line-height: 1; opacity: 0.8; }

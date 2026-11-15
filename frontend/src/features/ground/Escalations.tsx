@@ -1,5 +1,6 @@
 // Flight-surgeon priority escalations (ALERT/CRITICAL), pending first.
 import type { ApiError } from '../../lib/api';
+import { Icon, type IconName } from '../../ui';
 import { formatAgo, formatTime, PRIORITY_INFO, shortHash } from './format';
 import type { EscalationRead } from './types';
 import { errorText } from './useGround';
@@ -25,7 +26,7 @@ export function Escalations(props: {
     <section className="gp-card gp-esc" aria-labelledby="gp-esc-title">
       <header className="gp-card-head">
         <h3 id="gp-esc-title">
-          <span aria-hidden="true">✚ </span>Uçuş cerrahına öncelikli bildirimler
+          <Icon name="plus" size={16} />{' '}Uçuş cerrahına öncelikli bildirimler
         </h3>
         {items && (
           <span className={`gp-count ${pending > 0 ? 'gp-count--hot' : ''}`}>
@@ -46,7 +47,7 @@ export function Escalations(props: {
       {sorted.length > 0 && (
         <ul className="gp-esc-list">
           {sorted.map((e) => {
-            const pr = PRIORITY_INFO[e.priority] ?? { label: e.priority, icon: '▲' };
+            const pr = PRIORITY_INFO[e.priority] ?? { label: e.priority, icon: 'alert' as IconName };
             const acked = e.status === 'ACKED';
             return (
               <li
@@ -55,11 +56,11 @@ export function Escalations(props: {
               >
                 <div className="gp-esc-top">
                   <span className={`gp-badge gp-badge--${e.priority.toLowerCase()}`}>
-                    <span aria-hidden="true">{pr.icon} </span>
+                    <Icon name={pr.icon} size={14} />{' '}
                     {pr.label}
                   </span>
                   <span className={`gp-badge ${acked ? 'gp-badge--ok' : 'gp-badge--pending'}`}>
-                    <span aria-hidden="true">{acked ? '✓ ' : '⧗ '}</span>
+                    <Icon name={acked ? 'check' : 'hourglass'} size={14} />{' '}
                     {acked ? 'Onaylandı' : 'Bekliyor'}
                   </span>
                   <span className="gp-esc-crew">

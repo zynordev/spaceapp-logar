@@ -2,6 +2,7 @@
 // time formatting and the `?mock=1` switch. No dependency on UI-shell primitives.
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ApiError } from '../../lib/api';
+import { Icon } from '../../ui';
 
 export const MOCK = (() => {
   try { return new URLSearchParams(window.location.search).get('mock') === '1'; } catch { return false; }
@@ -82,7 +83,7 @@ export function InlineMsg({ msg }: { msg: Msg | null }) {
     <div className="lgi-live" role={msg?.kind === 'err' ? 'alert' : 'status'} aria-live={msg?.kind === 'err' ? 'assertive' : 'polite'}>
       {msg && (
         <div className={`lgi-msg lgi-msg--${msg.kind}`}>
-          <span className="lgi-msg__icon" aria-hidden="true">{msg.kind === 'ok' ? '✓' : msg.kind === 'err' ? '!' : 'i'}</span>
+          <span className="lgi-msg__icon" aria-hidden="true"><Icon name={msg.kind === 'ok' ? 'check' : msg.kind === 'err' ? 'warning' : 'info'} size={18} /></span>
           <div>
             <span className="lgi-sr">{msg.kind === 'ok' ? 'Başarılı: ' : msg.kind === 'err' ? 'Hata: ' : 'Bilgi: '}</span>
             {msg.text}
@@ -99,7 +100,7 @@ export function InlineMsg({ msg }: { msg: Msg | null }) {
 export function Notice({ kind = 'info', children }: { kind?: 'info' | 'warn' | 'err'; children: ReactNode }) {
   return (
     <div className={`lgi-notice lgi-notice--${kind}`}>
-      <span className="lgi-msg__icon" aria-hidden="true">{kind === 'info' ? 'i' : '!'}</span>
+      <span className="lgi-msg__icon" aria-hidden="true"><Icon name={kind === 'info' ? 'info' : 'warning'} size={18} /></span>
       <div>{children}</div>
     </div>
   );

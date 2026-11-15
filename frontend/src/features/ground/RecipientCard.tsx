@@ -2,6 +2,7 @@
 import { useId, useState } from 'react';
 import { api, ApiError, qs } from '../../lib/api';
 import { useApp } from '../../lib/store';
+import { Icon } from '../../ui';
 import { formatAgo, formatTime, kindLabel, RECIPIENT_INFO, shortHash, slug } from './format';
 import { mockAck, mockPacket } from './mock';
 import type { Recipient, RecipientStatus, SyncAckRead, SyncPacketRead } from './types';
@@ -108,7 +109,7 @@ export function RecipientCard(props: {
   return (
     <article className={`gp-card gp-rcp gp-rcp--${recipient.toLowerCase()}`} aria-labelledby={`${baseId}-t`}>
       <header className="gp-rcp-head">
-        <span className="gp-rcp-icon" aria-hidden="true">{info.icon}</span>
+        <span className="gp-rcp-icon" aria-hidden="true"><Icon name={info.icon} size={18} /></span>
         <div>
           <h4 id={`${baseId}-t`}>{status?.label_tr || info.label}</h4>
           <p className="gp-muted gp-small">{info.routed}</p>
@@ -171,12 +172,12 @@ export function RecipientCard(props: {
               <dd>
                 {packet.signature ? (
                   <span className="gp-badge gp-badge--ok">
-                    <span aria-hidden="true">✓ </span>
+                    <Icon name="check" size={14} />{' '}
                     {packet.signature_alg ?? 'HMAC-SHA256'} imzalı
                   </span>
                 ) : (
                   <span className="gp-badge gp-badge--muted">
-                    <span aria-hidden="true">○ </span>İmzasız (demo)
+                    <Icon name="circle" size={14} />{' '}İmzasız (demo)
                   </span>
                 )}
               </dd>
@@ -215,7 +216,7 @@ export function RecipientCard(props: {
 
           <div className="gp-actions">
             <button type="button" className="gp-btn gp-btn--ghost" onClick={() => download(packet)}>
-              <span aria-hidden="true">⇩ </span>JSON indir
+              <Icon name="download" size={14} />{' '}JSON indir
             </button>
             <button
               type="button"
@@ -224,7 +225,7 @@ export function RecipientCard(props: {
               disabled={!canAck || phase.k === 'acking' || phase.k === 'acked'}
               aria-describedby={ackHint ? `${baseId}-hint` : undefined}
             >
-              {phase.k === 'acking' ? 'Onaylanıyor…' : phase.k === 'acked' ? '✓ Onaylandı' : 'Yer ekibi onayı (ack)'}
+              {phase.k === 'acking' ? 'Onaylanıyor…' : phase.k === 'acked' ? <><Icon name="check" size={14} />{' '}Onaylandı</> : 'Yer ekibi onayı (ack)'}
             </button>
           </div>
           {ackHint && (
@@ -234,6 +235,8 @@ export function RecipientCard(props: {
       )}
 
       <p className={`gp-msg ${msg ? `gp-msg--${msg.tone}` : ''}`} role="status" aria-live="polite">
+        {msg?.tone === 'warn' && <><Icon name="warning" size={14} />{' '}</>}
+        {msg?.tone === 'ok' && <><Icon name="check" size={14} />{' '}</>}
         {msg?.text ?? ''}
       </p>
     </article>

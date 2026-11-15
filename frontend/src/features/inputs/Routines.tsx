@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { api, qs, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
+import { Icon, type IconName } from '../../ui';
 import { ROUTINE_CATALOG_FALLBACK, mockRoutines } from './mock';
 import {
   InlineMsg, MOCK, NeedSelection, Notice, Section, fmtDateTime, relTime, useAction, useNow,
@@ -11,10 +12,10 @@ import type {
   RoutineCatalogItem, RoutineCategory, RoutineDueRead, RoutineKind, RoutineScheduleRead, RoutineState,
 } from './types';
 
-const STATE_META: Record<RoutineState, { label: string; icon: string }> = {
-  OVERDUE: { label: 'Gecikti', icon: '⏰' },
-  DUE: { label: 'Zamanı geldi', icon: '●' },
-  UPCOMING: { label: 'Yaklaşan', icon: '○' },
+const STATE_META: Record<RoutineState, { label: string; icon: IconName }> = {
+  OVERDUE: { label: 'Gecikti', icon: 'bell' },
+  DUE: { label: 'Zamanı geldi', icon: 'dot' },
+  UPCOMING: { label: 'Yaklaşan', icon: 'circle' },
 };
 const ORDER: Record<RoutineState, number> = { OVERDUE: 0, DUE: 1, UPCOMING: 2 };
 const CATEGORY_LABEL: Record<RoutineCategory, string> = { DAILY: 'Günlük', PERIODIC_TEST: 'Periyodik test' };
@@ -127,7 +128,7 @@ export function RoutinesSection() {
                       <div className="lgi-routine__main">
                         <div className="lgi-routine__top">
                           <span className={`lgi-state lgi-state--${r.state.toLowerCase()}`}>
-                            <span aria-hidden="true">{meta.icon} </span>{meta.label}
+                            <Icon name={meta.icon} size={14} />{' '}{meta.label}
                           </span>
                           <span className="lgi-chip">{CATEGORY_LABEL[cat]}</span>
                           <Streak current={r.current_streak} best={r.best_streak} pulse={done} />
@@ -147,7 +148,7 @@ export function RoutinesSection() {
                         disabled={busy || done}
                         aria-label={done ? `${r.schedule.title_tr}: kaydedildi` : `${r.schedule.title_tr}: yaptım`}
                       >
-                        <span aria-hidden="true">✓ </span>{done ? 'Kaydedildi' : 'Yaptım'}
+                        <Icon name="check" size={14} />{' '}{done ? 'Kaydedildi' : 'Yaptım'}
                       </button>
                     </li>
                   );
@@ -169,7 +170,7 @@ function Streak({ current, best, pulse }: { current: number; best: number; pulse
       aria-label={`Seri ${current}, en iyi ${best}`}
       title="Arka arkaya zamanında tamamlama sayısı"
     >
-      <span aria-hidden="true">🔥 {current}</span>
+      <span aria-hidden="true"><Icon name="flame" size={14} />{' '}{current}</span>
       <span className="lgi-streak__best" aria-hidden="true">en iyi {best}</span>
     </span>
   );

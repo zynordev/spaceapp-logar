@@ -2,6 +2,7 @@
 // the choice, the group has a real <legend>, and the selected option carries a
 // check mark + border (colour is never the only signal).
 import type { ReactNode } from 'react';
+import { Icon } from '../../ui';
 
 export interface SegOption<V extends string | number> {
   value: V;
@@ -49,7 +50,7 @@ export function Segmented<V extends string | number>({
                 aria-label={o.aria}
               />
               <span className="lgi-seg__label">
-                {checked && <span className="lgi-seg__tick" aria-hidden="true">✓ </span>}
+                {checked && <span className="lgi-seg__tick" aria-hidden="true"><Icon name="check" size={14} />{' '}</span>}
                 {o.label}
               </span>
               {o.sub !== undefined && <span className="lgi-seg__sub">{o.sub}</span>}

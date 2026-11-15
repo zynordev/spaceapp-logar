@@ -3,6 +3,7 @@
 // Contract: docs/CONTRACT_PARALLEL_BUILD.md section E + GET /v1/risk-coverage.
 import { qs, usePolling } from '../../lib/api';
 import { useApp, type AuthUser } from '../../lib/store';
+import { Icon } from '../../ui';
 import { CoverageMap } from './CoverageMap';
 import { Escalations } from './Escalations';
 import { LinkHeader } from './LinkHeader';
@@ -60,7 +61,7 @@ export function GroundPanel() {
     <section className="gp-root" aria-labelledby="gp-title">
       <header className="gp-head">
         <h2 id="gp-title">
-          <span aria-hidden="true" className="gp-head-mark">⟟</span> Yer istasyonu ve senkronizasyon
+          <Icon name="satellite" size={20} className="gp-head-mark" /> Yer istasyonu ve senkronizasyon
         </h2>
         <p className="gp-muted gp-small">
           Gemi Dünya'dan bağımsız karar destek verir; bağlantı olduğunda bütünlüğü kontrol edilen paketler doğru
@@ -79,7 +80,7 @@ export function GroundPanel() {
           <section className="gp-rcps" aria-labelledby="gp-rcps-title">
             <div className="gp-section-head">
               <h3 id="gp-rcps-title">
-                <span aria-hidden="true">⇄ </span>Yer ekipleri ve paketler
+                <Icon name="swap" size={16} />{' '}Yer ekipleri ve paketler
               </h3>
               {statusErr && status.error?.status !== 404 && <p className="gp-note gp-note--warn">{statusErr}</p>}
             </div>

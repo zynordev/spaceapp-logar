@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from 'react';
 import { api, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
+import { Icon } from '../../ui';
 import { InlineMsg, useAction } from './shared';
 import type { DemoRunRead, DemoScenarioRead } from './types';
 
@@ -60,7 +61,7 @@ export function DemoScenarioPicker() {
           {scenarios.map((s) => <option key={s.scenario_id} value={s.scenario_id}>{s.title || s.scenario_id}</option>)}
         </select>
         <button type="button" className="lgi-btn lgi-btn--primary lgi-btn--small" onClick={start} disabled={disabled} aria-busy={busy}>
-          <span aria-hidden="true">▶ </span>{busy ? 'Çalışıyor…' : 'Çalıştır'}
+          <Icon name="play" size={14} />{' '}{busy ? 'Çalışıyor…' : 'Çalıştır'}
         </button>
         <button
           type="button"

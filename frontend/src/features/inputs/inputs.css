@@ -149,7 +149,7 @@
 }
 .lgi-msg__icon {
   flex: none; width: 1.6em; height: 1.6em; border-radius: 50%; display: inline-flex; align-items: center;
-  justify-content: center; font-weight: 800; border: 2px solid currentColor;
+  justify-content: center; font-weight: 800;
 }
 .lgi-msg--ok { border-color: var(--lgi-ok); }
 .lgi-msg--ok .lgi-msg__icon { color: var(--lgi-ok); }
@@ -254,3 +254,7 @@
 .lgi-demo__desc { font-size: 0.92em; }
 .lgi-demo__info { border: 1px solid var(--lgi-border); border-radius: 10px; padding: 6px 10px; background: var(--lgi-bg2); }
 .lgi-demo__info ul { margin: 4px 0 0; padding-left: 1.2em; }
+
+/* Inline SVG icons (ui/icons) sit on the text baseline next to their label. */
+.lgi .ui-icon { vertical-align: -2px; }
+.lgi-tab__icon, .lgi-activity__icon { display: inline-flex; }

@@ -1,6 +1,7 @@
 // Honest risk coverage map: NASA's 5 spaceflight hazards + data reliability.
 import { useId, useState } from 'react';
 import type { ApiError } from '../../lib/api';
+import { Icon } from '../../ui';
 import { COVERAGE_INFO, coverageOf } from './format';
 import type { Coverage, CoverageRead, HazardRead } from './types';
 import { errorText } from './useGround';
@@ -28,7 +29,7 @@ function HazardRow({ hazard }: { hazard: HazardRead }) {
         <p className="gp-hz-counts">
           {ORDER.map((k) => (
             <span key={k} className={`gp-cnt gp-cov--${k.toLowerCase()}`}>
-              <span aria-hidden="true">{COVERAGE_INFO[k].icon}</span> {c[k]}
+              <Icon name={COVERAGE_INFO[k].icon} size={14} /> {c[k]}
               <span className="gp-sr"> {COVERAGE_INFO[k].label}</span>
             </span>
           ))}
@@ -55,7 +56,7 @@ function HazardRow({ hazard }: { hazard: HazardRead }) {
                 aria-controls={detailId}
                 onClick={() => setOpen(isOpen ? null : r.key)}
               >
-                <span aria-hidden="true" className="gp-chip-icon">{ci.icon}</span>
+                <span aria-hidden="true" className="gp-chip-icon"><Icon name={ci.icon} size={14} /></span>
                 <span className="gp-chip-title">{r.title_tr}</span>
                 <span className="gp-chip-cov">{ci.label}</span>
               </button>
@@ -105,7 +106,7 @@ export function CoverageMap(props: { data: CoverageRead | null; error: ApiError 
     <section className="gp-card gp-cov" aria-labelledby="gp-cov-title">
       <header className="gp-card-head">
         <h3 id="gp-cov-title">
-          <span aria-hidden="true">▦ </span>Risk kapsam haritası
+          <Icon name="grid" size={16} />{' '}Risk kapsam haritası
         </h3>
         {data && <span className="gp-count">{total} risk</span>}
       </header>
@@ -122,7 +123,7 @@ export function CoverageMap(props: { data: CoverageRead | null; error: ApiError 
         {ORDER.map((k) => (
           <li key={k} className={`gp-cov--${k.toLowerCase()}`}>
             <span className="gp-legend-key">
-              <span aria-hidden="true">{COVERAGE_INFO[k].icon}</span> {COVERAGE_INFO[k].label}
+              <Icon name={COVERAGE_INFO[k].icon} size={14} /> {COVERAGE_INFO[k].label}
             </span>{' '}
             <span className="gp-muted gp-small">{COVERAGE_INFO[k].legend}</span>
           </li>

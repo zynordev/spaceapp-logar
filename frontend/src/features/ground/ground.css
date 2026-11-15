@@ -209,9 +209,7 @@
 .gp-kind-mini { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gp-accent); }
 .gp-msg { min-height: 1.2em; font-size: 0.88rem; }
 .gp-msg--warn { color: var(--gp-alert); }
-.gp-msg--warn::before { content: "⚠ "; }
 .gp-msg--ok { color: var(--gp-ok); }
-.gp-msg--ok::before { content: "✓ "; }
 .gp-msg--info { color: var(--gp-muted); }
 
 /* ---------- coverage map ---------- */
@@ -278,3 +276,7 @@
 @media (forced-colors: active) {
   .gp-badge, .gp-chip, .gp-btn { border: 1px solid CanvasText; }
 }
+
+/* Inline SVG icons (ui/icons) sit on the text baseline next to their label. */
+.gp-root .ui-icon { vertical-align: -2px; }
+.gp-link-icon, .gp-chip-icon { display: inline-flex; }
