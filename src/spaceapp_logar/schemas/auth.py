@@ -22,3 +22,14 @@ class TokenRead(BaseModel):
     expires_at: datetime
     role: Role
     user_id: str
+
+
+class AuthConfigRead(BaseModel):
+    auth_required: bool
+    auth_configured: bool
+
+
+class MeRead(BaseModel):
+    user_id: str
+    role: Role | None
+    anonymous: bool
