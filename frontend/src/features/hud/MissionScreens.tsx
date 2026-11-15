@@ -296,14 +296,19 @@ function RoomCol({
       <span className={`dz-room__value${!last ? ' is-empty' : ''}`}>{last ? fmtAuto(last.value) : '—'}</span>
       <span className="dz-room__unit">{unit}</span>
       <Bar level={measured ? top?.health_attention ?? null : null} text={measured ? undefined : 'ÖLÇÜM YOK'} className="dz-room__bar" />
-      {(src || valueSrc) && (
-        <span className={`dz-room__src${src?.demo ? ' is-demo' : ''}`}>
-          {thrSrc && <SourceBadge kind={thrSrc.kind} size="xs" detail={thrSrc.kind === 'STANDARD' ? null : thrSrc.detail} />}
-          {src && <span>{src.demo ? src.text.replace('DEMO EŞİK // ', '') : src.text}</span>}
-          {valueSrc && <SourceBadge kind={valueSrc} size="xs" />}
-        </span>
-      )}
-      {!(src && !src.demo) && <Icon name={col.icon} size={src ? 30 : 40} className="dz-room__icon" />}
+      {/* line 1: threshold (as in the design's NASA line); line 2: provenance badges around the icon */}
+      {src && <span className={`dz-room__src${src.demo ? ' is-demo' : ''}`}>{src.demo ? src.text.replace('DEMO EŞİK // ', 'EŞİK // ') : src.text}</span>}
+      <span className="dz-room__prov">
+        {thrSrc && (
+          <SourceBadge
+            kind={thrSrc.kind}
+            size="xs"
+            title={thrSrc.detail ? `${thrSrc.kind === 'DEMO' ? 'DEMO eşik' : 'Kaynaklı eşik'} · ${thrSrc.detail}` : undefined}
+          />
+        )}
+        <Icon name={col.icon} size={thrSrc || valueSrc ? 28 : 40} className="dz-room__icon" />
+        {valueSrc && <SourceBadge kind={valueSrc} size="xs" />}
+      </span>
     </>
   );
   const style = box(x, 49, col.w, 281);
@@ -492,7 +497,9 @@ function PersonCol({
       title={last ? `${def?.label} · ${fmtClock(last.observed_at)} (${relTime(last.observed_at)})${demo ? ' · DEMO eşik' : ''}` : def?.label}
     >
       <span className="dz-pcol__title">{col.title}</span>
-      <span className={`dz-pcol__value${!last ? ' is-empty' : ''}`}>{value}</span>
+      <span className={`dz-pcol__value${!last ? ' is-empty' : ''}`} style={value.length > 6 ? { fontSize: 46 } : undefined}>
+        {value}
+      </span>
       <span className="dz-pcol__unit">{unit}</span>
       <Bar level={top?.health_attention ?? null} className="dz-pcol__bar" />
       <span className="dz-pcol__demo">

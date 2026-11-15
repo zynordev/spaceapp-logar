@@ -338,5 +338,19 @@ button.dz-room__col:hover { background: rgba(255, 255, 255, 0.04); }
 /* provenance badges (ui/SourceBadge) inside the design columns */
 .dz-room__src { display: flex; align-items: center; justify-content: center; gap: 4px; }
 .dz-pcol__demo { display: flex; justify-content: center; gap: 3px; height: 16px; }
-.dz-stage .ui-src { transform: scale(1.15); transform-origin: center; }
 .dz-crew__emergency { max-height: 54px; }
+
+/* room columns: threshold line, then badges either side of the icon.
+ * Badges are sized in design pixels (no transform, so they take real space). */
+.dz-room__src { display: block; max-width: 100%; margin-top: 6px; padding: 0 6px; overflow: hidden; text-overflow: ellipsis; text-align: center; font-size: 15px; line-height: 18px; }
+.dz-room__prov { display: flex; align-items: center; justify-content: center; gap: 8px; max-width: 100%; margin-top: 6px; padding: 0 6px; }
+.dz-room__prov .dz-room__icon { margin-top: 0; }
+.dz-stage .ui-src--xs { gap: 4px; padding: 1px 6px; font-size: 12px; line-height: 16px; white-space: nowrap; }
+.dz-stage .ui-src--xs .ui-icon { width: 12px; height: 12px; }
+.dz-room__value { margin-top: 4px; }
+.dz-room__bar { margin-top: 6px; }
+.dz-room__src { margin-top: 5px; }
+.dz-room__prov { margin-top: 5px; }
+.dz-room__label { letter-spacing: 0; }
+.dz-room__prov { gap: 5px; padding: 0 2px; }
+.dz-stage .ui-src--xs { padding: 1px 4px; font-size: 11px; gap: 3px; }
