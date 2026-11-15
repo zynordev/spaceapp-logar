@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Float,
     ForeignKey,
@@ -541,4 +542,63 @@ class ActivityDeclaration(Base):
     source_type: Mapped[str] = mapped_column(String(32))
     source_id: Mapped[str] = mapped_column(String(100))
     scenario_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+_ROUTINE_KINDS = (
+    "HYDRATION",
+    "EXERCISE",
+    "SLEEP_WINDOW",
+    "CHECK_IN",
+    "BODY_MASS_WEEKLY",
+    "GRIP_STRENGTH_WEEKLY",
+    "MUSCULOSKELETAL_ASSESSMENT_BIWEEKLY",
+)
+
+
+class RoutineSchedule(Base):
+    """A recurring reminder for one crew member (fixed catalogue kinds)."""
+
+    __tablename__ = "routine_schedules"
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN (" + ", ".join(f"'{k}'" for k in _ROUTINE_KINDS) + ")",
+            name="ck_routine_schedules_kind",
+        ),
+        CheckConstraint(
+            "interval_minutes >= 30 AND interval_minutes <= 20160",
+            name="ck_routine_schedules_interval",
+        ),
+        Index("ix_routine_schedules_lookup", "mission_id", "crew_member_id", "kind"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    crew_member_id: Mapped[str] = mapped_column(String(100))
+    kind: Mapped[str] = mapped_column(String(64))
+    interval_minutes: Mapped[int] = mapped_column(Integer)
+    anchor_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class RoutineCompletion(Base):
+    """Append-only record that a routine was done."""
+
+    __tablename__ = "routine_completions"
+    __table_args__ = (
+        CheckConstraint(
+            "source_type IN ('MANUAL')", name="ck_routine_completions_source"
+        ),
+        Index("ix_routine_completions_schedule", "schedule_id", "completed_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    schedule_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("routine_schedules.id", ondelete="RESTRICT"),
+    )
+    crew_member_id: Mapped[str] = mapped_column(String(100))
+    completed_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    source_type: Mapped[str] = mapped_column(String(32), default="MANUAL")
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
