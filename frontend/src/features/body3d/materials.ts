@@ -117,6 +117,7 @@ export class BodyMaterials {
   private readonly cache = new Map<string, THREE.MeshPhysicalMaterial>();
   private readonly tmp = new THREE.Color();
   private readonly hidden = new Set<Layer>();
+  private lowCost = false;
   /** Resting emissive intensity per region (pulse adds on top). */
   readonly restGlow: Partial<Record<RegionKey, number>> = {};
 
@@ -148,6 +149,10 @@ export class BodyMaterials {
       this.cache.set(key, m);
       this.track(region, m, color);
       if (this.hidden.has(layerOf(region))) m.visible = false;
+      if (this.lowCost) {
+        m.clearcoat = 0;
+        m.sheen = 0;
+      }
     }
     return m;
   }
@@ -159,6 +164,15 @@ export class BodyMaterials {
     for (const [region, list] of this.byRegion) {
       if (layerOf(region) !== layer) continue;
       for (const t of list) t.mat.visible = visible;
+    }
+  }
+
+  /** Large meshes counts (full anatomy): drop clearcoat/sheen on organs to keep 60 fps on iGPUs. */
+  setLowCost() {
+    this.lowCost = true;
+    for (const m of this.cache.values()) {
+      m.clearcoat = 0;
+      m.sheen = 0;
     }
   }
 

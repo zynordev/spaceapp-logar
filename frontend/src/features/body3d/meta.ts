@@ -142,8 +142,8 @@ export const REGION_META: Record<RegionKey, RegionMeta> = {
     label: 'Kabin ortamı',
     short: 'Kabin',
     description: 'Yaşam alanı: CO₂, O₂, basınç ve radyasyon.',
-    focus: [0, 0.95, 0],
-    distance: 3.6,
+    focus: [0, 1.0, 0],
+    distance: 4.7,
     marker: [0.62, 1.9, 0],
   },
 };

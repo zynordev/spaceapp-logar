@@ -50,6 +50,13 @@ function prepare(source: THREE.Object3D, mats: BodyMaterials): Prepared {
   // Work on a clone: the cached gltf.scene must stay untouched (StrictMode runs
   // memo factories twice; re-parenting the shared scene would empty one result).
   const scene = source.clone(true);
+  // 0. many meshes (full BodyParts3D export) → cheaper organ shading
+  let meshCount = 0;
+  scene.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) meshCount++;
+  });
+  if (meshCount > 250) mats.setLowCost();
+
   // 1. region tagging (nearest named ancestor wins) + materials
   const found = new Set<RegionKey>();
   const tagRec = (obj: THREE.Object3D, inherited: RegionKey | null, hint: string) => {
