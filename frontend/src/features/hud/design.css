@@ -339,3 +339,4 @@ button.dz-room__col:hover { background: rgba(255, 255, 255, 0.04); }
 .dz-room__src { display: flex; align-items: center; justify-content: center; gap: 4px; }
 .dz-pcol__demo { display: flex; justify-content: center; gap: 3px; height: 16px; }
 .dz-stage .ui-src { transform: scale(1.15); transform-origin: center; }
+.dz-crew__emergency { max-height: 54px; }

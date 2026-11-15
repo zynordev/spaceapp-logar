@@ -111,7 +111,7 @@ export function ActionCardView({
       {steps.length > 0 && (
         <div className="vt-ac-steps-wrap">
           <div className="vt-ac-steps-head">
-            <h4>Ne yapmalıyım?</h4>
+            <h4>Yapılması gerekenler:</h4>
             <span className="vt-progress" aria-label={`${doneCount} / ${steps.length} adım tamamlandı`}>
               <span className="vt-progress-bar"><span style={{ width: `${(doneCount / steps.length) * 100}%` }} /></span>
               <span className="vt-small">{doneCount}/{steps.length}</span>
@@ -158,13 +158,13 @@ export function ActionCardView({
       <div className="vt-ac-conds">
         {card.escalate_if_tr?.length > 0 && (
           <div className="vt-ac-cond vt-ac-escalate">
-            <h4><span aria-hidden="true"><Icon name="alert" size={14} /></span> Seviye yükselir / acil durum</h4>
+            <h4><span aria-hidden="true"><Icon name="alert" size={14} /></span> Seviyenin yükseldiği acil durumlar</h4>
             <ul>{card.escalate_if_tr.map((x, i) => <li key={i}>{x}</li>)}</ul>
           </div>
         )}
         {card.closes_when_tr && (
           <div className="vt-ac-cond vt-ac-closes">
-            <h4><span aria-hidden="true"><Icon name="check" size={14} /></span> Ne zaman kapanır?</h4>
+            <h4><span aria-hidden="true"><Icon name="check" size={14} /></span> Acil durum ne zaman sona erer?</h4>
             <p>{card.closes_when_tr}</p>
           </div>
         )}

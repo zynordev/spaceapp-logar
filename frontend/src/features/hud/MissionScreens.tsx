@@ -73,13 +73,20 @@ function Bar({ level, text, className = '' }: { level: string | null; text?: str
   );
 }
 
+/** Ring colour from the share itself: 70-100 green, 35-69 yellow, 0-34 red. */
+function ringBand(pct: number | null): 'normal' | 'watch' | 'critical' | 'unknown' {
+  if (pct === null) return 'unknown';
+  if (pct >= 70) return 'normal';
+  if (pct >= 35) return 'watch';
+  return 'critical';
+}
+
 /** White disc + coloured arc + number (share in %). */
-function Ring({ pct, level, size, stroke, label }: { pct: number | null; level: string; size: number; stroke: number; label: string }) {
+function Ring({ pct, size, stroke, label }: { pct: number | null; size: number; stroke: number; label: string }) {
   const r = size / 2 - stroke / 2 - 2;
   const c = 2 * Math.PI * r;
-  const m = attentionMeta(level);
   return (
-    <span className={`dz-ring dz-ring--${m.level.toLowerCase()}`} style={{ width: size, height: size }} role="img" aria-label={label} title={label}>
+    <span className={`dz-ring dz-ring--${ringBand(pct)}`} style={{ width: size, height: size }} role="img" aria-label={label} title={label}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} aria-hidden="true">
         <circle cx={size / 2} cy={size / 2} r={size / 2 - 1} className="dz-ring__disc" />
         <circle cx={size / 2} cy={size / 2} r={r} className="dz-ring__track" style={{ strokeWidth: stroke }} />
@@ -190,7 +197,6 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
       <span className="dz-abs" style={box(382, 145, 62, 62)}>
         <Ring
           pct={pct}
-          level={data?.overall_attention ?? 'UNKNOWN'}
           size={62}
           stroke={7}
           label={d.crewRules.length ? `${d.crewRules.length} kuralın ${normal} tanesi normal. Genel durum: ${overall.label}` : 'Değerlendirilmiş kural yok'}
@@ -404,7 +410,7 @@ function CrewWindow({ crewId, onPerson }: { crewId: string; onPerson: () => void
             {r.title}
           </button>
           <span className="dz-window__ring" style={box(527, tops[i], 217, heights[i])}>
-            <Ring pct={r.pct} level={r.level} size={150} stroke={14} label={r.caption} />
+            <Ring pct={r.pct} size={150} stroke={14} label={r.caption} />
             <span className="dz-window__caption">{r.caption}</span>
           </span>
         </span>
@@ -607,7 +613,6 @@ function PersonScreen({
           <span className="dz-pcol__ringwrap">
             <Ring
               pct={pctOf(d.inRange, d.labRes.length)}
-              level={labLevel ?? 'UNKNOWN'}
               size={82}
               stroke={9}
               label={d.labRes.length ? `${d.inRange}/${d.labRes.length} lab sonucu referans aralığında` : 'Lab sonucu yok'}

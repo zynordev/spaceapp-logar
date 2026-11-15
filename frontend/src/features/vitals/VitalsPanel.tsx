@@ -59,7 +59,7 @@ export function VitalsPanel() {
       <header className="vt-panel-head">
         <div>
           <h2 className="vt-h2">Ölçümler ve kurallar</h2>
-          <p className="vt-muted vt-small">Açıklanabilir kurallar: her seviye için gözlenen değer, eşik ve “neden”.</p>
+          <p className="vt-muted vt-small">Açıklanabilir kurallar: her seviye için gözlenen değer, eşik ve “nedenler”.</p>
         </div>
         <div className="vt-head-right">
           <Freshness at={status.data?.generated_at} error={!!status.error} />
