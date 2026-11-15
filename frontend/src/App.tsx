@@ -156,8 +156,8 @@ export default function App() {
           </EmptyState>
         ) : (
           <>
-            <section className={`hud${bodyOpen ? ' is-open' : ''}`} aria-label="Görev ekranı">
-              <div className="hud__scene">
+            <section className={`hud${bodyOpen ? ' is-open' : ''}`} aria-label="Görev ekranı" data-tour="hud">
+              <div className="hud__scene" data-tour="scene" data-open={bodyOpen ? 'true' : undefined}>
                 {bodyOpen ? (
                   <Slot name="3D vücut haritası" height={560} className="hud__body">
                     <BodyMapPanel />

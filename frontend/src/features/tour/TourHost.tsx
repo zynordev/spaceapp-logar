@@ -112,6 +112,13 @@ export function TourHost() {
     (async () => {
       // Let the route / tab switch render first.
       await new Promise((r) => setTimeout(r, def.route === 'console' ? 250 : 60));
+      // Put the screen in the state the step talks about (e.g. open the 3D body).
+      try {
+        await def.before?.(ctx);
+      } catch {
+        /* a failed helper action never breaks the tour */
+      }
+      if (left) return;
       // Find the spotlight target (first selector that appears).
       let el: HTMLElement | null = null;
       const t0 = Date.now();
@@ -167,7 +174,16 @@ export function TourHost() {
       raf = requestAnimationFrame(loop);
     };
     loop();
-    return () => cancelAnimationFrame(raf);
+    // rAF pauses in background tabs / hidden panes: scroll events and a slow
+    // timer keep the spotlight on the element there too.
+    const onScroll = () => measure();
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    const iv = setInterval(measure, 250);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(iv);
+      window.removeEventListener('scroll', onScroll, { capture: true });
+    };
   }, [target]);
 
   // Keyboard.

@@ -265,3 +265,11 @@
 .hud-crew__photo:hover small { color: var(--text); }
 .hud-crewcard.is-open .hud-crew__photo { border-color: var(--text); }
 .hud-crewcard.is-open .hud-panel__head { box-shadow: inset 0 -3px 0 var(--text); }
+
+/* provenance badges (ui/SourceBadge): one quiet line each for the threshold
+ * and the value; neutral ink, never an attention hue. */
+.hud-col__src { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 6px; min-width: 0; white-space: normal; }
+.hud-col__thr { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.hud-col__prov { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 2px; }
+.hud-panel .ui-src { font-family: var(--font-mono); letter-spacing: 0.03em; }
+.hud-crew__list .hud-crew__src { display: flex; flex-direction: row; flex-wrap: wrap; gap: 4px; margin-top: 2px; }

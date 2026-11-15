@@ -7,7 +7,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { qs, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
-import { Icon, attentionMeta, type IconName } from '../../ui';
+import { Icon, SOURCE_META, SourceBadge, attentionMeta, labSource, measurementSource, ruleSource, type IconName, type SourceKind } from '../../ui';
 import { cmpSymbol, displayUnit } from '../vitals/copy';
 import { rulesForMetric, targetFor, useAlerts, useCrewStatus, useMetrics, useSeries, useVitalsUi, worst } from '../vitals/data';
 import { fmtAuto, fmtClock, relTime, toMs } from '../vitals/format';
@@ -76,9 +76,34 @@ const upperTr = (s: string) => s.toLocaleUpperCase('tr-TR');
 
 /* --------------------------------------------------------------- pieces */
 
-function Panel({ title, id, aside, children, className }: { title: ReactNode; id: string; aside?: ReactNode; children: ReactNode; className?: string }) {
+function Panel({
+  title,
+  id,
+  aside,
+  children,
+  className,
+  tour,
+  crew,
+  open,
+}: {
+  title: ReactNode;
+  id: string;
+  aside?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  /** Stable hooks for the guided tour: data-tour / data-crew / data-open. */
+  tour?: string;
+  crew?: string;
+  open?: boolean;
+}) {
   return (
-    <section className={`hud-panel${className ? ` ${className}` : ''}`} aria-labelledby={id}>
+    <section
+      className={`hud-panel${className ? ` ${className}` : ''}`}
+      aria-labelledby={id}
+      data-tour={tour}
+      data-crew={crew}
+      data-open={open ? 'true' : undefined}
+    >
       <header className="hud-panel__head">
         <h2 id={id} className="hud-panel__title">
           {title}
@@ -109,12 +134,15 @@ function MetricColumn({
   rules,
   onOpen,
   compact = false,
+  scenarioId,
 }: {
   def: MetricDef;
   pair?: MetricDef | null;
   rules: RuleStatus[];
   onOpen: (m: string) => void;
   compact?: boolean;
+  /** Mission scenario: values of a scenario mission are SYNTHETIC. */
+  scenarioId: string | null;
 }) {
   const crewId = useApp((s) => s.crewId);
   const envId = useApp((s) => s.environmentTargetId);
@@ -138,21 +166,25 @@ function MetricColumn({
   // rule (e.g. ppO2 shown under cabin pressure) gets its name instead.
   const own = !!top && (top.metric === def.metric || (!!pair && top.metric === pair.metric));
   const thr = top && own && Number.isFinite(top.threshold) ? `${cmpSymbol(top.comparison)} ${fmtAuto(top.threshold)} ${displayUnit(top.unit)}` : top ? 'ilişkili' : '';
-  const source = approved
-    ? `${(top?.source || 'KAYNAKLI').split(/[ ,(]/)[0]} // ${thr}`
-    : demo
-      ? `${compact ? 'DEMO' : 'DEMO EŞİK'} // ${thr}`
-      : top
-        ? thr
-        : 'EŞİK YOK';
+  // Provenance: the threshold (STANDART / DEMO) and the value (SENTETİK; in the
+  // radiation-spe scenario the event timing is a real NASA DONKI record).
+  const thrSrc = ruleSource(top);
+  const valueSrc: SourceKind | null = last ? measurementSource(scenarioId) : null;
+  const donki = def.metric === 'RADIATION_DOSE_RATE' && scenarioId === 'radiation-spe' && !!last;
+  const srcSay = [
+    valueSrc ? `Değer: ${SOURCE_META[valueSrc].label}${donki ? ', olay zamanlaması GERÇEK (NASA DONKI)' : ''}.` : '',
+    thrSrc ? `Eşik: ${SOURCE_META[thrSrc.kind].label}${thrSrc.detail ? ` (${thrSrc.detail})` : ''}.` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <li className={`hud-col${compact ? ' hud-col--compact' : ''}`}>
+    <li className={`hud-col${compact ? ' hud-col--compact' : ''}`} data-tour={`metric-${def.metric}`}>
       <button
         type="button"
         className="hud-col__btn"
         onClick={() => onOpen(def.metric)}
-        aria-label={`${def.label}: ${last ? `${value} ${unit}` : reason}. ${level ? attentionMeta(level).label : 'Kural yok'}.${last ? ` Ölçüm ${fmtClock(last.observed_at)}.` : ''} Ayrıntıyı aç.`}
+        aria-label={`${def.label}: ${last ? `${value} ${unit}` : reason}. ${level ? attentionMeta(level).label : 'Kural yok'}.${last ? ` Ölçüm ${fmtClock(last.observed_at)}.` : ''}${srcSay ? ` ${srcSay}` : ''} Ayrıntıyı aç.`}
         title={last ? `Son ölçüm ${fmtClock(last.observed_at)} · ${relTime(last.observed_at, now)}` : undefined}
       >
         <span className="hud-col__key" title={def.label}>
@@ -164,9 +196,38 @@ function MetricColumn({
         </span>
         {(!compact || !last) && <span className="hud-col__unit">{last ? unit : reason}</span>}
         <StatusBar level={level} />
-        <span className={`hud-col__src${demo ? ' is-demo' : ''}`} title={top?.source || undefined}>
-          {source}
+        <span className={`hud-col__src${demo ? ' is-demo' : ''}`}>
+          {thrSrc && (
+            <SourceBadge
+              kind={thrSrc.kind}
+              detail={compact ? null : thrSrc.detail}
+              size="xs"
+              title={
+                thrSrc.kind === 'DEMO'
+                  ? 'DEMO eşik (kanıt sınıfı F): uçuş tıbbı uzmanı doğrulaması bekliyor.'
+                  : approved && top?.source
+                    ? `Eşik NASA-STD-3001 kaynaklı. Kaynak: ${top.source}`
+                    : undefined
+              }
+            />
+          )}
+          <span className="hud-col__thr" title={top?.source || undefined}>
+            {top ? thr : 'EŞİK YOK'}
+          </span>
         </span>
+        {(valueSrc || donki) && (
+          <span className="hud-col__prov">
+            {valueSrc && <SourceBadge kind={valueSrc} size="xs" title="Değer demo senaryosunun ürettiği sentetik veri; gerçek ölçüm değil." />}
+            {donki && (
+              <SourceBadge
+                kind="REAL"
+                detail={compact ? 'DONKI' : 'NASA DONKI'}
+                size="xs"
+                title="Olay zamanlaması gerçek NASA DONKI güneş parçacık olayı kaydından; doz değerleri sentetik."
+              />
+            )}
+          </span>
+        )}
         {!compact && (
           <span className={`hud-col__time${stale ? ' is-stale' : ''}`}>{last ? `${fmtClock(last.observed_at)} · ${relTime(last.observed_at, now)}` : ' '}</span>
         )}
@@ -183,7 +244,7 @@ interface CheckInLite {
   [k: string]: number | string | null;
 }
 interface LabPanelLite {
-  results: { position_vs_reference: 'BELOW' | 'WITHIN' | 'ABOVE'; sampled_at: string }[];
+  results: { position_vs_reference: 'BELOW' | 'WITHIN' | 'ABOVE'; sampled_at: string; source_type?: string | null }[];
 }
 
 const SYMPTOM_TR: Record<string, string> = {
@@ -283,6 +344,10 @@ function CrewCard({
   const labRes = labs.data?.results ?? [];
   const outRef = labRes.filter((r) => r.position_vs_reference !== 'WITHIN').length;
   const blood = labs.data ? (labRes.length ? `${labRes.length} sonuç · ${outRef} referans dışı` : 'Lab sonucu yok') : labs.error ? 'Alınamadı' : '…';
+  // One badge per lab source present (GERÇEK = NASA OSDR, ELLE = manual entry).
+  const labSrcs = [...new Set(labRes.map((r) => r.source_type ?? ''))]
+    .map((t) => labSource(t))
+    .filter((x): x is NonNullable<ReturnType<typeof labSource>> => !!x);
 
   return (
     <Panel
@@ -292,6 +357,9 @@ function CrewCard({
         </button>
       }
       id={`hud-crew-${crewId}`}
+      tour="crew-card"
+      crew={crewId}
+      open={open}
       className={`hud-crewcard att-${overall.level.toLowerCase()}${open ? ' is-open' : ''}`}
       aside={<span className="hud-tag">{open ? '3D AÇIK' : '3D İÇİN TIKLAYIN'}</span>}
     >
@@ -299,6 +367,8 @@ function CrewCard({
         <button
           type="button"
           className="hud-crew__photo"
+          data-tour="crew-open"
+          data-crew={crewId}
           aria-pressed={open}
           aria-label={open ? `${crewId}: 3D vücut modelini kapat` : `${crewId}: 3D vücut modelini aç`}
           onClick={onToggle}
@@ -342,6 +412,19 @@ function CrewCard({
               <li>
                 <span>›Kan</span>
                 <b>{blood}</b>
+                {labSrcs.length > 0 && (
+                  <span className="hud-crew__src">
+                    {labSrcs.map((x) => (
+                      <SourceBadge
+                        key={x.kind}
+                        kind={x.kind}
+                        detail={x.detail === 'NASA OSDR' ? 'OSDR' : x.detail}
+                        size="xs"
+                        title={x.kind === 'REAL' ? 'Gerçek kamu verisi: NASA OSDR laboratuvar kaydı; bu astronotun kendi ölçümü değil.' : undefined}
+                      />
+                    ))}
+                  </span>
+                )}
               </li>
             </ul>
           </div>
@@ -384,6 +467,7 @@ function MissionCard({ scenarioId, onOpen }: { scenarioId: string | null; onOpen
     <Panel
       title="GÖREV"
       id="hud-mission-title"
+      tour="mission"
       className="hud-mission"
       aside={scenarioId ? <span className="hud-tag" title="Bu görevdeki ölçümler sentetik demo verisidir">SENTETİK · {scenarioId}</span> : undefined}
     >
@@ -458,10 +542,10 @@ export function HudOverlay({ scenarioId, crewIds = [], onOpen, bodyOpen = false,
       </div>
 
       <div className="hud__room">
-        <Panel title="KABİN ORTAMI" id="hud-room-title" aside={envId ? <span className="hud-tag">{envId}</span> : undefined}>
+        <Panel title="KABİN ORTAMI" id="hud-room-title" tour="cabin" aside={envId ? <span className="hud-tag">{envId}</span> : undefined}>
           <ul className="hud-cols">
             {pick(metrics, ENV_ORDER).map((m) => (
-              <MetricColumn key={m.metric} def={m} rules={rules} onOpen={openMetric} />
+              <MetricColumn key={m.metric} def={m} rules={rules} onOpen={openMetric} scenarioId={scenarioId} />
             ))}
           </ul>
         </Panel>
@@ -469,14 +553,22 @@ export function HudOverlay({ scenarioId, crewIds = [], onOpen, bodyOpen = false,
 
       <div className="hud__vitals">
         {bodyOpen && (
-        <section className="hud-vitals" aria-label={`Vital bulgular · ${crewId ?? ''}`}>
+        <section className="hud-vitals" data-tour="vitals" aria-label={`Vital bulgular · ${crewId ?? ''}`}>
           <ul className="hud-cols hud-cols--grid">
             {pick(metrics, VITAL_ORDER).map((m) => (
-              <MetricColumn key={m.metric} def={m} pair={m.metric === 'SYSTOLIC_BP' ? dia : null} rules={rules} onOpen={openMetric} compact />
+              <MetricColumn
+                key={m.metric}
+                def={m}
+                pair={m.metric === 'SYSTOLIC_BP' ? dia : null}
+                rules={rules}
+                onOpen={openMetric}
+                compact
+                scenarioId={scenarioId}
+              />
             ))}
           </ul>
           {/* Recorded sample with its own label; not the source of HEART_RATE above. */}
-          <div className="hud-ecg">
+          <div className="hud-ecg" data-tour="ecg">
             <EcgStrip compact height={48} />
           </div>
         </section>

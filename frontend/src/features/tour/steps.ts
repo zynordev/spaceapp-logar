@@ -2,6 +2,7 @@
 // the app there first (route / detail tab / body region / a real button) and
 // shows a short, honest Turkish caption. Same order as docs/VIDEO_SCRIPT.md.
 import { api, qs } from '../../lib/api';
+import { useApp } from '../../lib/store';
 import { requestBodyRegion } from '../body3d/selection';
 import type { DetailTabId } from '../../shell/detailTab';
 import type { TourId } from './store';
@@ -26,8 +27,10 @@ export interface TourStep {
   honest?: string;
   route: 'app' | 'console';
   tab?: DetailTabId;
-  /** Element(s) to spotlight; the first match wins. */
+  /** Element(s) to spotlight; the first match wins. Prefer `data-tour` hooks. */
   target: string[];
+  /** Runs before the target is looked up (e.g. open the 3D body panel). */
+  before?: (ctx: StepCtx) => void | Promise<void>;
   enter?: (ctx: StepCtx) => void | Promise<void>;
   /** Auto-advance dwell time. */
   ms?: number;
@@ -82,6 +85,26 @@ async function delayNote(ctx: StepCtx) {
   }
 }
 
+/**
+ * Mission screen: the big panel shows the 3D body only after a crew card is
+ * clicked. Click the selected crew member's card (as a user would) unless the
+ * body is already open; never switch to another crew member.
+ */
+async function openBody(ctx: StepCtx) {
+  const scene = await ctx.waitFor('[data-tour="scene"]');
+  if (!scene || ctx.left() || scene.dataset.open === 'true') return;
+  const crew = useApp.getState().crewId;
+  if (!crew) return;
+  const btn = await ctx.waitFor(`[data-tour="crew-open"][data-crew="${CSS.escape(crew)}"]`, 8000);
+  if (!btn || ctx.left() || btn.getAttribute('aria-pressed') === 'true') return;
+  btn.click();
+  await ctx.waitFor('[data-tour="scene"][data-open="true"]', 3000);
+}
+
+/** The selected crew member's card (open), else any crew card. */
+const CREW_CARD = ['[data-tour="crew-card"][data-open="true"]', '[data-tour="crew-card"]', '[data-tour="hud"]'];
+const SCENE = ['[data-tour="scene"]', '[data-tour="hud"]'];
+
 function click(el: HTMLElement | null) {
   if (el && !(el as HTMLButtonElement).disabled) el.click();
 }
@@ -123,13 +146,26 @@ const SYNTHETIC = 'Veriler sentetik demo senaryosundan; gerçek astronot ölçü
 export const TOURS: Record<TourId, TourStep[]> = {
   co2: [
     {
-      id: 'body-cabin',
+      id: 'cabin-co2',
       beat: '0–4 sn',
       title: 'Kabin CO₂ yükseliyor',
-      caption: 'Sentetik senaryo kabin CO₂ değerini yükseltir. 3B haritada kabin bölgesi işaretlenir.',
+      caption: 'Sentetik senaryo kabin CO₂ kısmi basıncını yükseltir. Üst şeritteki CO₂ sütunu değeri, durumu ve eşiğin kaynağını gösterir.',
       honest: SYNTHETIC,
       route: 'app',
-      target: ['.hud__scene', '.hud'],
+      target: ['[data-tour="metric-CABIN_CO2_PARTIAL_PRESSURE"]', '[data-tour="cabin"]', '[data-tour="hud"]'],
+      before: openBody,
+      enter: () => requestBodyRegion('cabin'),
+      ms: 4000,
+    },
+    {
+      id: 'body-cabin',
+      beat: '0–4 sn',
+      title: '3B haritada kabin bölgesi',
+      caption: 'Mürettebat kartı astronotun 3B vücut modelini açar. Kabin ortamı bölgesi işaretlenir; sağda aynı astronotun vital bulguları ve kayıtlı EKG şeridi durur.',
+      honest: SYNTHETIC,
+      route: 'app',
+      target: SCENE,
+      before: openBody,
       enter: () => requestBodyRegion('cabin'),
       ms: 4000,
     },
@@ -140,7 +176,8 @@ export const TOURS: Record<TourId, TourStep[]> = {
       caption: 'Öznel bildirim aynı kurala bağlanır: baş bölgesi de yanar. Sistem iki bulguyu birlikte gösterir.',
       honest: DECISION_SUPPORT,
       route: 'app',
-      target: ['.hud__scene', '.hud'],
+      target: SCENE,
+      before: openBody,
       enter: () => requestBodyRegion('head'),
       ms: 4000,
     },
@@ -236,7 +273,8 @@ export const TOURS: Record<TourId, TourStep[]> = {
       caption: 'Ölçümler normal seyrederken astronot göğüs ağrısı bildirir (kırmızı bayrak). Gövde bölgesi işaretlenir.',
       honest: SYNTHETIC,
       route: 'app',
-      target: ['.hud__scene', '.hud'],
+      target: SCENE,
+      before: openBody,
       enter: () => requestBodyRegion('torso'),
       ms: 4000,
     },
@@ -244,10 +282,11 @@ export const TOURS: Record<TourId, TourStep[]> = {
       id: 'rf-critical',
       beat: '4–10 sn',
       title: 'Anında KRİTİK',
-      caption: 'Kırmızı bayrak ortalama beklemez: genel durum hemen Kritik olur. Normal ölçümler ciddi bir olayı dışlamaz.',
+      caption: 'Kırmızı bayrak ortalama beklemez: mürettebat kartında genel durum hemen Kritik olur, acil durum satırı açık alarmı gösterir. Normal ölçümler ciddi bir olayı dışlamaz.',
       honest: DECISION_SUPPORT,
       route: 'app',
-      target: ['.hud-status', '.hud__right'],
+      target: CREW_CARD,
+      before: openBody,
       ms: 5000,
     },
     {
