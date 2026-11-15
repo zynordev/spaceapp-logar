@@ -116,7 +116,7 @@ export function GroundConsoleApp() {
 
   useEffect(() => {
     const prev = document.title;
-    document.title = 'Yer kontrol konsolu — SpaceApp Logar';
+    document.title = 'Ground control console — SpaceApp Logar';
     return () => {
       document.title = prev;
     };
@@ -137,7 +137,7 @@ export function GroundConsoleApp() {
   const replay = () => {
     tracker.replay();
     snaps.current = snaps.current.slice(-1);
-    toast('Simülasyon yeniden başladı: bilinen tüm öğeler şimdi yola çıktı.');
+    toast('Simulation restarted: all known items are now on their way.');
   };
 
   const preset = PRESETS.find((p) => p.id === settings.preset) ?? PRESETS[0];
@@ -145,9 +145,9 @@ export function GroundConsoleApp() {
     user?.role === 'GROUND'
       ? null
       : user?.anonymous
-        ? 'Demo modu: oturum açılmadan onay verilebilir (yetki bayrağı kapalı).'
+        ? 'Demo mode: acknowledgement is possible without signing in (permission flag off).'
         : user?.role
-          ? `Rolünüz: ${roleLabel(user.role)}. Onay yalnız yer ekibi (GROUND) rolüyle verilebilir.`
+          ? `Your role: ${roleLabel(user.role)}. Only the ground team (GROUND) role can acknowledge.`
           : null;
 
   return (
@@ -161,19 +161,19 @@ export function GroundConsoleApp() {
           document.getElementById('console-main')?.focus();
         }}
       >
-        Ana içeriğe geç
+        Skip to main content
       </a>
       <header className="console-header">
         <div className="console-header__title">
           <Icon name="signal" size={24} />
           <div>
-            <h1>Dünya Görev Kontrol — uçuş cerrahı konsolu</h1>
-            <p className="console-muted">Gemideki karar destek sistemi kendi başına çalışır; yer ekibi aynı olayları ışık gecikmesiyle görür.</p>
+            <h1>Earth Mission Control — flight surgeon console</h1>
+            <p className="console-muted">The onboard decision support system runs on its own; the ground team sees the same events with the light delay.</p>
           </div>
         </div>
         <div className="console-header__controls">
           <label className="console-field">
-            <span>Görev</span>
+            <span>Mission</span>
             <Select
               value={missionId ?? ''}
               onChange={(e) => {
@@ -183,7 +183,7 @@ export function GroundConsoleApp() {
               disabled={list.length === 0}
             >
               {missionId && !current && <option value={missionId}>{missionId}</option>}
-              {list.length === 0 && !missionId && <option value="">Görev yok</option>}
+              {list.length === 0 && !missionId && <option value="">No mission</option>}
               {list.map((m) => (
                 <option key={m.mission_id} value={m.mission_id}>
                   {m.mission_id}
@@ -192,7 +192,7 @@ export function GroundConsoleApp() {
             </Select>
           </label>
           <label className="console-field">
-            <span>Ekip üyesi</span>
+            <span>Crew member</span>
             <Select value={crewId ?? ''} onChange={(e) => setSelection({ crewId: e.target.value || null })} disabled={crews.length === 0}>
               {crews.length === 0 && <option value="">—</option>}
               {crews.map((c) => (
@@ -206,11 +206,11 @@ export function GroundConsoleApp() {
           <div className="console-header__links">
             {offline ? (
               <Chip tone="danger" icon="offline">
-                Sunucu bağlantısı yok
+                No server connection
               </Chip>
             ) : (
               <Chip tone="ok" icon="check">
-                Sunucu bağlı
+                Server connected
               </Chip>
             )}
             {token ? (
@@ -220,18 +220,18 @@ export function GroundConsoleApp() {
                 icon="logout"
                 onClick={() => {
                   useApp.getState().setToken(null);
-                  toast('Oturum kapatıldı.');
+                  toast('Signed out.');
                 }}
               >
-                {roleLabel(user?.role)} · çıkış
+                {roleLabel(user?.role)} · sign out
               </Button>
             ) : auth.authConfigured !== false ? (
               <Button size="sm" variant="ghost" icon="user" onClick={() => setLoginOpen(true)}>
-                Oturum aç
+                Sign in
               </Button>
             ) : null}
             <a className="console-back" href="#/">
-              <Icon name="swap" size={16} /> Gemi ekranına dön
+              <Icon name="swap" size={16} /> Back to ship screen
             </a>
           </div>
         </div>
@@ -240,16 +240,16 @@ export function GroundConsoleApp() {
       <div className="console-disclaimer" role="note">
         <Icon name="warning" size={16} />
         <span>
-          <strong>Gecikme simülasyonu — yalnız gösterim.</strong> Veriler sunucudan anında gelir; gecikmeyi yalnız bu ekran canlandırır. Konsol teşhis
-          koymaz, tedavi önermez: gemideki karar destek sisteminin neyi işaretlediğini ve yer ekibinin bunu en erken ne zaman bilebileceğini gösterir.
+          <strong>Delay simulation — display only.</strong> Data arrives from the server instantly; only this screen animates the delay. The console does not diagnose
+          or recommend treatment: it shows what the onboard decision support system flagged and the earliest time the ground team can know it.
         </span>
         <Chip tone="demo">DEMO</Chip>
       </div>
 
       <main id="console-main" className="console-main" tabIndex={-1}>
-        <section className="console-controls" aria-label="Gecikme simülasyonu ayarları">
+        <section className="console-controls" aria-label="Delay simulation settings">
           <fieldset className="console-seg">
-            <legend>Tek yön ışık gecikmesi</legend>
+            <legend>One-way light delay</legend>
             <div className="console-seg__opts">
               {PRESETS.map((p) => {
                 const disabled = p.id === 'server' && serverDelay === null;
@@ -264,7 +264,7 @@ export function GroundConsoleApp() {
                     />
                     <span className="console-seg__label">{p.label}</span>
                     <span className="console-seg__hint">
-                      {p.id === 'server' ? (serverDelay === null ? 'ayarlı değil' : formatDelay(serverDelay)) : p.id === 'custom' ? 'saniye' : p.hint}
+                      {p.id === 'server' ? (serverDelay === null ? 'not set' : formatDelay(serverDelay)) : p.id === 'custom' ? 'seconds' : p.hint}
                     </span>
                   </label>
                 );
@@ -272,7 +272,7 @@ export function GroundConsoleApp() {
             </div>
             {settings.preset === 'custom' && (
               <label className="console-field console-field--inline">
-                <span>Özel gecikme (sn)</span>
+                <span>Custom delay (s)</span>
                 <input
                   className="ui-input console-custom"
                   type="number"
@@ -287,13 +287,13 @@ export function GroundConsoleApp() {
             )}
             {settings.preset === 'server' && serverDelay === null && (
               <p className="console-inline-note">
-                <Icon name="info" size={14} /> Sunucuda SPACEAPP_LINK_DELAY_SECONDS ayarlı değil (Bilinmiyor); gecikme 0 sn kabul edildi. Bir hazır ayar seçin.
+                <Icon name="info" size={14} /> SPACEAPP_LINK_DELAY_SECONDS is not set on the server (unknown); a delay of 0 s is assumed. Choose a preset.
               </p>
             )}
           </fieldset>
 
           <fieldset className="console-seg console-seg--compact">
-            <legend>Hızlandırılmış gösterim</legend>
+            <legend>Accelerated display</legend>
             <div className="console-seg__opts">
               {COMPRESSIONS.map((c) => (
                 <label key={c} className={`console-seg__opt${compression === c ? ' is-on' : ''}`}>
@@ -305,20 +305,20 @@ export function GroundConsoleApp() {
                     onChange={() => update({ compression: c as Compression })}
                   />
                   <span className="console-seg__label console-num">{c}×</span>
-                  <span className="console-seg__hint">{c === 1 ? 'gerçek süre' : 'hızlı'}</span>
+                  <span className="console-seg__hint">{c === 1 ? 'real time' : 'fast'}</span>
                 </label>
               ))}
             </div>
             <Button size="sm" variant="secondary" icon="refresh" onClick={replay}>
-              Yeniden oynat
+              Replay
             </Button>
           </fieldset>
           <p className="console-controls__now console-muted">
-            Seçili: {preset.label} · gerçek gecikme <span className="console-num">{formatDelay(delaySeconds)}</span>
+            Selected: {preset.label} · real delay <span className="console-num">{formatDelay(delaySeconds)}</span>
             {compression > 1 && (
               <>
                 {' '}
-                · gösterimde <span className="console-num">{formatDelay(delaySeconds / compression)}</span>
+                · on screen <span className="console-num">{formatDelay(delaySeconds / compression)}</span>
               </>
             )}
           </p>
@@ -326,9 +326,9 @@ export function GroundConsoleApp() {
 
         {!missionId ? (
           missions.error ? (
-            <ErrorNote error={missions.error} what="Görevler" />
+            <ErrorNote error={missions.error} what="Missions" />
           ) : (
-            <p className="console-muted">Görev bekleniyor… Bir demo senaryosu çalıştırıldığında burada görünür.</p>
+            <p className="console-muted">Waiting for a mission… It appears here when a demo scenario runs.</p>
           )
         ) : (
           <>
@@ -344,8 +344,8 @@ export function GroundConsoleApp() {
             <div className="console-cols">
               <Timeline
                 side="ship"
-                title="Gemi (anlık)"
-                subtitle="Karar destek sistemi bu olayları anında işaretledi."
+                title="Ship (live)"
+                subtitle="The decision support system flagged these events instantly."
                 status={
                   <div className="console-state">
                     <span className="console-state__label">Gemideki genel durum</span>
@@ -356,27 +356,27 @@ export function GroundConsoleApp() {
                 events={shipEvents}
                 allEvents={events}
                 acks={acks}
-                empty="Gemide işaretlenmiş olay yok"
+                empty="No events flagged on board"
               />
               <Timeline
                 side="earth"
-                title="Dünya (gecikmeli)"
-                subtitle="Yer ekibi bir olayı ancak sinyal ulaştığında bilebilir."
+                title="Earth (delayed)"
+                subtitle="The ground team can only know an event once the signal arrives."
                 status={
                   <div className="console-state">
-                    <span className="console-state__label">Dünya'nın bildiği durum</span>
+                    <span className="console-state__label">What Earth knows</span>
                     {earthAttention ? (
                       <AttentionBadge level={toAttention(earthAttention)} />
                     ) : (
-                      <AttentionBadge level="UNKNOWN">Henüz ulaşmadı</AttentionBadge>
+                      <AttentionBadge level="UNKNOWN">Not arrived yet</AttentionBadge>
                     )}
-                    <span className="console-muted">{earthSince ? `ulaştı ${clock(earthSince)}` : '—'}</span>
+                    <span className="console-muted">{earthSince ? `arrived ${clock(earthSince)}` : '—'}</span>
                   </div>
                 }
                 events={earthEvents}
                 allEvents={events}
                 acks={acks}
-                empty="Dünya'ya henüz bir olay ulaşmadı"
+                empty="No event has reached Earth yet"
               />
             </div>
 

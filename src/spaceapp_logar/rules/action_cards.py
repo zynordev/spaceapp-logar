@@ -34,8 +34,9 @@ from spaceapp_logar.rules.card_model import (
 
 
 DEMO_FOOTER = (
-    "DEMO kartı: içerik uzman doğrulaması bekliyor. Teşhis koymaz, ilaç veya "
-    "tedavi önermez. Göreve özel prosedür ve ekip sağlık sorumlusu önceliklidir."
+    "DEMO card: content awaits expert validation. Does not diagnose; no "
+    "medication or treatment is recommended. Mission-specific procedure and the "
+    "crew medical officer take priority."
 )
 
 ENV_CO2_WATCH_CARD_V1 = ActionCard(
@@ -45,37 +46,39 @@ ENV_CO2_WATCH_CARD_V1 = ActionCard(
     rule_id=CO2_NOMINAL_RULE_ID,
     title_key="co2_watch.title",
     reason_key="co2_watch.reason",
-    title_tr="Kabin CO₂ değerini kontrol et",
+    title_tr="Check the cabin CO₂ value",
     reason_tr=(
-        "Son bir saatlik ortalama CO₂ değeri nominal sınırın üzerinde. "
-        "Ölçümü doğrula ve görev prosedürünü kontrol et."
+        "The one-hour average CO₂ value is above the nominal limit. "
+        "Verify the measurement and check the mission procedure."
     ),
     steps=(
         ActionCardStep(
             key="verify_measurement",
             text_tr=(
-                "Ölçümü tekrar kontrol et. Kabin CO₂ göstergesini ve sensör "
-                "durumunu kontrol et. Sensör hatası görünüyorsa bunu kaydet."
+                "Re-check the measurement. Check the cabin CO₂ display and sensor "
+                "status. If a sensor fault appears, record it."
             ),
         ),
         ActionCardStep(
             key="record_check_in",
             text_tr=(
-                "Nasıl hissettiğini kaydet. Özellikle yorgunluk veya "
-                "ağrı/baş ağrısı varsa kısa öznel durum kontrolünü doldur."
+                "Record how you feel. Especially if you have fatigue or "
+                "pain/headache, complete the short subjective status check."
             ),
         ),
         ActionCardStep(
             key="open_mission_procedure",
             text_tr=(
-                "Görev prosedürünü aç. Göreve özel CO₂ havalandırma/giderim "
-                "prosedürünü aç ve prosedürde belirtilen sorumlu ekibe bildir."
+                "Open the mission procedure. Open the mission-specific CO₂ "
+                "ventilation/removal procedure and notify the responsible team "
+                "named in the procedure."
             ),
         ),
     ),
     footer_note_tr=(
-        "Bu bir WATCH bildirimidir. Yazılım kendi başına havalandırma veya "
-        "CO₂ giderim ekipmanına komut vermez. Göreve özel prosedür önceliklidir."
+        "This is a WATCH notification. The software does not command ventilation "
+        "or CO₂ removal equipment by itself. The mission-specific procedure takes "
+        "priority."
     ),
     requires_mission_procedure=True,
     allows_automatic_vehicle_command=False,
@@ -84,20 +87,20 @@ ENV_CO2_WATCH_CARD_V1 = ActionCard(
 _RECORD_SYMPTOMS = ActionCardStep(
     key="record_check_in",
     text_tr=(
-        "Nasıl hissettiğini kaydet: yorgunluk, baş dönmesi, bulantı, ağrı ve ruh "
-        "hali için kısa öznel durum kontrolünü doldur."
+        "Record how you feel: fatigue, dizziness, nausea, pain and mood. "
+        "Complete the short subjective status check."
     ),
 )
 _NOTIFY_MEDICAL_OFFICER = ActionCardStep(
     key="notify_medical_officer",
     text_tr=(
-        "Görev prosedürünü aç ve ekip sağlık sorumlusuna/yer ekibine bildir. "
-        "Sonraki adımları onlar belirler."
+        "Open the mission procedure and notify the crew medical officer/ground "
+        "team. They decide the next steps."
     ),
 )
 _STOP_AND_REST = ActionCardStep(
     key="stop_activity_rest",
-    text_tr="Yorucu aktiviteyi durdur, güvenli bir pozisyonda otur ve dinlen.",
+    text_tr="Stop the strenuous activity, sit in a safe position and rest.",
 )
 
 VITAL_SPO2_WATCH_CARD_V1 = ActionCard(
@@ -107,23 +110,23 @@ VITAL_SPO2_WATCH_CARD_V1 = ActionCard(
     rule_id=SPO2_RULE_ID,
     title_key="spo2_watch.title",
     reason_key="spo2_watch.reason",
-    title_tr="SpO₂ ölçümünü doğrula",
+    title_tr="Verify the SpO₂ measurement",
     reason_tr=(
-        "Son 10 dakikalık dinlenme SpO₂ ortalaması olağan referansın altında. "
-        "Önce ölçümün doğru olduğundan emin ol."
+        "The 10-minute resting SpO₂ average is below the usual reference. "
+        "First make sure the measurement is correct."
     ),
     steps=(
         ActionCardStep(
             key="verify_sensor_placement",
             text_tr=(
-                "Sensörün parmak/kulak yerleşimini ve temasını kontrol et, "
-                "elini sabit tutarak ölçümü tekrarla."
+                "Check the sensor's finger/ear placement and contact, and repeat "
+                "the measurement while holding your hand steady."
             ),
         ),
         _RECORD_SYMPTOMS,
         ActionCardStep(
             key="check_cabin_atmosphere",
-            text_tr="Kabin O₂ ve basınç göstergelerini kontrol et.",
+            text_tr="Check the cabin O₂ and pressure readings.",
         ),
     ),
     footer_note_tr=DEMO_FOOTER,
@@ -139,16 +142,16 @@ VITAL_SPO2_ALERT_CARD_V1 = ActionCard(
     rule_id=SPO2_RULE_ID,
     title_key="spo2_alert.title",
     reason_key="spo2_alert.reason",
-    title_tr="Düşük SpO₂: dinlen ve ekip sağlık sorumlusuna bildir",
+    title_tr="Low SpO₂: rest and notify the crew medical officer",
     reason_tr=(
-        "Son 10 dakikalık dinlenme SpO₂ ortalaması belirgin düşüklük referansının "
-        "altında."
+        "The 10-minute resting SpO₂ average is below the clear low-value "
+        "reference."
     ),
     steps=(
         _STOP_AND_REST,
         ActionCardStep(
             key="confirm_second_sensor",
-            text_tr="Ölçümü ikinci bir sensör veya cihazla doğrula.",
+            text_tr="Verify the measurement with a second sensor or device.",
         ),
         _NOTIFY_MEDICAL_OFFICER,
     ),
@@ -165,23 +168,23 @@ VITAL_TEMP_WATCH_CARD_V1 = ActionCard(
     rule_id=TEMP_RULE_ID,
     title_key="temp_watch.title",
     reason_key="temp_watch.reason",
-    title_tr="Vücut sıcaklığı eğilimini izle",
+    title_tr="Monitor the body temperature trend",
     reason_tr=(
-        "Son bir saatlik vücut sıcaklığı kişisel başlangıç değerinin belirgin "
-        "üzerinde."
+        "The one-hour body temperature average is clearly above the personal "
+        "baseline."
     ),
     steps=(
         ActionCardStep(
             key="verify_sensor_contact",
             text_tr=(
-                "Sıcaklık sensörünün cilt temasını kontrol et ve ikinci bir "
-                "ölçümle doğrula."
+                "Check the temperature sensor's skin contact and verify with a "
+                "second measurement."
             ),
         ),
         _RECORD_SYMPTOMS,
         ActionCardStep(
             key="reassess_one_hour",
-            text_tr="Bir saat içinde yeniden ölç ve değişimi kaydet.",
+            text_tr="Measure again within one hour and record the change.",
         ),
     ),
     footer_note_tr=DEMO_FOOTER,
@@ -197,12 +200,12 @@ VITAL_TEMP_ALERT_CARD_V1 = ActionCard(
     rule_id=TEMP_RULE_ID,
     title_key="temp_alert.title",
     reason_key="temp_alert.reason",
-    title_tr="Yüksek vücut sıcaklığı: ekip sağlık sorumlusuna bildir",
-    reason_tr="Son bir saatlik vücut sıcaklığı genel ateş referansının üzerinde.",
+    title_tr="High body temperature: notify the crew medical officer",
+    reason_tr="The one-hour body temperature average is above the general fever reference.",
     steps=(
         ActionCardStep(
             key="confirm_second_thermometer",
-            text_tr="Sıcaklığı ikinci bir termometre veya sensörle doğrula.",
+            text_tr="Verify the temperature with a second thermometer or sensor.",
         ),
         _RECORD_SYMPTOMS,
         _NOTIFY_MEDICAL_OFFICER,
@@ -220,21 +223,21 @@ MULTI_CARDIO_RESP_WATCH_CARD_V1 = ActionCard(
     rule_id=CARDIO_RESP_RULE_ID,
     title_key="cardio_resp_watch.title",
     reason_key="cardio_resp_watch.reason",
-    title_tr="Dinlenme kalp ve solunum hızını doğrula",
+    title_tr="Verify resting heart rate and breathing rate",
     reason_tr=(
-        "Dinlenme sırasında kalp hızı kişisel başlangıcın ve solunum hızı "
-        "referansın üzerinde."
+        "During rest, heart rate is above the personal baseline and breathing "
+        "rate is above the reference."
     ),
     steps=(
         ActionCardStep(
             key="rest_and_remeasure",
-            text_tr="Beş dakika oturarak dinlen ve ölçümleri tekrarla.",
+            text_tr="Sit and rest for five minutes, then repeat the measurements.",
         ),
         ActionCardStep(
             key="check_activity_context",
             text_tr=(
-                "Yakın zamanda egzersiz, EVA hazırlığı veya yoğun görev olup "
-                "olmadığını kaydet."
+                "Record whether there was recent exercise, EVA preparation or "
+                "intense mission activity."
             ),
         ),
         _RECORD_SYMPTOMS,
@@ -252,15 +255,16 @@ MULTI_CARDIO_RESP_ALERT_CARD_V1 = ActionCard(
     rule_id=CARDIO_RESP_RULE_ID,
     title_key="cardio_resp_alert.title",
     reason_key="cardio_resp_alert.reason",
-    title_tr="Kalp-solunum bulguları ve belirti: ekip sağlık sorumlusuna bildir",
+    title_tr="Heart and breathing findings with symptom: notify the crew medical officer",
     reason_tr=(
-        "Dinlenmede yüksek kalp ve solunum hızına öznel belirti eşlik ediyor."
+        "High resting heart rate and breathing rate are accompanied by a "
+        "subjective symptom."
     ),
     steps=(
         _STOP_AND_REST,
         ActionCardStep(
             key="remeasure_vitals",
-            text_tr="Kalp hızı, solunum, SpO₂ ve sıcaklığı yeniden ölç.",
+            text_tr="Re-measure heart rate, breathing, SpO₂ and temperature.",
         ),
         _NOTIFY_MEDICAL_OFFICER,
     ),
@@ -277,23 +281,23 @@ DATA_HR_SENSOR_CHECK_CARD_V1 = ActionCard(
     rule_id=HR_JUMP_RULE_ID,
     title_key="hr_sensor_check.title",
     reason_key="hr_sensor_check.reason",
-    title_tr="Kalp hızı sensörünü kontrol et",
+    title_tr="Check the heart rate sensor",
     reason_tr=(
-        "Kalp hızı sinyali şüpheli veya geçersiz. Bu bir sağlık alarmı değil, "
-        "veri kalitesi uyarısıdır."
+        "The heart rate signal is suspect or invalid. This is not a health alarm; "
+        "it is a data quality warning."
     ),
     steps=(
         ActionCardStep(
             key="reseat_sensor",
-            text_tr="Göğüs bandını/bileklik sensörünü yeniden yerleştir.",
+            text_tr="Reposition the chest strap/wrist sensor.",
         ),
         ActionCardStep(
             key="repeat_measurement",
-            text_tr="Bir dakika hareketsiz kalarak ölçümü tekrarla.",
+            text_tr="Stay still for one minute and repeat the measurement.",
         ),
         ActionCardStep(
             key="log_sensor_issue",
-            text_tr="Sorun sürerse sensör arızasını kaydet.",
+            text_tr="If the problem persists, record the sensor fault.",
         ),
     ),
     footer_note_tr=DEMO_FOOTER,
@@ -309,35 +313,35 @@ RED_FLAG_EMERGENCY_CARD_V1 = ActionCard(
     rule_id=RED_FLAG_RULE_ID,
     title_key="red_flag.title",
     reason_key="red_flag.reason",
-    title_tr="Acil belirti: hemen ekip sağlık sorumlusuna ve yer ekibine bildir",
+    title_tr="Emergency symptom: notify the crew medical officer and ground team immediately",
     reason_tr=(
-        "Kırmızı bayrak belirtisi bildirildi. Normal ölçümler bu durumu dışlamaz; "
-        "değerlendirmeyi beklemeden acil prosedüre geç."
+        "A red-flag symptom was reported. Normal measurements do not rule this out; "
+        "proceed to the emergency procedure without waiting for evaluation."
     ),
     steps=(
         ActionCardStep(
             key="stop_and_safe_position",
-            text_tr="İşi hemen durdur ve güvenli bir pozisyona geç.",
+            text_tr="Stop work immediately and move to a safe position.",
         ),
         ActionCardStep(
             key="alert_crew_now",
             text_tr=(
-                "Ekip sağlık sorumlusuna ve yer ekibine hemen bildir; yanında bir "
-                "ekip arkadaşı kalsın."
+                "Notify the crew medical officer and ground team immediately; have a "
+                "crew member stay with you."
             ),
         ),
         ActionCardStep(
             key="open_emergency_procedure",
             text_tr=(
-                "Göreve özel acil tıbbi prosedürü aç ve ekip sağlık sorumlusunun "
-                "yönlendirmesini izle."
+                "Open the mission-specific emergency medical procedure and follow the "
+                "crew medical officer's direction."
             ),
         ),
     ),
     footer_note_tr=(
-        "DEMO kartı: kırmızı bayrak listesi uçuş tıbbı doğrulaması bekliyor. "
-        "Teşhis koymaz, ilaç veya tedavi önermez. Bu alarm ölçümlerle kendiliğinden "
-        "kapanmaz; ekip üyesi değerlendirip kapatır."
+        "DEMO card: the red-flag list awaits flight medicine validation. Does not "
+        "diagnose; no medication or treatment is recommended. This alarm does not "
+        "close on its own through measurements; a crew member evaluates and closes it."
     ),
     requires_mission_procedure=True,
     allows_automatic_vehicle_command=False,

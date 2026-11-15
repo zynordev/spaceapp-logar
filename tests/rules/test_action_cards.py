@@ -57,7 +57,7 @@ def test_card_keeps_its_approved_safety_limits() -> None:
         "check_removal_system",
         "record_check_in",
     )
-    assert card.title_tr.startswith("Kabin CO₂ yüksek")
+    assert card.title_tr.startswith("Cabin CO₂ high")
     assert all(step.why_tr for step in card.steps)
     assert card.reassess_minutes == 30
     assert card.escalate_if_tr and card.closes_when_tr

@@ -493,152 +493,152 @@ SCENARIOS: dict[str, Scenario] = {
     for scenario in (
         Scenario(
             scenario_id="co2-headache",
-            title="Kabin CO₂ yükselmesi + baş ağrısı",
+            title="Cabin CO₂ rise + headache",
             time_scale="acute",
             description=(
-                "Destiny modülünde CO₂ bir saat boyunca nominal sınırın üzerine çıkar; "
-                "Harmony modülü normal kalır (yerel birikim). Astronot hafif baş ağrısı "
-                "bildirir. Arada yapılan egzersiz, bağlam sayesinde "
-                "alarm üretmez."
+                "CO₂ in the Destiny module rises above the nominal limit for one hour; "
+                "the Harmony module stays normal (local buildup). The astronaut reports "
+                "a mild headache. Exercise in between, given its context, "
+                "does not raise an alarm."
             ),
             expected=(
-                "CO₂ kuralı WATCH ve onaylı CO₂ eylem kartı",
-                "Açık CO₂ alarmı; vital kurallar normal",
-                "Egzersiz sırasındaki yüksek kalp hızı alarm üretmez (dinlenme bağlamı)",
+                "CO₂ rule at WATCH and an approved CO₂ action card",
+                "Open CO₂ alarm; vital rules normal",
+                "High heart rate during exercise raises no alarm (rest context)",
             ),
             duration_minutes=180,
             build=build_co2_headache,
         ),
         Scenario(
             scenario_id="fever-trend",
-            title="Saatler içinde sıcaklık, kalp ve solunum artışı",
+            title="Temperature, heart and respiration rise within hours",
             time_scale="subacute",
             description=(
-                "Vücut sıcaklığı kişisel başlangıçtan yükselir; dinlenme kalp ve "
-                "solunum hızı birlikte artar. Öznel yorgunluk girildiğinde seviye "
-                "yükselir. Teşhis konmaz."
+                "Body temperature rises from the personal baseline; resting heart and "
+                "respiration rate rise together. When subjective fatigue is entered, the level "
+                "rises. No diagnosis is made."
             ),
             expected=(
-                "Sıcaklık eğilimi önce WATCH, sonra ALERT (DEMO eşik)",
-                "Kalp + solunum kuralı WATCH; öznel belirti sonrası ALERT",
-                "Lab kartında WBC uçuş öncesine göre artış (yalnızca bilgi)",
+                "Temperature trend WATCH first, then ALERT (DEMO threshold)",
+                "Heart + respiration rule WATCH; ALERT after a subjective symptom",
+                "Lab card: WBC rise versus pre-flight (information only)",
             ),
             duration_minutes=240,
             build=build_fever_trend,
         ),
         Scenario(
             scenario_id="spo2-drop",
-            title="Dinlenmede SpO₂ düşüşü",
+            title="SpO₂ drop at rest",
             time_scale="acute",
             description=(
-                "Dinlenmedeki SpO₂ önce olağan referansın, sonra belirgin düşüklük "
-                "referansının altına iner; astronot baş dönmesi bildirir."
+                "Resting SpO₂ first drops below the usual reference, then below the significantly low "
+                "reference; the astronaut reports dizziness."
             ),
             expected=(
-                "SpO₂ kuralı önce WATCH, sonra ALERT (DEMO eşik)",
-                "Kart önce sensör yerleşimini doğrulatır, sonra dinlenme ve bildirim",
+                "SpO₂ rule WATCH first, then ALERT (DEMO threshold)",
+                "Card first asks to verify sensor placement, then rest and notification",
             ),
             duration_minutes=90,
             build=build_spo2_drop,
         ),
         Scenario(
             scenario_id="sensor-fault",
-            title="Sensör arızası: kötü veri ≠ normal sağlık",
+            title="Sensor fault: bad data ≠ normal health",
             time_scale="acute",
             description=(
-                "SpO₂ sensörü arıza bildirir ve kalp hızında fiziksel olarak "
-                "şüpheli bir sıçrama olur. Sistem sağlık alarmı üretmez, durumu "
-                "'bilinmiyor' olarak gösterir ve sensör kontrol kartı açar."
+                "The SpO₂ sensor reports a fault and heart rate shows a physically "
+                "implausible spike. The system raises no health alarm and shows the status "
+                "as 'Unknown' and opens a sensor check card."
             ),
             expected=(
-                "SpO₂ UNKNOWN (veri yetersiz); sağlık alarmı yok",
-                "Kalp hızı veri kalitesi SUSPECT + sensör kontrol kartı",
-                "Genel durum UNKNOWN; yeşil gösterilmez",
+                "SpO₂ UNKNOWN (insufficient data); no health alarm",
+                "Heart rate data quality SUSPECT + sensor check card",
+                "Overall status UNKNOWN; never shown as green",
             ),
             duration_minutes=120,
             build=build_sensor_fault,
         ),
         Scenario(
             scenario_id="chest-pain-red-flag",
-            title="Kırmızı bayrak: ölçümler normalken göğüs ağrısı",
+            title="Red flag: chest pain while measurements are normal",
             time_scale="acute",
             description=(
-                "Tüm ölçümler normal seyrederken astronot göğüs ağrısı bildirir. "
-                "Normal ölçümler ciddi bir olayı dışlamadığı için sistem hiçbir "
-                "ortalamayı beklemeden en üst seviyeye çıkar ve acil kartı açar. "
-                "Teşhis konmaz; alarmı ekip üyesi değerlendirip kapatır."
+                "The astronaut reports chest pain while all measurements remain normal. "
+                "Because normal measurements do not rule out a serious event, the system "
+                "escalates to the highest level without waiting for an average and opens an emergency card. "
+                "No diagnosis is made; a crew member reviews and closes the alarm."
             ),
             expected=(
-                "Kırmızı bayrak kuralı CRITICAL + acil eylem kartı",
-                "Vital kurallar normal kalırken genel durum Kritik",
-                "Alarm ölçümlerle kendiliğinden kapanmaz; 'Değerlendirildi, kapat' gerekir",
+                "Red flag rule CRITICAL + emergency action card",
+                "Vital rules stay normal while overall status is Critical",
+                "Alarm does not close by itself as measurements come in; 'Reviewed, close' is required",
             ),
             duration_minutes=90,
             build=build_chest_pain,
         ),
         Scenario(
             scenario_id="cabin-o2-drop",
-            title="Kabin O₂ ve basınç düşüşü",
+            title="Cabin O₂ and pressure drop",
             time_scale="acute",
             description=(
-                "Kabin O₂ oranı ve toplam basınç yavaşça düşer (olası kaçak). Sistem "
-                "O₂ kısmi basıncını hesaplar; ekibin SpO₂'si de düşmeye başlar, "
-                "astronot baş dönmesi bildirir."
+                "Cabin O₂ fraction and total pressure fall slowly (possible leak). The system "
+                "calculates the O₂ partial pressure; the crew's SpO₂ also starts to fall, "
+                "the astronaut reports dizziness."
             ),
             expected=(
-                "Kabin O₂ kısmi basıncı önce İzle, sonra Uyarı (DEMO eşik)",
-                "SpO₂ kuralı İzle; iki kural aynı nedeni farklı açılardan gösterir",
-                "Kart ekibi uyarmayı ve atmosfer prosedürünü öne alır",
+                "Cabin O₂ partial pressure Watch first, then Warning (DEMO threshold)",
+                "SpO₂ rule Watch; the two rules show the same cause from different angles",
+                "Card puts crew warning and the atmosphere procedure first",
             ),
             duration_minutes=90,
             build=build_cabin_o2_drop,
         ),
         Scenario(
             scenario_id="radiation-spe",
-            title="Güneş parçacık olayı: doz hızında ani artış",
+            title="Solar particle event: sudden dose rate increase",
             time_scale="acute",
             description=(
-                "Modülün doz hızı önce birkaç kat, sonra onlarca kat artar. Sistem "
-                "modülün kendi başlangıcına göre değerlendirir ve görev boyunca "
-                "kümülatif dozu hesaplar. " + PROVENANCE_NOTE_TR
+                "The module's dose rate first rises several-fold, then tens-fold. The system "
+                "assesses it against the module's own baseline and, over the mission, "
+                "calculates the cumulative dose. " + PROVENANCE_NOTE_TR
             ),
             expected=(
                 PROVENANCE_NOTE_TR,
-                "Radyasyon kuralı önce İzle, sonra Uyarı (DEMO eşik)",
-                "Kart korunaklı bölüme geçiş prosedürünü ve EVA'nın durdurulmasını öne alır",
-                "Açıklamada kümülatif doz ve 600 mSv kariyer sınırı bağlamı",
+                "Radiation rule Watch first, then Warning (DEMO threshold)",
+                "Card puts the move to a shielded area and halting EVA first",
+                "Explanation covers cumulative dose and the 600 mSv career limit context",
             ),
             duration_minutes=180,
             build=build_radiation_spe,
         ),
         Scenario(
             scenario_id="sleep-debt",
-            title="Birikmiş uyku borcu ve yorgunluk",
+            title="Accumulated sleep debt and fatigue",
             time_scale="subacute",
             description=(
-                "Son üç gece kısa uyunmuştur. Astronot yüksek yorgunluk ve ruh hali "
-                "sıkıntısı bildirince seviye yükselir."
+                "The last three nights were short on sleep. The astronaut reports high fatigue and mood "
+                "distress, and the level rises."
             ),
             expected=(
-                "Uyku kuralı önce İzle, öznel kayıttan sonra Uyarı (DEMO eşik)",
-                "Kart kritik görevlerin ekip sağlık sorumlusuyla değerlendirilmesini önerir",
+                "Sleep rule Watch first, then Warning after the subjective record (DEMO threshold)",
+                "Card recommends reviewing critical mission tasks with the crew medical officer",
             ),
             duration_minutes=120,
             build=build_sleep_debt,
         ),
         Scenario(
             scenario_id="gravity-adaptation",
-            title="Yerçekimi geçişi sonrası uyum: bulantı, baş dönmesi, görme",
+            title="Adaptation after gravity transition: nausea, dizziness, vision",
             time_scale="acute",
             description=(
-                "Yeni bir yerçekimi ortamına geçişten sonra astronot bulantı, baş "
-                "dönmesi, burun tıkanıklığı ve sırt ağrısı bildirir; ikinci kayıtta "
-                "görme değişikliği de ekler."
+                "After moving to a new gravity environment, the astronaut reports nausea, dizziness, "
+                "nasal congestion and back pain; the second record adds "
+                "a vision change."
             ),
             expected=(
-                "Hareket hastalığı örüntüsü İzle (DEMO)",
-                "Görme değişikliği İzle: SANS izlemi kartı (DEMO)",
-                "Sırt ağrısı ve burun tıkanıklığı kayıtlı, kural yok (risk haritasında 'sadece veri')",
+                "Motion sickness pattern Watch (DEMO)",
+                "Vision change Watch: SANS monitoring card (DEMO)",
+                "Back pain and nasal congestion recorded, no rule (shown as 'data only' on the risk map)",
             ),
             duration_minutes=120,
             build=build_gravity_adaptation,

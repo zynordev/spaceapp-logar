@@ -32,7 +32,7 @@ def test_atmosphere_uses_oxygen_partial_pressure(o2, pressure, attention) -> Non
 def test_atmosphere_without_data_is_unknown_and_reports_pressure_trend() -> None:
     assert evaluate_cabin_atmosphere(None, 101.3, None).health_attention is HealthAttention.UNKNOWN
     falling = evaluate_cabin_atmosphere(17.5, 99.0, -1.2)  # ppO2 17.3 kPa
-    assert "düşüyor" in falling.explanation
+    assert "falling" in falling.explanation
     assert select_action_card(falling).card_id == "ENV_CABIN_ATMOSPHERE_WATCH_CARD_V2"
 
 
@@ -50,7 +50,7 @@ def test_radiation_compares_with_module_baseline(recent, baseline, attention) ->
     evaluation = evaluate_radiation(recent, baseline, 0.123)
 
     assert evaluation.health_attention is attention
-    assert "0,123 mSv" in evaluation.explanation
+    assert "0.123 mSv" in evaluation.explanation
     assert "600 mSv" in evaluation.explanation
 
 

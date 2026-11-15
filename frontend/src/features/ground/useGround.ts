@@ -46,10 +46,10 @@ export function useSource<T>(
 /** Human-readable error line for a failed ground call. */
 export function errorText(e: ApiError | null, endpoint: string): string | null {
   if (!e) return null;
-  if (e.status === 404) return `Sunucuda henüz yok (${endpoint}). Önizleme için adrese ?mock=1 ekleyin.`;
-  if (e.status === 0) return 'Sunucuya ulaşılamıyor — son bilinen veriler gösteriliyor.';
-  if (e.status === 401) return 'Oturum gerekli — lütfen giriş yapın.';
-  if (e.status === 403) return 'Bu bilgiyi görme yetkiniz yok.';
+  if (e.status === 404) return `Not on the server yet (${endpoint}). Add ?mock=1 to the address to preview.`;
+  if (e.status === 0) return 'Cannot reach the server — showing the last known data.';
+  if (e.status === 401) return 'Sign-in required — please sign in.';
+  if (e.status === 403) return 'You do not have permission to view this information.';
   return serverMessage(e);
 }
 
@@ -61,5 +61,5 @@ export function errorText(e: ApiError | null, endpoint: string): string | null {
  */
 export function serverMessage(e: ApiError): string {
   const msg = e.message;
-  return !msg || msg.startsWith('HTTP ') ? `Sunucu hatası (HTTP ${e.status})` : `${msg} (HTTP ${e.status})`;
+  return !msg || msg.startsWith('HTTP ') ? `Server error (HTTP ${e.status})` : `${msg} (HTTP ${e.status})`;
 }

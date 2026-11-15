@@ -4,13 +4,13 @@ import type { Role } from '../lib/store';
 const TR = 'en-GB';
 
 export const ROLE_LABEL: Record<Role, string> = {
-  ASTRONAUT: 'Astronot',
-  CREW_MEDICAL_OFFICER: 'Ekip sağlık sorumlusu',
-  GROUND: 'Yer ekibi',
+  ASTRONAUT: 'Astronaut',
+  CREW_MEDICAL_OFFICER: 'Crew medical officer',
+  GROUND: 'Ground team',
 };
 
 export function roleLabel(role: Role | null | undefined): string {
-  return role ? ROLE_LABEL[role] ?? role : 'Rol yok';
+  return role ? ROLE_LABEL[role] ?? role : 'No role';
 }
 
 function toDate(v: string | number | Date | null | undefined): Date | null {
@@ -43,19 +43,19 @@ export function formatRelative(v: string | number | Date | null | undefined, now
   if (!d) return '—';
   const diff = d.getTime() - now;
   const abs = Math.abs(diff);
-  if (abs < 45_000) return diff < 0 ? 'az önce' : 'şimdi';
+  if (abs < 45_000) return diff < 0 ? 'just now' : 'now';
   const units: [number, string][] = [
-    [86_400_000, 'gün'],
-    [3_600_000, 'sa'],
-    [60_000, 'dk'],
+    [86_400_000, 'day'],
+    [3_600_000, 'h'],
+    [60_000, 'min'],
   ];
   for (const [ms, unit] of units) {
     if (abs >= ms) {
       const n = Math.round(abs / ms);
-      return diff < 0 ? `${n} ${unit} önce` : `${n} ${unit} sonra`;
+      return diff < 0 ? `${n} ${unit} ago` : `in ${n} ${unit}`;
     }
   }
-  return 'şimdi';
+  return 'now';
 }
 
 /** Seconds -> "1 sa 5 dk" / "4 dk" / "30 sn". */

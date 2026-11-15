@@ -235,7 +235,7 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
         <span className="lgi-activity__icon" aria-hidden="true"><Icon name="warning" size={28} /></span>
         <div className="lgi-activity__body">
           <strong className="lgi-activity__big">The declared time has run out — activity context is unknown</strong>
-          {current.message_tr && current.state === 'EXPIRED' && !current.message_tr.startsWith('Beyan edilen süre doldu') && (
+          {current.message_tr && current.state === 'EXPIRED' && !current.message_tr.startsWith('The declared time has ended') && (
             <div>{current.message_tr}</div>
           )}
           <div className="lgi-muted">
@@ -274,7 +274,7 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
         {current.message_tr && <div className="lgi-muted">{current.message_tr}</div>}
         <div className="lgi-actions">
           <button type="button" className="lgi-btn" disabled={busy} onClick={() => onEnd(a)}>
-            <Icon name="stop" size={14} />{' '}Bitir
+            <Icon name="stop" size={14} />{' '}End
           </button>
         </div>
       </div>

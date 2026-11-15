@@ -60,7 +60,7 @@ function layoutFor(profile: Profile): Layout {
       from: v(station).add(new THREE.Vector3(-0.1, -0.06, 0)),
       to: surfacePoint(earth.pos, earth.r * 1.003, new THREE.Vector3(-0.12, 1, 0.3)),
       lift: 0.55,
-      habitatLabel: 'İSTASYON · ALÇAK DÜNYA YÖRÜNGESİ',
+      habitatLabel: 'STATION · LOW EARTH ORBIT',
       habitatLabelAt: v(station).add(new THREE.Vector3(0, -0.5, 0)),
       habitatLabelSide: 'below',
       groundLabelAt: surfacePoint(earth.pos, earth.r * 1.003, new THREE.Vector3(-0.12, 1, 0.3)),
@@ -80,7 +80,7 @@ function layoutFor(profile: Profile): Layout {
     from,
     to: surfacePoint(earth.pos, earth.r * 1.01, dir.clone().add(new THREE.Vector3(0, 0.35, 0.6))),
     lift: 1.1,
-    habitatLabel: profile === 'MARS' ? 'HABİTAT · MARS' : 'HABİTAT · AY',
+    habitatLabel: profile === 'MARS' ? 'HABITAT · MARS' : 'HABITAT · MOON',
     habitatLabelAt: from,
     habitatLabelSide: 'right',
     groundLabelAt: v(earth.pos).add(new THREE.Vector3(0, -earth.r - 0.12, 0)),
@@ -389,7 +389,7 @@ export default function SpaceCanvas({ link, running, reduced, dpr, onFail }: Spa
         <Scene link={link} reduced={reduced} L={L} groundEl={groundEl} habitatEl={habitatEl} />
       </Canvas>
       <span ref={groundEl} className={`sp-label sp-label--${L.groundLabelSide}`}>
-        DÜNYA · YER EKİPLERİ
+        EARTH · GROUND TEAMS
       </span>
       <span ref={habitatEl} className={`sp-label sp-label--${L.habitatLabelSide}`}>
         {L.habitatLabel}

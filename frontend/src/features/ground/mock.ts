@@ -29,10 +29,10 @@ export function isMock(): boolean {
 export const MOCK_MISSION_ID = 'mock-mars-transit';
 
 const LABELS: Record<Recipient, string> = {
-  FLIGHT_SURGEON: 'Uçuş cerrahı',
-  LIFE_SUPPORT: 'Yaşam destek',
+  FLIGHT_SURGEON: 'Flight surgeon',
+  LIFE_SUPPORT: 'Life support',
   RADIATION: 'Radyasyon',
-  MISSION_CONTROL: 'Görev kontrol',
+  MISSION_CONTROL: 'Mission control',
 };
 
 /** Deterministic 64-hex pseudo hash (fixture only — not a real SHA-256). */
@@ -76,7 +76,7 @@ function s(): MockState {
       status: 'PENDING',
       created_at: minutesAgo(7),
       acked_at: null,
-      summary_tr: 'Kırmızı bayrak: göğüs ağrısı bildirildi — Kritik. Görev prosedürü ve uçuş cerrahı yönlendirmesi gerekir.',
+      summary_tr: 'Red flag: chest pain reported — Critical. Mission procedure and flight surgeon guidance are needed.',
       packet_sha256: fakeHash('esc-0001'),
     },
     {
@@ -88,7 +88,7 @@ function s(): MockState {
       status: 'PENDING',
       created_at: minutesAgo(23),
       acked_at: null,
-      summary_tr: 'SpO₂ 10 dakikadır kişisel başlangıcın altında (%91) — Uyarı.',
+      summary_tr: 'SpO₂ below personal baseline for 10 minutes (91%) — Warning.',
       packet_sha256: fakeHash('esc-0002'),
     },
     {
@@ -100,7 +100,7 @@ function s(): MockState {
       status: 'ACKED',
       created_at: minutesAgo(190),
       acked_at: minutesAgo(150),
-      summary_tr: 'Laboratuvar modülünde kabin CO₂ nominal sınırın üzerinde — Uyarı.',
+      summary_tr: 'Cabin CO₂ above the nominal limit in the lab module — Warning.',
       packet_sha256: fakeHash('esc-0003'),
     },
   ];
@@ -147,33 +147,33 @@ export async function mockEscalations(): Promise<EscalationRead[]> {
 
 const ITEM_TEMPLATES: Record<Recipient, Omit<PacketItem, 'id' | 'occurred_at'>[]> = {
   FLIGHT_SURGEON: [
-    { kind: 'ESCALATION', summary_tr: 'Öncelikli bildirim: göğüs ağrısı (Kritik)', data: { priority: 'CRITICAL' } },
-    { kind: 'RED_FLAG', summary_tr: 'Kırmızı bayrak: göğüs ağrısı', data: { symptom: 'CHEST_PAIN' } },
-    { kind: 'ESCALATION', summary_tr: 'Öncelikli bildirim: SpO₂ düşüşü (Uyarı)', data: { priority: 'ALERT' } },
-    { kind: 'ALERT', summary_tr: 'SpO₂ sürekli düşük — Uyarı', data: { rule_id: 'VITAL_SPO2_SUSTAINED_V1' } },
-    { kind: 'RULE_EVALUATION', summary_tr: 'Vücut sıcaklığı eğilimi — Normal', data: { rule_id: 'VITAL_TEMP_TREND_V1' } },
-    { kind: 'CHECK_IN', summary_tr: 'Öznel bildirim: yorgunluk 3/5, uyku 5,5 sa', data: {} },
-    { kind: 'LAB_RESULT', summary_tr: 'WBC 6,1 ×10⁹/L (bilgi amaçlı)', data: { analyte: 'WBC' } },
-    { kind: 'TREND', summary_tr: 'Dinlenme kalp hızı 24 sa ortalaması 68 bpm', data: { metric: 'HEART_RATE' } },
-    { kind: 'RULE_EVALUATION', summary_tr: 'Uyku ve yorgunluk — İzle', data: { rule_id: 'BEHAV_SLEEP_V1' } },
+    { kind: 'ESCALATION', summary_tr: 'Priority notification: chest pain (Critical)', data: { priority: 'CRITICAL' } },
+    { kind: 'RED_FLAG', summary_tr: 'Red flag: chest pain', data: { symptom: 'CHEST_PAIN' } },
+    { kind: 'ESCALATION', summary_tr: 'Priority notification: SpO₂ drop (Warning)', data: { priority: 'ALERT' } },
+    { kind: 'ALERT', summary_tr: 'Sustained low SpO₂ — Warning', data: { rule_id: 'VITAL_SPO2_SUSTAINED_V1' } },
+    { kind: 'RULE_EVALUATION', summary_tr: 'Body temperature trend — Normal', data: { rule_id: 'VITAL_TEMP_TREND_V1' } },
+    { kind: 'CHECK_IN', summary_tr: 'Subjective report: fatigue 3/5, sleep 5.5 h', data: {} },
+    { kind: 'LAB_RESULT', summary_tr: 'WBC 6.1 ×10⁹/L (for information only)', data: { analyte: 'WBC' } },
+    { kind: 'TREND', summary_tr: 'Resting heart rate 24 h average 68 bpm', data: { metric: 'HEART_RATE' } },
+    { kind: 'RULE_EVALUATION', summary_tr: 'Sleep and fatigue — Watch', data: { rule_id: 'BEHAV_SLEEP_V1' } },
   ],
   LIFE_SUPPORT: [
-    { kind: 'ALERT', summary_tr: 'Kabin CO₂ nominal sınırın üzerinde (lab modülü)', data: { rule_id: 'ENV_CO2_NOMINAL_V1' } },
-    { kind: 'RULE_EVALUATION', summary_tr: 'Kabin O₂ kısmi basıncı — Normal', data: { rule_id: 'ENV_CABIN_ATMOSPHERE_V1' } },
+    { kind: 'ALERT', summary_tr: 'Cabin CO₂ above nominal limit (lab module)', data: { rule_id: 'ENV_CO2_NOMINAL_V1' } },
+    { kind: 'RULE_EVALUATION', summary_tr: 'Cabin O₂ partial pressure — Normal', data: { rule_id: 'ENV_CABIN_ATMOSPHERE_V1' } },
     { kind: 'TREND', summary_tr: 'Kabin CO₂ saatlik ortalama 3,1 mmHg', data: { metric: 'CO2' } },
-    { kind: 'TREND', summary_tr: 'Kabin basıncı 101,2 kPa sabit', data: { metric: 'CABIN_PRESSURE' } },
+    { kind: 'TREND', summary_tr: 'Cabin pressure 101.2 kPa stable', data: { metric: 'CABIN_PRESSURE' } },
   ],
   RADIATION: [
-    { kind: 'RULE_EVALUATION', summary_tr: 'Doz hızı modül başlangıcında — Normal', data: { rule_id: 'ENV_RADIATION_V1' } },
-    { kind: 'TREND', summary_tr: 'Kümülatif doz günlük artış 0,46 mGy', data: { metric: 'RADIATION_DOSE_RATE' } },
+    { kind: 'RULE_EVALUATION', summary_tr: 'Dose rate at module baseline — Normal', data: { rule_id: 'ENV_RADIATION_V1' } },
+    { kind: 'TREND', summary_tr: 'Cumulative dose daily increase 0.46 mGy', data: { metric: 'RADIATION_DOSE_RATE' } },
   ],
   MISSION_CONTROL: [
-    { kind: 'ESCALATION', summary_tr: 'Öncelikli bildirim kopyası: göğüs ağrısı (Kritik)', data: {} },
-    { kind: 'ALERT', summary_tr: 'SpO₂ sürekli düşük — Uyarı', data: {} },
-    { kind: 'ALERT', summary_tr: 'Kabin CO₂ nominal sınırın üzerinde', data: {} },
-    { kind: 'RULE_EVALUATION', summary_tr: 'Genel durum: 1 Kritik, 1 Uyarı', data: {} },
-    { kind: 'TREND', summary_tr: 'Ekip check-in uyumu %83', data: {} },
-    { kind: 'CHECK_IN', summary_tr: 'Günlük öznel bildirim özeti', data: {} },
+    { kind: 'ESCALATION', summary_tr: 'Priority notification copy: chest pain (Critical)', data: {} },
+    { kind: 'ALERT', summary_tr: 'Sustained low SpO₂ — Warning', data: {} },
+    { kind: 'ALERT', summary_tr: 'Cabin CO₂ above nominal limit', data: {} },
+    { kind: 'RULE_EVALUATION', summary_tr: 'Overall status: 1 Critical, 1 Warning', data: {} },
+    { kind: 'TREND', summary_tr: 'Crew check-in compliance 83%', data: {} },
+    { kind: 'CHECK_IN', summary_tr: 'Daily subjective report summary', data: {} },
   ],
 };
 
@@ -209,10 +209,10 @@ export async function mockPacket(recipient: Recipient): Promise<SyncPacketRead> 
 export async function mockAck(body: SyncAckBody): Promise<SyncAckRead> {
   await delay(500);
   const st = s();
-  if (param('mock403') === '1') throw new ApiError('Yalnız yer ekibi onaylayabilir', 403, 'FORBIDDEN');
+  if (param('mock403') === '1') throw new ApiError('Only the ground team can acknowledge', 403, 'FORBIDDEN');
   const known = st.packets.get(body.packet_id);
   if (param('mock409') === '1' || !known || known.sha256 !== body.sha256) {
-    throw new ApiError('Paket özeti eşleşmiyor', 409, 'CONFLICT');
+    throw new ApiError('Packet digest does not match', 409, 'CONFLICT');
   }
   const now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
   st.pending[body.recipient] = 0;
@@ -251,61 +251,61 @@ export const MOCK_COVERAGE: CoverageRead = (() => {
       key: 'RADIATION',
       title_tr: 'Uzay radyasyonu',
       risks: [
-        r('acute_radiation', 'Ani yüksek maruziyet (güneş parçacık olayı)', 'RULE', ['Radyasyon doz hızı'], [['ENV_RADIATION_V1', 'Radyasyon doz hızı ve kümülatif doz']], 'Modülün kendi başlangıcına göre ani artış.'),
-        r('cumulative_radiation', 'Kümülatif doz', 'RULE', ['Radyasyon doz hızı (zamana göre toplam)'], [['ENV_RADIATION_V1', 'Radyasyon doz hızı ve kümülatif doz']], 'Uzun dönem risk tahmini yapılmaz.'),
+        r('acute_radiation', 'Acute high exposure (solar particle event)', 'RULE', ['Radiation dose rate'], [['ENV_RADIATION_V1', 'Radiation dose rate and cumulative dose']], 'Sudden rise relative to the module baseline.'),
+        r('cumulative_radiation', 'Cumulative dose', 'RULE', ['Radiation dose rate (total over time)'], [['ENV_RADIATION_V1', 'Radiation dose rate and cumulative dose']], 'No long-term risk prediction is made.'),
       ],
     },
     {
       key: 'ISOLATION',
-      title_tr: 'İzolasyon ve kapalı kalma',
+      title_tr: 'Isolation and confinement',
       risks: [
-        r('sleep_circadian', 'Uyku kaybı ve sirkadiyen bozulma', 'RULE', ['Uyku süresi', 'Yorgunluk (öznel)'], [['BEHAV_SLEEP_V1', 'Uyku ve yorgunluk']], 'Uyku kalitesi ölçülmüyor.'),
-        r('behavioral_health', 'Davranışsal sağlık ve ruh hali', 'RULE', ['Ruh hali sıkıntısı (öznel)'], [['BEHAV_SLEEP_V1', 'Uyku ve yorgunluk']], 'Ayrı bir ruh hali kuralı yok.'),
-        r('team_performance', 'Ekip uyumu ve performans', 'GAP', [], [], 'Ölçülmüyor.'),
+        r('sleep_circadian', 'Sleep loss and circadian disruption', 'RULE', ['Sleep duration', 'Fatigue (subjective)'], [['BEHAV_SLEEP_V1', 'Uyku ve yorgunluk']], 'Sleep quality is not measured.'),
+        r('behavioral_health', 'Behavioural health and mood', 'RULE', ['Mood distress (subjective)'], [['BEHAV_SLEEP_V1', 'Uyku ve yorgunluk']], 'No separate mood rule.'),
+        r('team_performance', 'Crew cohesion and performance', 'GAP', [], [], 'Not measured.'),
       ],
     },
     {
       key: 'DISTANCE',
-      title_tr: "Dünya'dan uzaklık",
+      title_tr: "Distance from Earth",
       risks: [
-        r('in_mission_emergency', 'Görev sırasında acil tıbbi durumlar', 'RULE', ['Kırmızı bayrak belirtileri'], [['RED_FLAG_SYMPTOM_V1', 'Kırmızı bayrak belirtisi']], 'Teşhis yok.'),
-        r('infection_immune', 'Bağışıklık değişimi ve enfeksiyon', 'RULE', ['Vücut sıcaklığı', 'WBC (laboratuvar)'], [['VITAL_TEMP_TREND_V1', 'Sıcaklık eğilimi']], 'Laboratuvar yalnızca bilgi.'),
-        r('limited_medical_care', 'Sınırlı tıbbi imkân ve iletişim gecikmesi', 'GAP', [], [], 'Ortam bağlamı işi sürüyor.'),
+        r('in_mission_emergency', 'Emergency medical conditions during the mission', 'RULE', ['Red flag symptoms'], [['RED_FLAG_SYMPTOM_V1', 'Red flag symptom']], 'No diagnosis.'),
+        r('infection_immune', 'Immune change and infection', 'RULE', ['Body temperature', 'WBC (laboratory)'], [['VITAL_TEMP_TREND_V1', 'Temperature trend']], 'Laboratory data is for information only.'),
+        r('limited_medical_care', 'Limited medical capability and communication delay', 'GAP', [], [], 'Environment context work in progress.'),
       ],
     },
     {
       key: 'GRAVITY',
-      title_tr: 'Değişen yerçekimi alanları',
+      title_tr: 'Changing gravity fields',
       risks: [
-        r('space_motion_sickness', 'Uzay hareket hastalığı', 'RULE', ['Bulantı', 'Baş dönmesi'], [['SENS_MOTION_SICKNESS_V1', 'Hareket hastalığı']], 'Belirti örüntüsü.'),
-        r('sans', 'SANS (nöro-oküler sendrom)', 'RULE', ['Görme değişikliği (öznel)'], [['SANS_VISION_SYMPTOM_V1', 'Görme belirtisi']], 'Göz muayenesi verisi yok.'),
-        r('cardiovascular_orthostatic', 'Kalp-damar uyumu', 'DATA_ONLY', ['Kalp hızı', 'Tansiyon'], [], 'Doğrulanmış eşik gerekiyor.'),
-        r('fluid_shift', 'Sıvı kayması', 'DATA_ONLY', ['Burun tıkanıklığı (öznel)'], [], 'Kural yok.'),
-        r('spine_back_pain', 'Omurga uzaması ve sırt ağrısı', 'DATA_ONLY', ['Sırt ağrısı (öznel)'], [], 'Kural yok.'),
-        r('muscle_aerobic', 'Kas kaybı ve aerobik kapasite', 'GAP', [], [], 'Ölçülmüyor.'),
-        r('bone_kidney', 'Kemik kaybı ve böbrek taşı', 'GAP', [], [], 'Ölçülmüyor.'),
+        r('space_motion_sickness', 'Space motion sickness', 'RULE', ['Nausea', 'Dizziness'], [['SENS_MOTION_SICKNESS_V1', 'Motion sickness']], 'Symptom pattern.'),
+        r('sans', 'SANS (neuro-ocular syndrome)', 'RULE', ['Vision change (subjective)'], [['SANS_VISION_SYMPTOM_V1', 'Vision symptom']], 'No eye examination data.'),
+        r('cardiovascular_orthostatic', 'Cardiovascular adaptation', 'DATA_ONLY', ['Heart rate', 'Blood pressure'], [], 'A validated threshold is needed.'),
+        r('fluid_shift', 'Fluid shift', 'DATA_ONLY', ['Nasal congestion (subjective)'], [], 'No rule.'),
+        r('spine_back_pain', 'Spinal elongation and back pain', 'DATA_ONLY', ['Back pain (subjective)'], [], 'No rule.'),
+        r('muscle_aerobic', 'Muscle loss and aerobic capacity', 'GAP', [], [], 'Not measured.'),
+        r('bone_kidney', 'Bone loss and kidney stones', 'GAP', [], [], 'Not measured.'),
       ],
     },
     {
       key: 'HOSTILE_ENVIRONMENT',
-      title_tr: 'Kapalı ve düşmanca ortam',
+      title_tr: 'Confined and hostile environment',
       risks: [
-        r('cabin_co2', 'Kabin CO₂ birikimi', 'RULE', ['Kabin CO₂'], [['ENV_CO2_NOMINAL_V1', 'CO₂ nominal sınır']], 'NASA-STD-3001 nominal sınırı.'),
-        r('hypoxia', 'Düşük oksijen (hipoksi)', 'RULE', ['Kabin O₂', 'SpO₂'], [['VITAL_SPO2_SUSTAINED_V1', 'SpO₂ sürekli düşük']], 'Birlikte izlenir.'),
-        r('decompression', 'Dekompresyon hastalığı', 'DATA_ONLY', ['Kabin basıncı'], [], 'EVA bağlamı yok.'),
-        r('celestial_dust', 'Ay/Mars tozu maruziyeti', 'GAP', [], [], 'Toz sensörü yok.'),
-        r('noise_hearing', 'Gürültü ve işitme kaybı', 'GAP', [], [], 'Gürültü ölçümü yok.'),
+        r('cabin_co2', 'Cabin CO₂ build-up', 'RULE', ['Cabin CO₂'], [['ENV_CO2_NOMINAL_V1', 'CO₂ nominal limit']], 'NASA-STD-3001 nominal limit.'),
+        r('hypoxia', 'Low oxygen (hypoxia)', 'RULE', ['Cabin O₂', 'SpO₂'], [['VITAL_SPO2_SUSTAINED_V1', 'SpO₂ persistently low']], 'Monitored together.'),
+        r('decompression', 'Decompression sickness', 'DATA_ONLY', ['Cabin pressure'], [], 'No EVA context.'),
+        r('celestial_dust', 'Lunar/Martian dust exposure', 'GAP', [], [], 'No dust sensor.'),
+        r('noise_hearing', 'Noise and hearing loss', 'GAP', [], [], 'No noise measurement.'),
       ],
     },
     {
       key: 'DATA',
-      title_tr: 'Kesitler arası: veri güvenilirliği',
+      title_tr: 'Across sections: data reliability',
       risks: [
-        r('sensor_reliability', 'Sensör hatası ile sağlık sorununu ayırmak', 'RULE', ['Kaynak kalite bayrağı'], [['DATA_HR_JUMP_V1', 'Kalp hızı sıçraması']], "Kötü veri genel durumu 'Bilinmiyor' yapar."),
+        r('sensor_reliability', 'Separating sensor fault from health problem', 'RULE', ['Source quality flag'], [['DATA_HR_JUMP_V1', 'Heart rate jump']], "Bad data makes the overall status 'Unknown'."),
       ],
     },
   ];
   const summary = { RULE: 0, DATA_ONLY: 0, GAP: 0 } as Record<string, number>;
   for (const h of hazards) for (const k of h.risks) summary[k.coverage] += 1;
-  return { hazards, summary, note_tr: 'Yerel örnek veri (?mock=1) — canlı /v1/risk-coverage yanıtı alınamadı.' };
+  return { hazards, summary, note_tr: 'Local sample data (?mock=1) — live /v1/risk-coverage response could not be loaded.' };
 })();

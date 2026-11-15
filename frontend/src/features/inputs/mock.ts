@@ -26,13 +26,13 @@ let activity: ActivityRead | null = (() => {
 export const mockActivity = {
   current(now = Date.now()): ActivityCurrentRead {
     if (!activity || activity.ended_at) {
-      return { state: 'NONE', activity: null, remaining_seconds: null, message_tr: 'Açık aktivite beyanı yok (önizleme verisi).' };
+      return { state: 'NONE', activity: null, remaining_seconds: null, message_tr: 'No open activity declaration (preview data).' };
     }
     const remaining = Math.round((Date.parse(activity.expected_end_at) - now) / 1000);
     if (remaining <= 0) {
-      return { state: 'EXPIRED', activity, remaining_seconds: 0, message_tr: 'Beyan edilen süre doldu — aktivite bağlamı bilinmiyor.' };
+      return { state: 'EXPIRED', activity, remaining_seconds: 0, message_tr: 'The declared time has ended — activity context unknown.' };
     }
-    return { state: 'ACTIVE', activity, remaining_seconds: remaining, message_tr: 'Beyan edilen aktivite sürüyor (önizleme verisi).' };
+    return { state: 'ACTIVE', activity, remaining_seconds: remaining, message_tr: 'The declared activity is ongoing (preview data).' };
   },
   start(state: ActivityState, minutes: number): ActivityRead {
     const now = Date.now();
@@ -51,13 +51,13 @@ export const mockActivity = {
 
 // ---- Routines --------------------------------------------------------------
 export const ROUTINE_CATALOG_FALLBACK: RoutineCatalogItem[] = [
-  { kind: 'HYDRATION', title_tr: 'Su içme', description_tr: 'Düzenli sıvı alımı hatırlatması.', category: 'DAILY', default_interval_minutes: 120, evidence: 'DEMO' },
-  { kind: 'EXERCISE', title_tr: 'Egzersiz seansı', description_tr: 'Planlı egzersiz bloğu.', category: 'DAILY', default_interval_minutes: 1440, evidence: 'DEMO' },
-  { kind: 'SLEEP_WINDOW', title_tr: 'Uyku penceresi', description_tr: 'Planlı uyku dönemine geçiş.', category: 'DAILY', default_interval_minutes: 1440, evidence: 'DEMO' },
-  { kind: 'CHECK_IN', title_tr: 'Öznel durum kaydı', description_tr: 'Belirti formunu doldurma.', category: 'DAILY', default_interval_minutes: 240, evidence: 'DEMO' },
-  { kind: 'BODY_MASS_WEEKLY', title_tr: 'Haftalık vücut kütlesi', description_tr: 'Haftalık kütle ölçümü.', category: 'PERIODIC_TEST', default_interval_minutes: 10080, evidence: 'DEMO' },
-  { kind: 'GRIP_STRENGTH_WEEKLY', title_tr: 'Haftalık kavrama kuvveti', description_tr: 'Haftalık el kavrama testi.', category: 'PERIODIC_TEST', default_interval_minutes: 10080, evidence: 'DEMO' },
-  { kind: 'MUSCULOSKELETAL_ASSESSMENT_BIWEEKLY', title_tr: 'Kas-iskelet değerlendirmesi', description_tr: 'İki haftada bir değerlendirme.', category: 'PERIODIC_TEST', default_interval_minutes: 20160, evidence: 'DEMO' },
+  { kind: 'HYDRATION', title_tr: 'Drinking water', description_tr: 'Reminder for regular fluid intake.', category: 'DAILY', default_interval_minutes: 120, evidence: 'DEMO' },
+  { kind: 'EXERCISE', title_tr: 'Exercise session', description_tr: 'Planned exercise block.', category: 'DAILY', default_interval_minutes: 1440, evidence: 'DEMO' },
+  { kind: 'SLEEP_WINDOW', title_tr: 'Sleep window', description_tr: 'Transition to the planned sleep period.', category: 'DAILY', default_interval_minutes: 1440, evidence: 'DEMO' },
+  { kind: 'CHECK_IN', title_tr: 'Subjective state entry', description_tr: 'Fill in the symptom form.', category: 'DAILY', default_interval_minutes: 240, evidence: 'DEMO' },
+  { kind: 'BODY_MASS_WEEKLY', title_tr: 'Weekly body mass', description_tr: 'Weekly mass measurement.', category: 'PERIODIC_TEST', default_interval_minutes: 10080, evidence: 'DEMO' },
+  { kind: 'GRIP_STRENGTH_WEEKLY', title_tr: 'Weekly grip strength', description_tr: 'Weekly hand grip test.', category: 'PERIODIC_TEST', default_interval_minutes: 10080, evidence: 'DEMO' },
+  { kind: 'MUSCULOSKELETAL_ASSESSMENT_BIWEEKLY', title_tr: 'Musculoskeletal assessment', description_tr: 'Assessment every two weeks.', category: 'PERIODIC_TEST', default_interval_minutes: 20160, evidence: 'DEMO' },
 ];
 
 interface MockRoutine { schedule: RoutineScheduleRead; last: number | null; streak: number; best: number }

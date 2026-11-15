@@ -68,9 +68,9 @@ def get_risk_coverage() -> CoverageRead:
         hazards=hazards,
         summary=summary,
         note_tr=(
-            "Tehlike başlıkları NASA İnsan Araştırma Programı'nın beş uzay uçuşu "
-            "tehlikesine göre düzenlenmiştir; risk adları kısa Türkçe açıklamadır. "
-            "'Kural' karar desteği olduğunu, teşhis olduğunu göstermez. DEMO "
-            "kuralları uzman doğrulaması bekler."
+            "Hazard headings follow NASA's Human Research Program five spaceflight "
+            "hazards; risk names are short descriptions. 'Rule' indicates decision "
+            "support; it does not indicate a diagnosis. DEMO rules await expert "
+            "validation."
         ),
     )

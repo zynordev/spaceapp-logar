@@ -20,39 +20,39 @@ PROFILES = ("ISS", "MOON", "MARS")
 FLIGHT_SURGEON = "FLIGHT_SURGEON"
 CREW_MEDICAL_OFFICER = "CREW_MEDICAL_OFFICER"
 OWNER_LABELS_TR = {
-    FLIGHT_SURGEON: "Uçuş cerrahı (yer ekibi)",
-    CREW_MEDICAL_OFFICER: "Mürettebat sağlık sorumlusu (gemide)",
+    FLIGHT_SURGEON: "Flight surgeon (ground team)",
+    CREW_MEDICAL_OFFICER: "Crew medical officer (onboard)",
 }
 
 # (label, min, typical, max one-way seconds, note)
 _DEFS: dict[str, tuple[str, float, float, float, str]] = {
     "ISS": (
-        "ISS (alçak Dünya yörüngesi)",
+        "ISS (low Earth orbit)",
         0,
         1,
         2,
-        "Yer ile neredeyse anlık iletişim; yer ekibi çoğu kart penceresinde yanıt verebilir.",
+        "Near-instant communication with the ground; the ground team can respond within most card windows.",
     ),
     "MOON": (
-        "Ay görevi",
+        "Moon mission",
         1.2,
         1.3,
         1.4,
-        "Tek yön gecikme yaklaşık 1,3 sn; gidiş-dönüş birkaç saniye.",
+        "One-way delay about 1.3 s; round trip a few seconds.",
     ),
     "MARS": (
-        "Mars görevi",
+        "Mars mission",
         182,
         750,
         1342,
-        "Tek yön gecikme 3-22 dk; kısa pencerelerde yer ekibi beklenemez, "
-        "karar gemide alınır.",
+        "One-way delay 3-22 min; in short windows the ground team cannot be expected to respond, "
+        "so the decision is made onboard.",
     ),
 }
 SOURCE_NOTE_TR = (
-    "Gecikme değerleri NASA'nın kamuya açık bilgilerine dayanır: Ay ~1,3 sn tek yön; "
-    "Mars 3-22 dk tek yön (konuma göre); ISS TDRS aktarımıyla ~1-2 sn (yaklaşık). "
-    "Bu, demo bağlamıdır; gerçek bağlantı ölçümü değildir."
+    "Delay values are based on publicly available NASA information: Moon ~1.3 s one way; "
+    "Mars 3-22 min one way (depending on position); ISS ~1-2 s via TDRS relay (approximate). "
+    "This is demo context; it is not a measurement of the actual link."
 )
 
 
@@ -111,8 +111,8 @@ def typical_one_way_seconds(session: Session, mission_id: str) -> float:
 
 def _fmt(seconds: float) -> str:
     if seconds < 120:
-        return f"{seconds:g} sn"
-    return f"{seconds / 60:.0f} dk"
+        return f"{seconds:g} s"
+    return f"{seconds / 60:.0f} min"
 
 
 def earth_response(
@@ -124,13 +124,13 @@ def earth_response(
     owner = owner_for(round_trip, act_within_minutes)
     if in_time:
         note = (
-            f"Yer ile gidiş-dönüş yaklaşık {_fmt(round_trip)}; kartın {act_within_minutes} dk "
-            "penceresi içinde yer ekibinden yanıt alınabilir."
+            f"Ground round trip about {_fmt(round_trip)}; a response from the ground team is "
+            f"possible within the card's {act_within_minutes} min window."
         )
     else:
         note = (
-            f"Yer ile gidiş-dönüş yaklaşık {_fmt(round_trip)}; kartın {act_within_minutes} dk "
-            "penceresi içinde yanıt beklenemez, gemideki sağlık sorumlusu yürütür."
+            f"Ground round trip about {_fmt(round_trip)}; a response is not expected within the "
+            f"card's {act_within_minutes} min window, so the crew medical officer onboard leads."
         )
     return EarthResponseRead(
         profile=name,

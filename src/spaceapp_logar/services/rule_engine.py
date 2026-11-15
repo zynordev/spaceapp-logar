@@ -69,10 +69,10 @@ BASELINE_SAMPLES = 60
 BASELINE_MIN_SAMPLES = 30
 
 SYMPTOM_LABELS = {
-    "fatigue": "yorgunluk",
-    "dizziness": "baş dönmesi",
-    "nausea": "bulantı",
-    "pain": "ağrı",
+    "fatigue": "fatigue",
+    "dizziness": "dizziness",
+    "nausea": "nausea",
+    "pain": "pain",
 }
 
 
@@ -283,9 +283,9 @@ def run_hr_jump(session: Session, observation: Observation) -> RuleOutcome:
             comparison="valid",
             window_minutes=2,
             explanation=(
-                f"Kalp hızı ölçümü kullanılamaz (kaynak kalitesi "
-                f"{observation.reported_quality}, değer {observation.value:.0f} bpm). "
-                "Sensör doğrulanmadan sağlık alarmı üretilmez."
+                f"Heart rate measurement cannot be used (source quality "
+                f"{observation.reported_quality}, value {observation.value:.0f} bpm). "
+                "No health alarm is generated until the sensor is verified."
             ),
             source=HR_JUMP_SOURCE,
             source_uri=DEMO_SOURCE_URI,

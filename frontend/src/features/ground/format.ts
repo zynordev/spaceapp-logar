@@ -34,8 +34,8 @@ export function formatAgo(iso: string | null | undefined, now = Date.now()): str
   if (Number.isNaN(t)) return '';
   const diff = Math.round((now - t) / 1000);
   if (diff < 0) return 'gelecekte';
-  if (diff < 60) return 'az önce';
-  return `${formatDuration(diff - (diff % 60))} önce`;
+  if (diff < 60) return 'just now';
+  return `${formatDuration(diff - (diff % 60))} ago`;
 }
 
 export function shortHash(hash: string | null | undefined, n = 12): string {
@@ -53,23 +53,23 @@ export interface RecipientInfo {
 
 export const RECIPIENT_INFO: Record<Recipient, RecipientInfo> = {
   FLIGHT_SURGEON: {
-    label: 'Uçuş cerrahı',
-    routed: 'Sağlık uyarıları, kırmızı bayraklar, öznel bildirimler, laboratuvar ve öncelikli bildirimler',
+    label: 'Flight surgeon',
+    routed: 'Health alerts, red flags, subjective reports, lab results and priority notifications',
     icon: 'plus',
   },
   LIFE_SUPPORT: {
-    label: 'Yaşam destek (ECLSS)',
-    routed: 'Kabin CO₂, O₂ ve basınç değerlendirmeleri ile ortam uyarıları',
+    label: 'Life support (ECLSS)',
+    routed: 'Cabin CO₂, O₂ and pressure assessments and environmental alerts',
     icon: 'wind',
   },
   RADIATION: {
     label: 'Radyasyon ekibi',
-    routed: 'Doz hızı olayları ve kümülatif doz eğilimi',
+    routed: 'Dose-rate events and cumulative dose trend',
     icon: 'radiation',
   },
   MISSION_CONTROL: {
-    label: 'Görev kontrol',
-    routed: 'Genel durum özeti ve tüm ekiplere giden uyarıların kopyası',
+    label: 'Mission control',
+    routed: 'Overall status summary and a copy of the alerts sent to all teams',
     icon: 'satellite',
   },
 };
@@ -79,13 +79,13 @@ export function recipientLabel(r: string): string {
 }
 
 export const KIND_LABEL: Record<PacketItemKind, string> = {
-  ALERT: 'Uyarı',
-  RULE_EVALUATION: 'Kural değerlendirmesi',
-  CHECK_IN: 'Öznel bildirim',
+  ALERT: 'Warning',
+  RULE_EVALUATION: 'Rule evaluation',
+  CHECK_IN: 'Subjective report',
   LAB_RESULT: 'Laboratuvar',
-  RED_FLAG: 'Kırmızı bayrak',
-  TREND: 'Eğilim',
-  ESCALATION: 'Öncelikli bildirim',
+  RED_FLAG: 'Red flag',
+  TREND: 'Trend',
+  ESCALATION: 'Priority notification',
 };
 
 export function kindLabel(k: string): string {
@@ -93,25 +93,25 @@ export function kindLabel(k: string): string {
 }
 
 export const PRIORITY_INFO: Record<EscalationPriority, { label: string; icon: IconName }> = {
-  CRITICAL: { label: 'Kritik', icon: 'critical' },
-  ALERT: { label: 'Uyarı', icon: 'alert' },
+  CRITICAL: { label: 'Critical', icon: 'critical' },
+  ALERT: { label: 'Warning', icon: 'alert' },
 };
 
 export const COVERAGE_INFO: Record<Coverage, { label: string; icon: IconName; legend: string }> = {
   RULE: {
-    label: 'Kural var',
+    label: 'Rule in place',
     icon: 'check',
-    legend: 'Karar destek kuralı çalışıyor (teşhis değildir).',
+    legend: 'Decision support rule active (not a diagnosis).',
   },
   DATA_ONLY: {
     label: 'Sadece veri',
     icon: 'eye',
-    legend: 'Veri toplanıyor ve gösteriliyor; doğrulanmış eşik/kural yok.',
+    legend: 'Data is collected and shown; no validated threshold or rule.',
   },
   GAP: {
-    label: 'Boşluk',
+    label: 'Gap',
     icon: 'circle',
-    legend: 'GAP = bu prototipte henüz izlenmiyor.',
+    legend: 'GAP = not yet monitored in this prototype.',
   },
 };
 

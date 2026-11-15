@@ -71,10 +71,10 @@ CO2_RULE_ID = "ENV_CO2_NOMINAL_V1"
 
 RECIPIENTS = ("FLIGHT_SURGEON", "LIFE_SUPPORT", "RADIATION", "MISSION_CONTROL")
 RECIPIENT_LABELS_TR = {
-    "FLIGHT_SURGEON": "Uçuş hekimi",
-    "LIFE_SUPPORT": "Yaşam destek",
-    "RADIATION": "Radyasyon ekibi",
-    "MISSION_CONTROL": "Görev kontrol",
+    "FLIGHT_SURGEON": "Flight surgeon",
+    "LIFE_SUPPORT": "Life support",
+    "RADIATION": "Radiation team",
+    "MISSION_CONTROL": "Mission control",
 }
 
 LIFE_SUPPORT_RULES = frozenset({CO2_RULE_ID, ATMOSPHERE_RULE_ID})
@@ -86,24 +86,24 @@ LIFE_SUPPORT_METRICS = frozenset(
 RADIATION_METRICS = frozenset({"RADIATION_DOSE_RATE"})
 
 RULE_LABELS_TR = {
-    CO2_RULE_ID: "kabin CO₂",
-    ATMOSPHERE_RULE_ID: "kabin atmosferi",
-    RADIATION_RULE_ID: "radyasyon doz hızı",
-    RED_FLAG_RULE_ID: "kırmızı bayrak belirtisi bildirimi",
-    SPO2_RULE_ID: "SpO₂ ölçümü",
-    TEMP_RULE_ID: "vücut sıcaklığı",
-    CARDIO_RESP_RULE_ID: "kalp-solunum örüntüsü",
-    HR_JUMP_RULE_ID: "kalp atış hızı veri tutarlılığı",
-    SLEEP_RULE_ID: "uyku süresi",
-    MOTION_RULE_ID: "hareket hastalığı belirtileri",
-    VISION_RULE_ID: "görme belirtisi",
+    CO2_RULE_ID: "cabin CO₂",
+    ATMOSPHERE_RULE_ID: "cabin atmosphere",
+    RADIATION_RULE_ID: "radiation dose rate",
+    RED_FLAG_RULE_ID: "red flag symptom report",
+    SPO2_RULE_ID: "SpO₂ measurement",
+    TEMP_RULE_ID: "body temperature",
+    CARDIO_RESP_RULE_ID: "heart-respiration pattern",
+    HR_JUMP_RULE_ID: "heart rate data consistency",
+    SLEEP_RULE_ID: "sleep duration",
+    MOTION_RULE_ID: "motion sickness symptoms",
+    VISION_RULE_ID: "vision symptom",
 }
 ATTENTION_LABELS_TR = {
-    "WATCH": "İZLEME",
-    "ALERT": "UYARI",
-    "CRITICAL": "KRİTİK",
+    "WATCH": "WATCH",
+    "ALERT": "WARNING",
+    "CRITICAL": "CRITICAL",
     "NORMAL": "NORMAL",
-    "UNKNOWN": "BELİRSİZ",
+    "UNKNOWN": "UNKNOWN",
 }
 ESCALATION_LEVELS = ("ALERT", "CRITICAL")
 
@@ -238,8 +238,8 @@ def create_escalation(
         "latest_check_in": _check_in_data(check_in) if check_in else None,
     }
     summary = (
-        f"{alert.target_id}: {label} için {level} düzeyinde bildirim açıldı. "
-        "Karar desteği özetidir, tanı değildir; uçuş hekimi değerlendirmesi önerilir."
+        f"{alert.target_id}: {label} notification opened at {level} level. "
+        "This is a decision-support summary, not a diagnosis; a flight surgeon review is recommended."
     )
     escalation = GroundEscalation(
         mission_id=alert.mission_id,
@@ -348,8 +348,8 @@ def _collect_items(
                 alert.created_at,
                 "ALERT",
                 str(alert.id),
-                f"{alert.target_id}: {rule_label(alert.rule_id)} için "
-                f"{ATTENTION_LABELS_TR.get(level, level)} düzeyinde bildirim açıldı.",
+                f"{alert.target_id}: {rule_label(alert.rule_id)} notification opened at "
+                f"{ATTENTION_LABELS_TR.get(level, level)} level.",
                 {
                     "rule_id": alert.rule_id,
                     "target_id": alert.target_id,
@@ -374,7 +374,7 @@ def _collect_items(
                     record.created_at,
                     "RULE_EVALUATION",
                     str(record.id),
-                    f"{record.target_id}: {rule_label(record.rule_id)} değerlendirmesi "
+                    f"{record.target_id}: {rule_label(record.rule_id)} evaluation "
                     f"{ATTENTION_LABELS_TR.get(record.health_attention, record.health_attention)}.",
                     _evaluation_data(record),
                 )
@@ -391,7 +391,7 @@ def _collect_items(
             items.append(
                 _Item(
                     row.ingested_at, "CHECK_IN", str(row.id),
-                    f"{row.crew_member_id}: öznel durum bildirimi alındı.",
+                    f"{row.crew_member_id}: subjective check-in received.",
                     _check_in_data(row),
                 )
             )
@@ -405,7 +405,7 @@ def _collect_items(
             items.append(
                 _Item(
                     lab.ingested_at, "LAB_RESULT", str(lab.id),
-                    f"{lab.crew_member_id}: {lab.analyte} laboratuvar sonucu kaydedildi.",
+                    f"{lab.crew_member_id}: {lab.analyte} lab result recorded.",
                     {
                         "crew_member_id": lab.crew_member_id,
                         "analyte": lab.analyte,
@@ -428,8 +428,8 @@ def _collect_items(
             items.append(
                 _Item(
                     flag.ingested_at, "RED_FLAG", str(flag.id),
-                    f"{flag.crew_member_id}: kırmızı bayrak belirtisi bildirildi. "
-                    "Tanı değildir; uçuş hekimi değerlendirmesi önerilir.",
+                    f"{flag.crew_member_id}: red flag symptom reported. "
+                    "Not a diagnosis; a flight surgeon review is recommended.",
                     {
                         "crew_member_id": flag.crew_member_id,
                         "flags": flag.flags.split(",") if flag.flags else [],
@@ -505,7 +505,7 @@ def _trend_items(
         items.append(
             _Item(
                 hour, "TREND", f"{metric}|{target_id}|{iso(hour)}",
-                f"{target_id}: {metric} saatlik özet (ort. {mean}, {len(values)} ölçüm).",
+                f"{target_id}: {metric} hourly summary (mean {mean}, {len(values)} measurements).",
                 {
                     "metric": metric,
                     "target_id": target_id,

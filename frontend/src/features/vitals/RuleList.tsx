@@ -97,7 +97,7 @@ function WhyPanel({ rule, def, metricLabel }: { rule: RuleStatus; def: MetricDef
           {src ? <a href={src} target="_blank" rel="noopener noreferrer">{rule.source || src}</a> : rule.source || '—'}
           {rule.evidence_level ? <span className="vt-muted"> · evidence class {rule.evidence_level}</span> : null}
         </dd>
-        <dt>Kural</dt>
+        <dt>Rule</dt>
         <dd className="vt-mono">{rule.rule_id} v{rule.rule_version}</dd>
       </dl>
       {rule.related_metrics?.length > 0 && (
@@ -153,7 +153,7 @@ function RuleRow({
           aria-controls={panelId}
           onClick={() => setOpen((v) => !v)}
         >
-          Neden? <span aria-hidden="true" className="vt-chev"><Icon name="chevron-down" size={12} /></span>
+          Why? <span aria-hidden="true" className="vt-chev"><Icon name="chevron-down" size={12} /></span>
         </button>
       </div>
       <div id={panelId} className="vt-collapse" data-open={open} hidden={!open}>
@@ -175,7 +175,7 @@ export function RuleList({
 }) {
   const byMetric = new Map(metrics.map((m) => [m.metric, m]));
   const metricLabel = (m: string) => byMetric.get(m)?.label ?? m;
-  const sorted = [...rules].sort((a, b) => rank(b) - rank(a) || a.title.localeCompare(b.title, 'tr'));
+  const sorted = [...rules].sort((a, b) => rank(b) - rank(a) || a.title.localeCompare(b.title, 'en'));
   const groups = [
     { key: 'vital', title: 'Vital and subjective', list: sorted.filter((r) => r.target_id !== envTargetId) },
     { key: 'env', title: 'Environment', list: sorted.filter((r) => envTargetId != null && r.target_id === envTargetId) },

@@ -290,7 +290,7 @@ def test_red_flag_creates_one_critical_escalation(api_client: tuple[TestClient, 
     assert esc["priority"] == "CRITICAL"
     assert esc["status"] == "PENDING"
     assert esc["crew_member_id"] == CREW
-    assert "tanı değildir" in esc["summary_tr"]
+    assert "not a diagnosis" in esc["summary_tr"]
     assert len(esc["packet_sha256"]) == 64
     alerts = client.get("/v1/alerts", params={"mission_id": MISSION}).json()
     assert esc["alert_id"] == alerts[0]["id"]

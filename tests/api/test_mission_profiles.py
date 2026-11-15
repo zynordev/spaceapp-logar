@@ -132,7 +132,7 @@ def test_earth_response_owner_switches_between_iss_and_mars(
             assert short[0]["owner"] == "CREW_MEDICAL_OFFICER"
             assert short[0]["ground_can_respond_in_time"] is False
             assert short[0]["round_trip_seconds"] == 1500
-            assert "gemideki" in short[0]["note_tr"]
+            assert "onboard" in short[0]["note_tr"]
             on_iss = earth(client, scenario, "ISS")
             assert all(item["owner"] == "FLIGHT_SURGEON" for item in on_iss)
             break

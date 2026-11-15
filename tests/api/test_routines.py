@@ -59,7 +59,7 @@ def test_catalog_is_fixed_and_has_no_medication(api_client) -> None:
     }
     for item in items:
         assert item["evidence"] == "DEMO"
-        assert "görev planı yerine geçmez" in item["description_tr"]
+        assert "does not replace the mission task plan" in item["description_tr"]
         assert 30 <= item["default_interval_minutes"] <= 20160
         text = (item["kind"] + item["title_tr"] + item["description_tr"]).lower()
         assert not any(word in text for word in FORBIDDEN_WORDS)

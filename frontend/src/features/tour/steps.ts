@@ -62,7 +62,7 @@ async function escalationNote(ctx: StepCtx, none: string) {
     if (list.length === 0) ctx.note(none);
     else {
       const crit = list.filter((e) => e.priority === 'CRITICAL').length;
-      ctx.note(`Bu görevde ${list.length} öncelikli bildirim oluştu${crit ? ` (${crit} Kritik)` : ''}.`);
+      ctx.note(`${list.length} priority notification(s) were created in this mission${crit ? ` (${crit} Critical)` : ''}.`);
     }
   } catch {
     /* 404 on an older server: the panel itself says so */
@@ -78,8 +78,8 @@ async function delayNote(ctx: StepCtx) {
     const s = await api<{ link_delay_seconds: number | null }>('GET', `/v1/sync/status${qs({ mission_id: ctx.missionId })}`);
     if (ctx.left()) return;
     const d = s.link_delay_seconds;
-    if (d == null) ctx.note('Sunucuda gecikme ayarlı değil (0 sn kabul edilir). Konsoldan “Mars ortalama” seçin ya da görev profilini Mars yapın.');
-    else if (d < 5) ctx.note(`Tek yön gecikme ≈${d.toLocaleString('en-GB', { maximumFractionDigits: 1 })} sn: sinyal hemen ulaşır. Mars profilinde ≈12,5 dk (60× gösterimde ≈12,5 sn).`);
+    if (d == null) ctx.note('The server has no delay set (0 s is assumed). Choose “Mars average” in the console, or set the mission profile to Mars.');
+    else if (d < 5) ctx.note(`One-way delay ≈${d.toLocaleString('en-GB', { maximumFractionDigits: 1 })} s: the signal arrives almost immediately. In the Mars profile it is ≈12.5 min (≈12.5 s at 60× display).`);
   } catch {
     /* the console shows its own status */
   }
@@ -117,21 +117,21 @@ async function consoleAck(ctx: StepCtx) {
   if (radio && !radio.checked) radio.click();
   await new Promise((r) => setTimeout(r, 150));
   if (ctx.left()) return;
-  ctx.note('Uçuş cerrahı paketi hazırlanıyor…');
+  ctx.note('Preparing the flight surgeon packet…');
   click(panel.querySelector<HTMLElement>('.console-packet__actions .ui-btn'));
   const deadline = Date.now() + 90_000;
   while (!ctx.left() && Date.now() < deadline) {
     const ack = panel.querySelector<HTMLButtonElement>('.console-packet .ui-btn--primary');
     if (ack && !ack.disabled) {
-      ctx.note('Tur, yer ekibi adına “Onayla (ack)” düğmesine bastı (demo).');
+      ctx.note('The tour pressed the “Acknowledge (ack)” button on behalf of the ground team (demo).');
       ack.click();
       return;
     }
     if (ack?.disabled) {
       if (panel.querySelector('.console-packet .console-inline-note')) {
-        ctx.note('Paketteki öğeler henüz Dünya’ya ulaşmadı; onay hepsi ulaşınca verilecek…');
+        ctx.note('Items in the packet have not reached Earth yet; the acknowledgement will be given once all have arrived…');
       } else {
-        ctx.note('Onaylanacak yeni öğe yok.');
+        ctx.note('No new items to acknowledge.');
         return;
       }
     }
@@ -140,16 +140,16 @@ async function consoleAck(ctx: StepCtx) {
   if (!ctx.left() && !panel.querySelector('.console-problem')) ctx.note(null);
 }
 
-const DECISION_SUPPORT = 'Karar desteği, teşhis değil.';
-const SYNTHETIC = 'Veriler sentetik demo senaryosundan; gerçek astronot ölçümü değil.';
+const DECISION_SUPPORT = 'Decision support, not a diagnosis.';
+const SYNTHETIC = 'Data comes from a synthetic demo scenario; not real astronaut measurements.';
 
 export const TOURS: Record<TourId, TourStep[]> = {
   co2: [
     {
       id: 'cabin-co2',
       beat: '0–4 sn',
-      title: 'Kabin CO₂ yükseliyor',
-      caption: 'Sentetik senaryo kabin CO₂ kısmi basıncını yükseltir. Üst şeritteki CO₂ sütunu değeri, durumu ve eşiğin kaynağını gösterir.',
+      title: 'Cabin CO₂ is rising',
+      caption: 'The synthetic scenario raises the cabin CO₂ partial pressure. The CO₂ column in the top strip shows the value, the status and the source of the threshold.',
       honest: SYNTHETIC,
       route: 'app',
       target: ['[data-tour="metric-CABIN_CO2_PARTIAL_PRESSURE"]', '[data-tour="cabin"]', '[data-tour="hud"]'],
@@ -160,8 +160,8 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'body-cabin',
       beat: '0–4 sn',
-      title: '3B haritada kabin bölgesi',
-      caption: 'Mürettebat kartı astronotun 3B vücut modelini açar. Kabin ortamı bölgesi işaretlenir; sağda aynı astronotun vital bulguları ve kayıtlı EKG şeridi durur.',
+      title: 'Cabin region on the 3D map',
+      caption: 'The crew card opens the astronaut’s 3D body model. The cabin environment region is marked; on the right, the same astronaut’s vital findings and the recorded ECG strip remain.',
       honest: SYNTHETIC,
       route: 'app',
       target: SCENE,
@@ -172,8 +172,8 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'body-head',
       beat: '0–4 sn',
-      title: 'Astronot baş ağrısı bildiriyor',
-      caption: 'Öznel bildirim aynı kurala bağlanır: baş bölgesi de yanar. Sistem iki bulguyu birlikte gösterir.',
+      title: 'Astronaut reports a headache',
+      caption: 'The subjective report is linked to the same rule: the head region lights up too. The system shows both findings together.',
       honest: DECISION_SUPPORT,
       route: 'app',
       target: SCENE,
@@ -184,9 +184,9 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'action-card',
       beat: '4–10 sn',
-      title: 'Eylem kartı: ne yapmalıyım, neden?',
-      caption: 'Önceden yazılmış adımlar, her adımın nedeni ve yeniden değerlendirme sayacı. CO₂ eşiği NASA-STD-3001 kaynaklı (STANDART).',
-      honest: 'Diğer eşikler DEMO (kanıt sınıfı F): uzman doğrulaması bekliyor. Yazılım araç komutu vermez.',
+      title: 'Action card: what should I do, and why?',
+      caption: 'Pre-written steps, the reason for each step and a re-assessment timer. The CO₂ threshold comes from NASA-STD-3001 (STANDARD).',
+      honest: 'Other thresholds are DEMO (evidence class F): awaiting expert validation. The software issues no tool or equipment commands.',
       route: 'app',
       tab: 'rules',
       target: ['#details .vt-ac', '#details'],
@@ -196,20 +196,20 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'escalation',
       beat: '10–17 sn',
-      title: 'Uçuş cerrahına otomatik yükseltme',
-      caption: 'Uyarı veya Kritik bir alarm açıldığı anda uçuş cerrahı için öncelikli bildirim kendiliğinden oluşur; kimse düğmeye basmaz.',
-      honest: 'Bildirim bağlantı penceresinde yere gider; gemi beklemeden çalışmaya devam eder.',
+      title: 'Automatic escalation to the flight surgeon',
+      caption: 'As soon as a Warning or Critical alarm opens, a priority notification for the flight surgeon is created automatically; nobody presses a button.',
+      honest: 'The notification goes to Earth in the link window; the ship keeps working without waiting.',
       route: 'app',
       tab: 'ground',
       target: ['.gp-esc', '.gp-root'],
-      enter: (ctx) => escalationNote(ctx, 'Bu senaryoda CO₂ alarmı İzle seviyesinde kaldı: öncelikli bildirim gerekmedi. Otomatik bildirimi “Kırmızı bayrak” turunda görün.'),
+      enter: (ctx) => escalationNote(ctx, 'In this scenario the CO₂ alarm stayed at Watch: no priority notification was needed. See the automatic notification in the “Red flag” step.'),
       ms: 5000,
     },
     {
       id: 'routing',
       beat: '10–17 sn',
-      title: 'Doğru ekibe yönlendirme',
-      caption: 'CO₂ ve kabin atmosferi verisi yaşam destek ekibinin paketine; sağlık verisi uçuş cerrahına gider.',
+      title: 'Routing to the right team',
+      caption: 'CO₂ and cabin atmosphere data go to the life support team packet; health data goes to the flight surgeon.',
       route: 'app',
       tab: 'ground',
       target: ['.gp-rcp--life_support', '.gp-rcps'],
@@ -218,9 +218,9 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'packet',
       beat: '10–17 sn',
-      title: 'İmzalı paket',
-      caption: 'Paket içeriği sha256 ile özetlenir; sunucuda anahtar varsa HMAC-SHA256 ile imzalanır. Yer, onaylarken özeti doğrular.',
-      honest: 'Bütünlük ve kaynak doğrulaması — şifreleme değil.',
+      title: 'Signed packet',
+      caption: 'Packet contents are summarised with sha256; if a key is set on the server, they are signed with HMAC-SHA256. Earth checks the digest when acknowledging.',
+      honest: 'Integrity and source verification — not encryption.',
       route: 'app',
       tab: 'ground',
       target: ['.gp-rcp--flight_surgeon', '.gp-rcps'],
@@ -234,9 +234,9 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'console',
       beat: '17–24 sn',
-      title: 'Dünya gecikmeli görür',
-      caption: 'Yer kontrol konsolu aynı olayları ışık gecikmesiyle görür. Sayaç, sinyalin Dünya’ya ne zaman ulaşacağını gösterir.',
-      honest: 'Gecikme simülasyonu: veriler sunucudan anında gelir, gecikmeyi yalnız bu ekran canlandırır.',
+      title: 'Earth sees it late',
+      caption: 'The ground control console sees the same events with the light delay. The counter shows when the signal will reach Earth.',
+      honest: 'Delay simulation: data arrives from the server instantly; only this screen animates the delay.',
       route: 'console',
       target: ['.console-link-band', '.console-main'],
       enter: delayNote,
@@ -245,9 +245,9 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'ack',
       beat: '24–30 sn',
-      title: 'Yer ekibi onaylar',
-      caption: 'Uçuş cerrahı paketi ulaştığında yer ekibi onaylar (ack). Tur, onay düğmesine yer ekibi adına basar.',
-      honest: 'Oturum açıkken onayı yalnız yer ekibi (GROUND) rolü verebilir.',
+      title: 'Ground team acknowledges',
+      caption: 'When the flight surgeon packet arrives, the ground team acknowledges it (ack). The tour presses the acknowledge button on behalf of the ground team.',
+      honest: 'When signed in, only the ground team (GROUND) role can give the acknowledgement.',
       route: 'console',
       target: ['section[aria-labelledby="console-packet-title"]', '.console-main'],
       enter: consoleAck,
@@ -256,9 +256,9 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'ack-back',
       beat: '24–30 sn',
-      title: 'Onay gemiye dönüyor',
-      caption: 'Onay da aynı gecikmeyle gemiye yolculuk eder. Gemi bu sürede kendi karar desteğiyle çalışmayı sürdürür.',
-      honest: DECISION_SUPPORT + ' Gecikme simülasyonu.',
+      title: 'Acknowledgement returns to the ship',
+      caption: 'The acknowledgement travels back to the ship with the same delay. The ship keeps working with its own decision support in the meantime.',
+      honest: DECISION_SUPPORT + ' Delay simulation.',
       route: 'console',
       target: ['.console-link-band', '.console-main'],
       enter: delayNote,
@@ -269,8 +269,8 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'rf-report',
       beat: '0–4 sn',
-      title: 'Göğüs ağrısı bildirimi',
-      caption: 'Ölçümler normal seyrederken astronot göğüs ağrısı bildirir (kırmızı bayrak). Gövde bölgesi işaretlenir.',
+      title: 'Chest pain report',
+      caption: 'While measurements are normal, the astronaut reports chest pain (red flag). The torso region is marked.',
       honest: SYNTHETIC,
       route: 'app',
       target: SCENE,
@@ -281,8 +281,8 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'rf-critical',
       beat: '4–10 sn',
-      title: 'Anında KRİTİK',
-      caption: 'Kırmızı bayrak ortalama beklemez: mürettebat kartında genel durum hemen Kritik olur, acil durum satırı açık alarmı gösterir. Normal ölçümler ciddi bir olayı dışlamaz.',
+      title: 'Immediately CRITICAL',
+      caption: 'A red flag does not wait for an average: on the crew card the overall status becomes Critical at once, and the emergency line shows the open alarm. Normal measurements do not rule out a serious event.',
       honest: DECISION_SUPPORT,
       route: 'app',
       target: CREW_CARD,
@@ -292,9 +292,9 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'rf-card',
       beat: '10–17 sn',
-      title: 'Acil eylem kartı',
-      caption: 'Kart görev prosedürünü öne alır. Alarm ölçümlerle kendiliğinden kapanmaz; ekip değerlendirip kapatır.',
-      honest: 'Teşhis konmaz, ilaç veya doz önerilmez.',
+      title: 'Emergency action card',
+      caption: 'The card puts the mission procedure first. The alarm does not close by itself when measurements return; the team reviews and closes it.',
+      honest: 'No diagnosis is made and no medication or dose is recommended.',
       route: 'app',
       tab: 'rules',
       target: ['#details .vt-ac', '#details'],
@@ -304,20 +304,20 @@ export const TOURS: Record<TourId, TourStep[]> = {
     {
       id: 'rf-escalation',
       beat: '17–24 sn',
-      title: 'Uçuş cerrahına KRİTİK bildirim',
-      caption: 'Kritik alarm, uçuş cerrahı için öncelikli bildirimi kendiliğinden oluşturur; kimse düğmeye basmaz.',
+      title: 'CRITICAL notification to the flight surgeon',
+      caption: 'A Critical alarm creates the priority notification for the flight surgeon automatically; nobody presses a button.',
       route: 'app',
       tab: 'ground',
       target: ['.gp-esc', '.gp-root'],
-      enter: (ctx) => escalationNote(ctx, 'Bu görevde henüz öncelikli bildirim görünmüyor.'),
+      enter: (ctx) => escalationNote(ctx, 'No priority notification is showing in this mission yet.'),
       ms: 5000,
     },
     {
       id: 'rf-console',
       beat: '24–30 sn',
-      title: 'Dünya gecikmeyle öğrenir',
-      caption: 'Yer ekibi bildirimi ancak sinyal ulaşınca görür. Gecikme uzunsa ilk karar gemideki sağlık sorumlusundadır.',
-      honest: 'Gecikme simülasyonu — yalnız gösterim.',
+      title: 'Earth learns with a delay',
+      caption: 'The ground team sees the notification only when the signal arrives. If the delay is long, the first decision rests with the health officer on board.',
+      honest: 'Delay simulation — display only.',
       route: 'console',
       target: ['.console-link-band', '.console-main'],
       enter: delayNote,

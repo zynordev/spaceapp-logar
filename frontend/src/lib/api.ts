@@ -6,7 +6,7 @@ import { useApp } from './store';
 import { toast } from '../ui/toast';
 
 /** Same text as ui/errors FORBIDDEN_MESSAGE (toasts with equal text are de-duplicated). */
-const FORBIDDEN_TOAST = 'Bu işlem için yetkiniz yok';
+const FORBIDDEN_TOAST = 'You do not have permission for this action';
 
 export class ApiError extends Error {
   /** HTTP status; 0 = network failure / timeout. */
@@ -61,7 +61,7 @@ export async function api<T>(
     });
   } catch {
     setOffline(true);
-    throw new ApiError('Sunucuya ulaşılamıyor', 0);
+    throw new ApiError('Cannot reach the server', 0);
   } finally {
     clearTimeout(timer);
   }

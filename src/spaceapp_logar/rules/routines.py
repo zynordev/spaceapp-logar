@@ -27,8 +27,8 @@ class RoutineCategory(StrEnum):
 
 MIN_INTERVAL_MINUTES = 30
 MAX_INTERVAL_MINUTES = 20160
-_DEMO_NOTE = " DEMO, görev planı yerine geçmez."
-_TEST_NOTE = " Test görev protokolüne göre uygulanır; sistem değerleri yorumlamaz."
+_DEMO_NOTE = " DEMO; does not replace the mission task plan."
+_TEST_NOTE = " The test is performed per mission protocol; the system does not interpret the values."
 
 
 @dataclass(frozen=True)
@@ -44,50 +44,50 @@ class RoutineDefinition:
 ROUTINE_CATALOG: tuple[RoutineDefinition, ...] = (
     RoutineDefinition(
         RoutineKind.HYDRATION,
-        "Sıvı alımı hatırlatması",
-        "Düzenli su içmeyi hatırlatır." + _DEMO_NOTE,
+        "Fluid intake reminder",
+        "Reminds to drink water regularly." + _DEMO_NOTE,
         RoutineCategory.DAILY,
         120,
     ),
     RoutineDefinition(
         RoutineKind.EXERCISE,
-        "Egzersiz seansı",
-        "Günlük egzersiz seansını hatırlatır." + _DEMO_NOTE,
+        "Exercise session",
+        "Reminds of the daily exercise session." + _DEMO_NOTE,
         RoutineCategory.DAILY,
         1440,
     ),
     RoutineDefinition(
         RoutineKind.SLEEP_WINDOW,
-        "Uyku penceresi",
-        "Planlanan uyku penceresini hatırlatır." + _DEMO_NOTE,
+        "Sleep window",
+        "Reminds of the planned sleep window." + _DEMO_NOTE,
         RoutineCategory.DAILY,
         1440,
     ),
     RoutineDefinition(
         RoutineKind.CHECK_IN,
-        "Öznel durum bildirimi",
-        "Beş alanlı öznel durum bildirimini hatırlatır." + _DEMO_NOTE,
+        "Subjective status report",
+        "Reminds of the five-field subjective status report." + _DEMO_NOTE,
         RoutineCategory.DAILY,
         240,
     ),
     RoutineDefinition(
         RoutineKind.BODY_MASS_WEEKLY,
-        "Haftalık vücut kütlesi ölçümü",
-        "Vücut kütlesi ölçümü." + _TEST_NOTE + _DEMO_NOTE,
+        "Weekly body mass measurement",
+        "Body mass measurement." + _TEST_NOTE + _DEMO_NOTE,
         RoutineCategory.PERIODIC_TEST,
         10080,
     ),
     RoutineDefinition(
         RoutineKind.GRIP_STRENGTH_WEEKLY,
-        "Haftalık kavrama kuvveti testi",
-        "Kavrama kuvveti testi." + _TEST_NOTE + _DEMO_NOTE,
+        "Weekly grip strength test",
+        "Grip strength test." + _TEST_NOTE + _DEMO_NOTE,
         RoutineCategory.PERIODIC_TEST,
         10080,
     ),
     RoutineDefinition(
         RoutineKind.MUSCULOSKELETAL_ASSESSMENT_BIWEEKLY,
-        "İki haftalık kas-iskelet değerlendirmesi",
-        "Kas-iskelet değerlendirmesi." + _TEST_NOTE + _DEMO_NOTE,
+        "Biweekly musculoskeletal assessment",
+        "Musculoskeletal assessment." + _TEST_NOTE + _DEMO_NOTE,
         RoutineCategory.PERIODIC_TEST,
         20160,
     ),

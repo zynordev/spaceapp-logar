@@ -126,7 +126,7 @@ export function ActionCardView({
                   <span className="vt-step-num" aria-hidden="true">{done ? <Icon name="check" size={14} /> : i + 1}</span>
                   <div className="vt-step-body">
                     <div className="vt-step-text">{st.text_tr || st.key}</div>
-                    {st.why_tr && <div className="vt-step-why"><b>Neden:</b> {st.why_tr}</div>}
+                    {st.why_tr && <div className="vt-step-why"><b>Why:</b> {st.why_tr}</div>}
                     {done && (
                       <div className="vt-step-done">
                         <span className="vt-sr">Completed. </span>

@@ -17,9 +17,9 @@ from spaceapp_logar.services.lab_panel import build_lab_panel
 router = APIRouter(tags=["lab-results"])
 
 LIMITATIONS = [
-    "Referans aralıkları kaynak veriden alınır; yazılım yeni eşik üretmez.",
-    "Laboratuvar sonuçları 7/24 alarm akışına dahil değildir; tek başına "
-    "teşhis veya alarm üretmez.",
+    "Reference ranges come from the source data; the software does not generate new thresholds.",
+    "Laboratory results are not part of the 24/7 alarm stream; on their own they "
+    "do not diagnose or generate an alarm.",
 ]
 
 

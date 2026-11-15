@@ -17,12 +17,12 @@ DEFAULT_UI_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 UI_DIST = Path(os.getenv("SPACEAPP_UI_DIST", str(DEFAULT_UI_DIST)))
 
 FALLBACK_HTML = """<!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>SpaceApp Logar — arayüz derlenmemiş</title>
+<title>SpaceApp Logar — interface not built</title>
 <style>
   body { margin: 0; min-height: 100vh; display: grid; place-items: center;
          background: #060a14; color: #e9eefb;
@@ -39,14 +39,14 @@ FALLBACK_HTML = """<!DOCTYPE html>
 </head>
 <body>
 <main>
-  <h1>SpaceApp Logar — arayüz henüz derlenmemiş</h1>
-  <p>API çalışıyor, ancak gösterge paneli (<code>frontend/dist</code>) bulunamadı.
-     Depo kökünde şunu çalıştırın ve sayfayı yenileyin:</p>
+  <h1>SpaceApp Logar — interface not built yet</h1>
+  <p>The API is running, but the dashboard (<code>frontend/dist</code>) was not found.
+     Run the following at the repository root and reload the page:</p>
   <pre>cd frontend &amp;&amp; npm ci &amp;&amp; npm run build</pre>
   <p lang="en">The API is running but the dashboard build is missing. Run the command above
      (Node 22+) and reload. Docker images include the build.</p>
-  <p><a href="/docs">API belgeleri (/docs)</a> · <a href="/health">Sağlık (/health)</a></p>
-  <p class="note">Prototip karar-destek aracıdır. Teşhis koymaz, tedavi önermez.</p>
+  <p><a href="/docs">API docs (/docs)</a> · <a href="/health">Health (/health)</a></p>
+  <p class="note">This is a prototype decision-support tool. It does not diagnose or recommend treatment.</p>
 </main>
 </body>
 </html>

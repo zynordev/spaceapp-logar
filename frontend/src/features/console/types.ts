@@ -93,16 +93,16 @@ export interface MissionLite {
 
 export const KIND_LABEL: Record<PacketItemKind, string> = {
   ALERT: 'Alarm',
-  RULE_EVALUATION: 'Kural değerlendirmesi',
-  CHECK_IN: 'Öznel bildirim',
+  RULE_EVALUATION: 'Rule evaluation',
+  CHECK_IN: 'Subjective report',
   LAB_RESULT: 'Laboratuvar sonucu',
-  RED_FLAG: 'Kırmızı bayrak bildirimi',
-  TREND: 'Saatlik özet',
-  ESCALATION: 'Uçuş hekimi bildirimi',
+  RED_FLAG: 'Red flag report',
+  TREND: 'Hourly summary',
+  ESCALATION: 'Flight surgeon notification',
 };
 
 export const ALERT_STATUS_LABEL: Record<string, string> = {
-  OPEN: 'Açık',
-  ACKNOWLEDGED: 'Görüldü',
-  RESOLVED: 'Kapandı',
+  OPEN: 'Open',
+  ACKNOWLEDGED: 'Acknowledged',
+  RESOLVED: 'Closed',
 };

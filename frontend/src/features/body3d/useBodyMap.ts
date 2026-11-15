@@ -106,25 +106,25 @@ export function useBodyMap(): BodyMapView {
   if (useDemo) {
     mode = 'demo';
     note = demoForced
-      ? 'DEMO VERİSİ — örnek değerler gösteriliyor, gerçek ölçüm değildir.'
-      : 'Sunucu vücut haritası verisi vermedi (404). DEMO VERİSİ gösteriliyor — gerçek ölçüm değildir.';
+      ? 'DEMO DATA — sample values are shown; these are not real measurements.'
+      : 'The server returned no body map data (404). DEMO DATA is shown — these are not real measurements.';
   } else if (!missionId || !crewId) {
     mode = 'neutral';
-    note = 'Görev ve mürettebat seçilmedi — bölgeler nötr (bilinmiyor) gösteriliyor.';
+    note = 'No mission or crew member selected — regions are shown as neutral (unknown).';
   } else if (polled.data) {
     mode = 'live';
     if (polled.error) {
       note = polled.error.network
-        ? 'Sunucuya ulaşılamıyor — son bilinen değerler gösteriliyor.'
-        : `Güncellenemedi (${polled.error.message}) — son bilinen değerler gösteriliyor.`;
+        ? 'Cannot reach the server — showing the last known values.'
+        : `Could not update (${polled.error.message}) — showing the last known values.`;
     }
   } else {
     mode = 'neutral';
     note = polled.error
       ? polled.error.network
-        ? 'Sunucuya ulaşılamıyor — bölgeler nötr (bilinmiyor) gösteriliyor.'
-        : `Vücut haritası alınamadı: ${polled.error.message}`
-      : 'Vücut haritası yükleniyor…';
+        ? 'Cannot reach the server — regions are shown as neutral (unknown).'
+        : `Body map could not be loaded: ${polled.error.message}`
+      : 'Loading body map…';
   }
 
   return {

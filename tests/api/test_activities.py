@@ -97,7 +97,7 @@ def test_current_expired_and_none(api_client: tuple[TestClient, Engine]) -> None
     assert expired["state"] == "EXPIRED"
     assert expired["activity"] is not None
     assert expired["remaining_seconds"] is None
-    assert "bilinmiyor" in expired["message_tr"]
+    assert "unknown" in expired["message_tr"]
 
 
 def test_end_makes_context_none_and_second_end_is_409(

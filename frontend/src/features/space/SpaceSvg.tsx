@@ -63,10 +63,10 @@ export function SpaceSvg({ link }: { link: LinkView }) {
       <circle cx={from.x} cy={from.y} r={4} fill="#f3fbfa" />
       <circle cx={to.x} cy={to.y} r={4} fill="#f3fbfa" />
       <text x={to.x - 14} y={to.y + 30} className="sp__svgtext" textAnchor="end">
-        DÜNYA · YER EKİPLERİ
+        EARTH · GROUND TEAMS
       </text>
       <text x={from.x + 14} y={from.y + (iss ? 50 : 30)} className="sp__svgtext">
-        {iss ? 'İSTASYON · ALÇAK DÜNYA YÖRÜNGESİ' : link.profile === 'MARS' ? 'HABİTAT · MARS' : 'HABİTAT · AY'}
+        {iss ? 'STATION · LOW EARTH ORBIT' : link.profile === 'MARS' ? 'HABITAT · MARS' : 'HABITAT · MOON'}
       </text>
     </svg>
   );

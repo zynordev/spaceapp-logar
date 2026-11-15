@@ -3,10 +3,10 @@
 export type CapState = 'works' | 'sim' | 'planned' | 'none';
 
 export const CAP_STATE: Record<CapState, string> = {
-  works: 'ÇALIŞIYOR',
-  sim: 'SİMÜLE',
-  planned: 'PLANLI',
-  none: 'YOK',
+  works: 'WORKS',
+  sim: 'SIMULATED',
+  planned: 'PLANNED',
+  none: 'NONE',
 };
 
 export interface Capability {
@@ -16,24 +16,24 @@ export interface Capability {
 }
 
 export const CAPABILITIES: Capability[] = [
-  { name: 'Kural motoru ve “Neden?” açıklaması', state: 'works', note: '11 kural gemide yerel çalışır. Yalnız kabin CO₂ eşiği NASA-STD-3001 kaynaklı (STANDART); diğerleri DEMO (kanıt sınıfı F).' },
-  { name: 'Eylem kartları V2', state: 'works', note: 'Önceden yazılmış adımlar, nedenleri, “Yaptım”, yeniden değerlendirme sayacı. Teşhis, ilaç veya doz yok.' },
-  { name: 'Vital ve kabin ölçümleri', state: 'sim', note: 'Demo senaryoları SENTETİK veri üretir. API ölçüm kabul eder (POST /v1/measurements), ama bağlı gerçek sensör yok.' },
-  { name: 'Giyilebilir / kabin sensörü sürücüsü', state: 'none', note: 'Cihaz entegrasyonu yok; veri yalnız API ile gelir.' },
-  { name: 'EKG şeridi', state: 'works', note: 'GERÇEK kayıt: PhysioNet MIT-BIH NSR 16265 tekrar oynatılır. Canlı değil, ritim yorumu yapılmaz, kalp hızı değeri bu kayıttan gelmez.' },
-  { name: 'Laboratuvar değerleri', state: 'works', note: 'NASA OSDR içe aktarma (GERÇEK, ör. OSD-569) ve elle giriş (ELLE). Referans aralığı kaynağından gelir.' },
-  { name: 'Uzay havası (güneş parçacık olayı)', state: 'works', note: 'NASA DONKI SEP olay zamanları (Mayıs 2024, depoda paketli dosya; canlı API değil). Doz değerleri SENTETİK.' },
-  { name: 'Kırmızı bayrak bildirimi', state: 'works', note: 'Belirti bildirimi eşik beklemeden KRİTİK alarm ve acil kart açar.' },
-  { name: 'Uçuş cerrahına otomatik yükseltme', state: 'works', note: 'Uyarı/Kritik alarm başına bir kez, kendiliğinden oluşur.' },
-  { name: 'Yer ekibine paket + onay', state: 'works', note: 'Alıcıya göre paket (uçuş cerrahı, yaşam destek, radyasyon, görev kontrol); sha256 özeti, sunucu anahtarı varsa HMAC-SHA256 imza. Şifreleme yok.' },
-  { name: 'Dünya bağlantısı ve ışık gecikmesi', state: 'sim', note: 'Gecikme yalnız yer konsolunda (#/yer) canlandırılır; gerçek uzay iletişimi / DTN yok.' },
-  { name: 'Görev profili (ISS / Ay / Mars)', state: 'works', note: 'Tek yön gecikme ve yükseltme sorumlusu sunucudan gelir. Sunucuda uç nokta yoksa seçici devre dışı görünür.' },
-  { name: 'Rol tabanlı oturum', state: 'works', note: 'İsteğe bağlı imzalı belirteç (Astronot / Ekip sağlık sorumlusu / Yer ekibi). Demo girişi yalnız sunucuda açıkça etkinse görünür.' },
-  { name: 'Çevrimdışı çalışma', state: 'works', note: 'Gemide yerel sunucu + SQLite; Dünya’ya bağımlı değil. Arayüz bağlantı kesilince son bilinen veriyi etiketleyerek gösterir.' },
-  { name: '3B vücut haritası', state: 'works', note: 'BodyParts3D modeli (CC BY 4.0). Bölge = kural grubu; anatomik bulgu veya teşhis değildir.' },
-  { name: 'Trend ve HRV', state: 'works', note: 'Saatlik/günlük özet. HRV (RMSSD) yalnız veri: eşik ve kural yok.' },
-  { name: 'Rutinler ve aktivite beyanı', state: 'works', note: 'Su, egzersiz, uyku penceresi, periyodik testler (DEMO aralıklar). İlaç rutini yok.' },
-  { name: 'DEMO eşiklerin uzman doğrulaması', state: 'planned', note: 'Uçuş tıbbı uzmanı incelemesi bekliyor; o zamana kadar DEMO etiketi kalır.' },
-  { name: 'Teşhis, ilaç veya doz önerisi', state: 'none', note: 'Bilinçli olarak kapsam dışı.' },
-  { name: 'Araç / ekipman komutu', state: 'none', note: 'Yazılım hiçbir sistemi kendisi çalıştırmaz.' },
+  { name: 'Rule engine and “Why?” explanation', state: 'works', note: '11 rules run locally on board. Only the cabin CO₂ threshold is sourced from NASA-STD-3001 (STANDARD); the others are DEMO (evidence class F).' },
+  { name: 'Action cards V2', state: 'works', note: 'Pre-written steps, their reasons, “Done”, and a re-evaluation counter. No diagnosis, no medication, no dose.' },
+  { name: 'Vital and cabin measurements', state: 'sim', note: 'Demo scenarios generate SYNTHETIC data. The API accepts measurements (POST /v1/measurements), but no real sensor is connected.' },
+  { name: 'Wearable / cabin sensor drivers', state: 'none', note: 'No device integration; data arrives only through the API.' },
+  { name: 'ECG strip', state: 'works', note: 'REAL recording: PhysioNet MIT-BIH NSR 16265 played back. Not live, no rhythm interpretation; the heart rate value does not come from this recording.' },
+  { name: 'Laboratory values', state: 'works', note: 'NASA OSDR import (REAL, e.g. OSD-569) and manual entry (MANUAL). Reference ranges come from the source.' },
+  { name: 'Space weather (solar particle event)', state: 'works', note: 'NASA DONKI SEP event times (May 2024, packaged file in the repository; not a live API). Dose values are SYNTHETIC.' },
+  { name: 'Red flag notification', state: 'works', note: 'A reported symptom opens a CRITICAL alert and an emergency card without waiting for a threshold.' },
+  { name: 'Automatic escalation to the flight surgeon', state: 'works', note: 'Created automatically, once per Warning or Critical alert.' },
+  { name: 'Packet and acknowledgement to the ground team', state: 'works', note: 'A packet per recipient (flight surgeon, life support, radiation, mission control); sha256 digest, and an HMAC-SHA256 signature if the server has a key. No encryption.' },
+  { name: 'Earth link and light delay', state: 'sim', note: 'The delay is only animated on the ground console (#/yer); there is no real space communication or DTN.' },
+  { name: 'Mission profile (ISS / Moon / Mars)', state: 'works', note: 'One-way delay and escalation owner come from the server. If the server has no endpoint, the selector appears disabled.' },
+  { name: 'Role-based sign-in', state: 'works', note: 'Optional signed token (Astronaut / Crew medical officer / Ground team). Demo sign-in is visible only when it is explicitly enabled on the server.' },
+  { name: 'Offline operation', state: 'works', note: 'Local server and SQLite on board; not dependent on Earth. When the connection drops, the interface shows the last known data, labelled as such.' },
+  { name: '3D body map', state: 'works', note: 'BodyParts3D model (CC BY 4.0). A region is a rule group; it is not a diagnosis and not an anatomical finding.' },
+  { name: 'Trend and HRV', state: 'works', note: 'Hourly and daily summaries. HRV (RMSSD) is data only: no threshold and no rule.' },
+  { name: 'Routines and activity declaration', state: 'works', note: 'Water, exercise, sleep window, periodic tests (DEMO intervals). No medication routine.' },
+  { name: 'Expert validation of DEMO thresholds', state: 'planned', note: 'Waiting for flight medicine expert review; until then the DEMO label stays.' },
+  { name: 'No diagnosis, no medication or dose recommendations', state: 'none', note: 'Deliberately out of scope.' },
+  { name: 'Tool / equipment commands', state: 'none', note: 'The software never operates any system itself.' },
 ];

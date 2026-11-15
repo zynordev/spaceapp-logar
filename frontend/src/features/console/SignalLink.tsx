@@ -22,13 +22,13 @@ export function SignalLink({ inTransit, delaySeconds, compression, reducedMotion
     <section className="console-link-band" aria-labelledby="console-link-title">
       <div className="console-link-band__head">
         <h2 id="console-link-title" className="console-side__title">
-          Bağlantı — tek yön gecikme
+          Link — one-way delay
         </h2>
         <p className="console-link-band__facts">
           <span className="console-num console-num--lg">{formatDelay(delaySeconds)}</span>
           {compression > 1 && (
             <span className="console-link-band__shown">
-              gösterimde <span className="console-num">{formatDelay(shown)}</span> ({compression}× hızlı)
+              on screen <span className="console-num">{formatDelay(shown)}</span> ({compression}× fast)
             </span>
           )}
         </p>
@@ -38,7 +38,7 @@ export function SignalLink({ inTransit, delaySeconds, compression, reducedMotion
         className={`console-wire${reducedMotion ? ' console-wire--still' : ''}`}
         viewBox="0 0 1000 64"
         role="img"
-        aria-label={`Yolda: gemiden Dünya'ya ${down}, Dünya'dan gemiye ${up} öğe`}
+        aria-label={`In transit: ${down} items from ship to Earth, ${up} items from Earth to ship`}
       >
         <line x1={X0} y1={24} x2={X1} y2={24} className="console-wire__line" />
         <line x1={X0} y1={40} x2={X1} y2={40} className="console-wire__line console-wire__line--up" />
@@ -62,10 +62,10 @@ export function SignalLink({ inTransit, delaySeconds, compression, reducedMotion
       </svg>
       <div className="console-wire__labels" aria-hidden="true">
         <span>
-          <Icon name="satellite" size={14} /> Gemi
+          <Icon name="satellite" size={14} /> Ship
         </span>
         <span>
-          Dünya <Icon name="signal" size={14} />
+          Earth <Icon name="signal" size={14} />
         </span>
       </div>
 
@@ -74,14 +74,14 @@ export function SignalLink({ inTransit, delaySeconds, compression, reducedMotion
           <Icon name="clock" size={16} /> Yolda <span className="console-num">{inTransit.length}</span>
         </h3>
         {inTransit.length === 0 ? (
-          <p className="console-muted">Şu an yolda öğe yok.</p>
+          <p className="console-muted">No items in transit right now.</p>
         ) : (
           <ul className="console-queue__list">
             {inTransit.map((e) => (
               <li key={e.key} className="console-queue__item">
                 <span className="console-queue__dir">
                   <Icon name={e.dir === 'down' ? 'arrow-down' : 'arrow-up'} size={14} />
-                  {e.dir === 'down' ? "Gemi → Dünya" : 'Dünya → gemi'}
+                  {e.dir === 'down' ? "Ship → Earth" : 'Earth → ship'}
                 </span>
                 <span className="console-queue__what">
                   {KIND_TEXT[e.kind]}
@@ -89,7 +89,7 @@ export function SignalLink({ inTransit, delaySeconds, compression, reducedMotion
                 </span>
                 <span className="console-queue__eta">
                   kalan <span className="console-num console-num--md">{formatCountdown(e.transit.remainingMs)}</span>
-                  <span className="console-muted"> · varış {clock(e.transit.arriveAt)}</span>
+                  <span className="console-muted"> · arrival {clock(e.transit.arriveAt)}</span>
                 </span>
                 <span
                   className="console-queue__bar"

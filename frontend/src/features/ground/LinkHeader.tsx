@@ -8,26 +8,26 @@ type LinkState = 'UP' | 'LOCAL' | 'NO_SERVICE' | 'OFFLINE' | 'WAIT';
 
 const STATE_INFO: Record<LinkState, { label: string; icon: IconName; detail: string }> = {
   UP: {
-    label: 'Gecikmeli bağlantı',
+    label: 'Delayed link',
     icon: 'signal',
-    detail: 'Sistem gemide otonom çalışıyor; paketler bağlantı penceresinde yer ekiplerine gider.',
+    detail: 'The system runs autonomously on board; packets go to the ground teams during the link window.',
   },
   LOCAL: {
     label: 'Yerel demo',
     icon: 'offline',
-    detail: 'Dünya bağlantısı simüle edilmiyor; paketler hazırlanıp elle indirilebilir.',
+    detail: 'Earth link is not simulated; packets can be prepared and downloaded manually.',
   },
   NO_SERVICE: {
     label: 'Senkronizasyon servisi yok',
     icon: 'offline',
-    detail: 'Bu sunucuda /v1/sync henüz yok. Önizleme için adrese ?mock=1 ekleyin.',
+    detail: '/v1/sync is not on this server yet. To preview, add ?mock=1 to the address.',
   },
   OFFLINE: {
-    label: 'Gemi sunucusuna ulaşılamıyor',
+    label: 'Cannot reach the ship server',
     icon: 'x',
-    detail: 'Arayüz son bilinen verileri gösteriyor; bağlantı dönünce yenilenir.',
+    detail: 'The interface shows the last known data; it refreshes when the connection returns.',
   },
-  WAIT: { label: 'Durum alınıyor…', icon: 'hourglass', detail: 'Senkronizasyon durumu sorgulanıyor.' },
+  WAIT: { label: 'Getting status…', icon: 'hourglass', detail: 'Querying sync status.' },
 };
 
 export function LinkHeader(props: {
@@ -73,7 +73,7 @@ export function LinkHeader(props: {
             <line x1="126" y1="22" x2="114" y2="42" />
           </g>
         )}
-        <text x="26" y="62" textAnchor="middle" className="gp-signal-label">Dünya</text>
+        <text x="26" y="62" textAnchor="middle" className="gp-signal-label">Earth</text>
         <text x="214" y="62" textAnchor="middle" className="gp-signal-label">Habitat</text>
       </svg>
 
@@ -81,17 +81,17 @@ export function LinkHeader(props: {
         <p className="gp-link-state" role="status">
           <span aria-hidden="true" className="gp-link-icon"><Icon name={info.icon} size={16} /></span>
           <strong>{info.label}</strong>
-          {mock && <span className="gp-tag">Örnek veri (?mock=1)</span>}
+          {mock && <span className="gp-tag">Sample data (?mock=1)</span>}
         </p>
         <p className="gp-link-delay">
           {state === 'NO_SERVICE' || state === 'WAIT' || (state === 'OFFLINE' && !status)
-            ? 'Gecikme bilgisi alınamadı'
+            ? 'Delay data could not be loaded'
             : delay == null
-              ? 'Gecikme bilgisi yok (yerel demo)'
+              ? 'No delay data (local demo)'
               : (
                 <>
-                  Tek yön gecikme ≈ <strong>{formatDuration(delay)}</strong>
-                  <span className="gp-muted"> · gidiş-dönüş ≈ {formatDuration(delay * 2)}</span>
+                  One-way delay ≈ <strong>{formatDuration(delay)}</strong>
+                  <span className="gp-muted"> · round trip ≈ {formatDuration(delay * 2)}</span>
                 </>
               )}
         </p>
@@ -101,15 +101,15 @@ export function LinkHeader(props: {
       {status && (
         <dl className="gp-link-stats">
           <div>
-            <dt>Bekleyen öncelikli</dt>
+            <dt>Pending priority</dt>
             <dd className={status.pending_escalations > 0 ? 'gp-hot' : undefined}>{status.pending_escalations}</dd>
           </div>
           <div>
-            <dt>Gönderilmemiş öğe</dt>
+            <dt>Unsent items</dt>
             <dd>{pendingTotal}</dd>
           </div>
           <div>
-            <dt>Durum zamanı</dt>
+            <dt>Status time</dt>
             <dd className="gp-small">{formatTime(status.generated_at)}</dd>
           </div>
         </dl>

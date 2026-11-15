@@ -36,10 +36,10 @@ export interface LinkEvent {
 }
 
 export const KIND_TEXT: Record<EventKind, string> = {
-  ALERT: 'Alarm açıldı',
-  ESCALATION: 'Uçuş hekimine bildirim',
-  PACKET_ACK: 'Paket onayı',
-  ESCALATION_ACK: 'Bildirim onayı',
+  ALERT: 'Alarm opened',
+  ESCALATION: 'Flight surgeon notification',
+  PACKET_ACK: 'Packet acknowledgement',
+  ESCALATION_ACK: 'Notification acknowledgement',
 };
 
 function firstSentence(text: string | null | undefined): string | null {
@@ -94,7 +94,7 @@ export function buildEvents(
       dir: 'down',
       kind: 'ESCALATION',
       title: e.summary_tr,
-      detail: e.crew_member_id ? `Ekip üyesi: ${e.crew_member_id}` : null,
+      detail: e.crew_member_id ? `Crew member: ${e.crew_member_id}` : null,
       attention: toAttention(e.priority),
       eventAt: parseTime(e.created_at),
       transit: at(key),
@@ -107,8 +107,8 @@ export function buildEvents(
         key: ackKey,
         dir: 'up',
         kind: 'ESCALATION_ACK',
-        title: 'Yer ekibi bildirimi onayladı',
-        detail: e.crew_member_id ? `Ekip üyesi: ${e.crew_member_id}` : null,
+        title: 'Ground team acknowledged the notification',
+        detail: e.crew_member_id ? `Crew member: ${e.crew_member_id}` : null,
         attention: null,
         eventAt: parseTime(e.acked_at),
         transit: at(ackKey),
@@ -123,8 +123,8 @@ export function buildEvents(
       key,
       dir: 'up',
       kind: 'PACKET_ACK',
-      title: `${k.recipientLabel}: paket alındı onayı`,
-      detail: `${k.itemCount} öğe · sha256 ${k.sha256.slice(0, 12)} · ${k.ackedBy}${k.escalationIds.length ? ` · ${k.escalationIds.length} bildirim onaylandı` : ''}`,
+      title: `${k.recipientLabel}: packet receipt acknowledged`,
+      detail: `${k.itemCount} items · sha256 ${k.sha256.slice(0, 12)} · ${k.ackedBy}${k.escalationIds.length ? ` · ${k.escalationIds.length} notifications acknowledged` : ''}`,
       attention: null,
       eventAt: parseTime(k.ackedAt),
       transit: at(key),

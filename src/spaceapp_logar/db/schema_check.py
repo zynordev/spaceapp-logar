@@ -34,14 +34,14 @@ class SchemaStatus:
     @property
     def message(self) -> str:
         if self.state == CURRENT:
-            return "Veritabanı şeması güncel."
+            return "Database schema is up to date."
         if self.state == OUTDATED:
             return (
-                "Veritabanı şeması kodun gerisinde "
-                f"(veritabanı: {self.database_revision or 'boş'}, kod: {self.code_revision}). "
-                "Çalıştırın: uv run alembic upgrade head"
+                "Database schema is behind the code "
+                f"(database: {self.database_revision or 'empty'}, code: {self.code_revision}). "
+                "Run: uv run alembic upgrade head"
             )
-        return "Şema sürümü belirlenemedi."
+        return "Schema version could not be determined."
 
 
 def _code_head() -> str | None:

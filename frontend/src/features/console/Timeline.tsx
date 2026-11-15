@@ -18,9 +18,9 @@ export interface TimelineProps {
 
 function whenText(ev: LinkEvent, side: 'ship' | 'earth'): { label: string; time: string } {
   const own = side === 'ship' ? ev.dir === 'down' : ev.dir === 'up';
-  if (own) return { label: ev.dir === 'down' ? 'Gemide' : 'Gönderildi', time: clock(ev.eventAt ?? ev.transit.departAt) };
-  if (ev.transit.phase === 'before') return { label: 'Önceden ulaştı', time: clock(ev.transit.arriveAt) };
-  return { label: 'Ulaştı', time: clock(ev.transit.arriveAt) };
+  if (own) return { label: ev.dir === 'down' ? 'On board' : 'Sent', time: clock(ev.eventAt ?? ev.transit.departAt) };
+  if (ev.transit.phase === 'before') return { label: 'Arrived early', time: clock(ev.transit.arriveAt) };
+  return { label: 'Arrived', time: clock(ev.transit.arriveAt) };
 }
 
 function ShipAck({ ev, allEvents, acks }: { ev: LinkEvent; allEvents: LinkEvent[]; acks: LocalAck[] }) {
@@ -29,20 +29,20 @@ function ShipAck({ ev, allEvents, acks }: { ev: LinkEvent; allEvents: LinkEvent[
   if (!t) {
     return (
       <p className="console-tl__note">
-        <Icon name="hourglass" size={14} /> Yer onayı: henüz yok
+        <Icon name="hourglass" size={14} /> Ground acknowledgement: not yet
       </p>
     );
   }
   if (t.phase === 'transit') {
     return (
       <p className="console-tl__note">
-        <Icon name="arrow-up" size={14} /> Yer onayı yolda — gemiye kalan <span className="console-num">{formatCountdown(t.remainingMs)}</span>
+        <Icon name="arrow-up" size={14} /> Ground acknowledgement in transit — time left to the ship <span className="console-num">{formatCountdown(t.remainingMs)}</span>
       </p>
     );
   }
   return (
     <p className="console-tl__note console-tl__note--ok">
-      <Icon name="check" size={14} /> Yer onayı gemiye ulaştı · {clock(t.arriveAt)}
+      <Icon name="check" size={14} /> Ground acknowledgement reached the ship · {clock(t.arriveAt)}
     </p>
   );
 }
@@ -80,7 +80,7 @@ export function Timeline({ side, title, subtitle, status, events, allEvents, ack
                       {KIND_TEXT[ev.kind]}
                     </span>
                     {ev.attention && <AttentionBadge level={ev.attention} size="sm" />}
-                    {incoming && ev.transit.phase === 'before' && <span className="console-tl__tag">konsol açılmadan önce ulaştı</span>}
+                    {incoming && ev.transit.phase === 'before' && <span className="console-tl__tag">arrived before the console opened</span>}
                   </div>
                   <p className="console-tl__title">{ev.title}</p>
                   {ev.detail && <p className="console-tl__detail">{ev.detail}</p>}
@@ -88,7 +88,7 @@ export function Timeline({ side, title, subtitle, status, events, allEvents, ack
                   {side === 'earth' && ev.escalation && ev.kind === 'ESCALATION' && (
                     <p className={`console-tl__note${ev.escalation.status === 'ACKED' ? ' console-tl__note--ok' : ''}`}>
                       <Icon name={ev.escalation.status === 'ACKED' ? 'check' : 'bell'} size={14} />
-                      {ev.escalation.status === 'ACKED' ? 'Yer ekibi onayladı' : 'Onay bekliyor'}
+                      {ev.escalation.status === 'ACKED' ? 'Ground team acknowledged' : 'Awaiting acknowledgement'}
                     </p>
                   )}
                 </div>

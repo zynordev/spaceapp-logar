@@ -281,7 +281,7 @@ export function TourHost() {
             <Icon name="play" size={12} /> Senaryo turu · {title}
           </span>
           {phase === 'running' && (
-            <span className="tour__count" aria-label={`Adım ${step + 1} / ${steps.length}`}>
+            <span className="tour__count" aria-label={`Step ${step + 1} / ${steps.length}`}>
               {step + 1}/{steps.length}
               {def && <span className="tour__beat"> · {def.beat}</span>}
             </span>
@@ -294,10 +294,10 @@ export function TourHost() {
         {phase === 'preparing' && (
           <div className="tour__body" aria-live="polite">
             <h2 id={`${uid}-t`} className="tour__title">
-              Senaryo çalıştırılıyor…
+              Running scenario…
             </h2>
             <p id={`${uid}-c`} className="tour__caption">
-              <Spinner size={14} label={null} /> Sunucu yeni bir görev için sentetik veri üretiyor (DEMO). Birkaç saniye sürebilir.
+              <Spinner size={14} label={null} /> The server is generating synthetic data for a new mission (DEMO). This may take a few seconds.
             </p>
           </div>
         )}
@@ -305,18 +305,18 @@ export function TourHost() {
         {phase === 'error' && (
           <div className="tour__body" role="alert">
             <h2 id={`${uid}-t`} className="tour__title">
-              Tur başlatılamadı
+              Tour could not start
             </h2>
             <p id={`${uid}-c`} className="tour__caption">
               {error}
-              {offline ? ' Bağlantı dönünce yeniden deneyin.' : ''}
+              {offline ? ' Try again when the connection returns.' : ''}
             </p>
             <div className="tour__actions">
               <Button size="sm" variant="secondary" icon="refresh" onClick={() => void useTour.getState().start(tour)}>
-                Yeniden dene
+                Retry
               </Button>
               <Button size="sm" variant="ghost" onClick={stop}>
-                Kapat
+                Close
               </Button>
             </div>
           </div>
@@ -340,13 +340,13 @@ export function TourHost() {
                 {note}
               </p>
             )}
-            {!target && ready && <p className="tour__note">Bu bölüm şu an ekranda yok; açıklama yine geçerli.</p>}
+            {!target && ready && <p className="tour__note">This section is not on screen right now; the description still applies.</p>}
             <div className="tour__actions">
               <Button size="sm" variant="ghost" onClick={prev} disabled={step === 0} aria-keyshortcuts="ArrowLeft">
-                Önceki
+                Previous
               </Button>
               <button ref={nextRef} type="button" className="ui-btn ui-btn--primary ui-btn--sm" onClick={next} aria-keyshortcuts="ArrowRight">
-                {last ? 'Bitir' : 'Sonraki'}
+                {last ? 'Finish' : 'Next'}
               </button>
               <label className="tour__auto">
                 <input type="checkbox" checked={auto} onChange={(e) => useTour.getState().setAuto(e.target.checked)} />

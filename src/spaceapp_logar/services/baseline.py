@@ -39,7 +39,7 @@ from spaceapp_logar.services.environment import context_at, context_by_id, next_
 
 ESTABLISHED = "ESTABLISHED"
 ESTIMATED_RESEARCH = "ESTIMATED_RESEARCH"
-STATUS_LABELS = {ESTABLISHED: "kişisel_kararlı", ESTIMATED_RESEARCH: "tahmini/araştırma"}
+STATUS_LABELS = {ESTABLISHED: "personal_stable", ESTIMATED_RESEARCH: "estimated/research"}
 SYMPTOM_FIELDS = ("fatigue", "dizziness", "nausea", "pain", "mood_distress")
 SYMPTOM_EXCLUSION_HOURS = 12
 ANY = "ANY"
@@ -145,7 +145,7 @@ def _exclusion_windows(
     for alert in session.scalars(alert_query).all():
         windows.append((alert.opened_at, alert.resolved_at or before))
     if windows:
-        reasons.append("aktif alarm aralıkları (kırmızı bayrak dahil)")
+        reasons.append("active alarm windows (including red flags)")
 
     if not _is_environment_metric(metric):
         symptom_query = select(SubjectiveCheckIn).where(
@@ -164,7 +164,7 @@ def _exclusion_windows(
             )
             hits += 1
         if hits:
-            reasons.append(f"≥2/4 belirtili öznel kayıt sonrası {SYMPTOM_EXCLUSION_HOURS} saat")
+            reasons.append(f"{SYMPTOM_EXCLUSION_HOURS} hours after a subjective entry with a symptom score ≥2/4")
     return windows, reasons
 
 
@@ -210,14 +210,14 @@ def _from_snapshot(
         is_sufficient=sufficient,
         classification=snapshot.classification,
         status_label=STATUS_LABELS[snapshot.classification],
-        evidence_level="kişisel veri" if sufficient else "F",
+        evidence_level="personal data" if sufficient else "F",
         environment_location=snapshot.environment_location,
         environment_context_id=snapshot.environment_context_id,
         activity_state=activity_state,
         profile_id=snapshot.id,
         profile_version=snapshot.version,
         limitation_note=(
-            f"Sabitlenmiş profil sürümü v{snapshot.version} kullanılıyor "
+            f"Pinned profile version v{snapshot.version} is in use "
             f"({snapshot.reason})."
         ),
     )
@@ -329,25 +329,25 @@ def get_personal_baseline(
         if len(values) >= max_used:
             break
     if quality_excluded:
-        reasons.insert(0, "geçersiz veya fiziksel olarak olanaksız veri")
+        reasons.insert(0, "invalid or physically impossible data")
 
     sufficient = len(values) >= min_required
     classification = ESTABLISHED if sufficient else ESTIMATED_RESEARCH
     ordered = sorted(values)
     location = context.location if context is not None else None
     notes = [
-        f"{len(values)} örnek (gereken {min_required}, en fazla {max_used})",
-        f"ortam: {location or 'tanımsız (görevin tamamı)'}",
-        f"bağlam: {activity}",
+        f"{len(values)} samples (required {min_required}, at most {max_used})",
+        f"environment: {location or 'undefined (whole mission)'}",
+        f"context: {activity}",
     ]
     if reasons:
-        notes.append("dışlanan: " + "; ".join(reasons) + f" ({excluded} örnek)")
+        notes.append("excluded: " + "; ".join(reasons) + f" ({excluded} samples)")
     if not sufficient:
         notes.append(
-            "veri yetersiz: tahmini/araştırma; yerleşik kişisel normal olarak kullanılmaz"
+            "insufficient data: estimated/research; not used as an established personal norm"
         )
     if location in ("LUNAR_HABITAT", "MARS_HABITAT"):
-        notes.append("Ay/Mars için nüfus normali yoktur; yalnızca kişinin kendi verisi kullanılır")
+        notes.append("No population norm exists for the Moon or Mars; only the person's own data is used")
 
     return BaselineProfileResult(
         median=float(median(ordered)) if ordered else None,
@@ -361,7 +361,7 @@ def get_personal_baseline(
         is_sufficient=sufficient,
         classification=classification,
         status_label=STATUS_LABELS[classification],
-        evidence_level="kişisel veri" if sufficient else "F",
+        evidence_level="personal data" if sufficient else "F",
         environment_location=location,
         environment_context_id=context.id if context is not None else None,
         activity_state=activity_state,

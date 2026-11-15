@@ -29,7 +29,7 @@ export function fieldErrors(detail: unknown): string[] {
   return detail.map((d: any) => {
     const loc = Array.isArray(d?.loc) ? d.loc.filter((p: unknown) => p !== 'body') : [];
     const key = loc.length ? String(loc[loc.length - 1]) : '';
-    const label = LOC_LABELS[key] ?? (loc.join('.') || 'Genel');
+    const label = LOC_LABELS[key] ?? (loc.join('.') || 'General');
     return `${label}: ${String(d?.msg ?? 'invalid').replace(/^Value error, /, '')}`;
   });
 }

@@ -73,7 +73,7 @@ def test_sustained_high_co2_returns_the_approved_watch_card(
     assert card["card_id"] == "ENV_CO2_WATCH_CARD_V2"
     assert card["version"] == 2
     assert card["attention"] == "WATCH"
-    assert card["title_tr"].startswith("Kabin CO₂ yüksek")
+    assert card["title_tr"].startswith("Cabin CO₂ high")
     assert card["step_keys"] == [
         "check_airflow",
         "compare_modules",

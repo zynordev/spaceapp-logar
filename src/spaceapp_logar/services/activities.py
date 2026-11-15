@@ -9,8 +9,8 @@ from spaceapp_logar.db.models import ActivityDeclaration
 from spaceapp_logar.schemas.activities import ActivityCurrentRead, ActivityRead
 
 MESSAGES_TR = {
-    "NONE": "Aktif bir aktivite beyanı yok — aktivite bağlamı bilinmiyor.",
-    "EXPIRED": "Beyan edilen süre doldu — aktivite bağlamı bilinmiyor.",
+    "NONE": "No active activity declaration — activity context unknown.",
+    "EXPIRED": "The declared time has ended — activity context unknown.",
 }
 
 
@@ -83,7 +83,7 @@ def current_activity(
         state="ACTIVE",
         activity=read,
         remaining_seconds=remaining,
-        message_tr=f"Beyan edilen aktivite: {latest.activity_state}; yaklaşık {minutes} dk kaldı.",
+        message_tr=f"Declared activity: {latest.activity_state}; about {minutes} min remaining.",
     )
 
 

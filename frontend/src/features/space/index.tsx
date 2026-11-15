@@ -35,18 +35,18 @@ interface EscalationLite {
 }
 
 const PROFILE_TEXT: Record<Profile, string> = {
-  ISS: 'ISS · ALÇAK DÜNYA YÖRÜNGESİ',
-  MOON: 'AY GÖREVİ',
-  MARS: 'MARS GÖREVİ',
+  ISS: 'ISS · LOW EARTH ORBIT',
+  MOON: 'MOON MISSION',
+  MARS: 'MARS MISSION',
 };
 
 function fmtDelay(s: number | null): string {
-  if (s == null) return 'tanımsız';
-  if (s < 1) return '<1 sn';
-  if (s < 120) return `${fmtAuto(s)} sn`;
+  if (s == null) return 'n/a';
+  if (s < 1) return '<1 s';
+  if (s < 120) return `${fmtAuto(s)} s`;
   const m = Math.floor(s / 60);
   const r = Math.round(s % 60);
-  return r ? `${m} dk ${r} sn` : `${m} dk`;
+  return r ? `${m} min ${r} s` : `${m} min`;
 }
 
 function detectWebGL(): boolean {
@@ -176,9 +176,9 @@ export function MissionSpaceView({ active, onOpenGround }: MissionSpaceViewProps
   const levelWord = link.level === 'CRITICAL' || link.level === 'ALERT' ? attentionMeta(link.level).label : null;
   const breakdown = recipients.map((r) => `${r.label_tr}: ${r.pending_items}`).join('\n');
   const summary =
-    `${PROFILE_TEXT[link.profile]}: habitattan Dünya'ya bağlantı. Tek yön ışık gecikmesi ${fmtDelay(delay)}. ` +
-    (link.pending == null ? 'Kuyruk bilgisi alınamadı.' : `Yer ekiplerine bekleyen ${link.pending} öğe.`) +
-    (link.escalations ? ` ${link.escalations} öncelikli eskalasyon bekliyor (${levelWord}).` : '');
+    `${PROFILE_TEXT[link.profile]}: habitat-to-Earth link. One-way light delay ${fmtDelay(delay)}. ` +
+    (link.pending == null ? 'Queue data could not be loaded.' : `${link.pending} items waiting for the ground teams.`) +
+    (link.escalations ? ` ${link.escalations} priority escalations waiting (${levelWord}).` : '');
 
   return (
     <div className="sp" ref={root}>
@@ -195,34 +195,34 @@ export function MissionSpaceView({ active, onOpenGround }: MissionSpaceViewProps
       </div>
 
       <div className="sp__info">
-        <h2 className="sp__title">YER BAĞLANTISI</h2>
-        <p className="sp__route">{PROFILE_TEXT[link.profile]} → DÜNYA</p>
+        <h2 className="sp__title">GROUND LINK</h2>
+        <p className="sp__route">{PROFILE_TEXT[link.profile]} → EARTH</p>
         <dl className="sp__rows">
           <div>
-            <dt>Tek yön ışık gecikmesi</dt>
+            <dt>One-way light delay</dt>
             <dd>
               {loading ? '…' : fmtDelay(delay)}
-              {round != null && round >= 1 && <small> · gidiş-dönüş {fmtDelay(round)}</small>}
+              {round != null && round >= 1 && <small> · round trip {fmtDelay(round)}</small>}
             </dd>
           </div>
           <div>
-            <dt>Yer ekiplerine bekleyen</dt>
+            <dt>Waiting for ground teams</dt>
             <dd>
               {failed ? (
-                <span className="sp__muted">alınamadı</span>
+                <span className="sp__muted">unavailable</span>
               ) : link.pending == null ? (
                 '…'
               ) : onOpenGround ? (
                 <button type="button" className="sp__link" onClick={onOpenGround} title={breakdown || undefined}>
-                  {link.pending} öğe
+                  {link.pending} items
                 </button>
               ) : (
-                `${link.pending} öğe`
+                `${link.pending} items`
               )}
             </dd>
           </div>
           <div>
-            <dt>Öncelikli eskalasyon</dt>
+            <dt>Priority escalations</dt>
             <dd>
               {link.escalations ? (
                 <>
@@ -239,9 +239,9 @@ export function MissionSpaceView({ active, onOpenGround }: MissionSpaceViewProps
       </div>
 
       <p className="sp__note">
-        Görselleştirme — ölçek ve konumlar temsili; gecikme değeri görev profilinden. Işındaki her nokta yer ekiplerine bekleyen bir öğedir
-        {link.escalations ? ', büyük noktalar öncelikli eskalasyonlardır' : ''} (en çok {MAX_PACKETS} nokta
-        {link.escalations > MAX_PRIORITY_PACKETS ? `, ${MAX_PRIORITY_PACKETS} büyük nokta` : ''}); akış hızı temsilidir.
+        Illustration only: scale and positions are representative; the delay value comes from the mission profile. Each point on the beam is one item waiting for the ground teams
+        {link.escalations ? ', large points are priority escalations' : ''} (at most {MAX_PACKETS} points
+        {link.escalations > MAX_PRIORITY_PACKETS ? `, ${MAX_PRIORITY_PACKETS} large points` : ''}); flow speed is representative.
       </p>
     </div>
   );

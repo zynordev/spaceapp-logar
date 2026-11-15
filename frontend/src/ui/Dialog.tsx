@@ -46,7 +46,7 @@ export function Dialog({ open, title, onClose, children, footer, width = 420 }: 
           {title}
         </h2>
         {onClose && (
-          <button type="button" className="ui-dialog__close" onClick={onClose} aria-label="Kapat">
+          <button type="button" className="ui-dialog__close" onClick={onClose} aria-label="Close">
             <Icon name="x" size={18} />
           </button>
         )}

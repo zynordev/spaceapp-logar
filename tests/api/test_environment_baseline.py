@@ -118,10 +118,10 @@ def test_too_little_data_is_estimated_research(api_client: tuple[TestClient, Eng
 
     assert result["is_sufficient"] is False
     assert result["classification"] == "ESTIMATED_RESEARCH"
-    assert result["status_label"] == "tahmini/araştırma"
+    assert result["status_label"] == "estimated/research"
     assert result["sample_count"] == 10
     assert result["min_samples_required"] == 30
-    assert "veri yetersiz" in result["limitation_note"]
+    assert "insufficient data" in result["limitation_note"]
 
 
 def test_enough_rest_data_is_established_with_percentiles(
@@ -136,7 +136,7 @@ def test_enough_rest_data_is_established_with_percentiles(
     result = baseline(client, T0 + timedelta(hours=2))
 
     assert result["classification"] == "ESTABLISHED"
-    assert result["status_label"] == "kişisel_kararlı"
+    assert result["status_label"] == "personal_stable"
     assert result["sample_count"] == 40  # exercise samples are not REST context
     assert result["p10"] <= result["p25"] <= result["median"] <= result["p75"] <= result["p90"]
     assert result["median"] == pytest.approx(64.5)
@@ -174,8 +174,8 @@ def test_faulty_data_and_symptomatic_periods_are_excluded(
     assert result["sample_count"] == 30
     assert result["median"] == pytest.approx(65)
     assert result["excluded_count"] == 5 + 24
-    assert "geçersiz" in result["limitation_note"]
-    assert "belirtili öznel kayıt" in result["limitation_note"]
+    assert "invalid" in result["limitation_note"]
+    assert "subjective entry with a symptom score" in result["limitation_note"]
 
 
 def test_red_flag_alert_period_is_excluded(api_client: tuple[TestClient, Engine]) -> None:
@@ -200,7 +200,7 @@ def test_red_flag_alert_period_is_excluded(api_client: tuple[TestClient, Engine]
     result = baseline(client, T0 + timedelta(hours=1))
 
     assert result["median"] == pytest.approx(68)
-    assert "aktif alarm" in result["limitation_note"]
+    assert "active alarm" in result["limitation_note"]
 
 
 def test_new_environment_starts_a_new_profile(api_client: tuple[TestClient, Engine]) -> None:
@@ -222,7 +222,7 @@ def test_new_environment_starts_a_new_profile(api_client: tuple[TestClient, Engi
     assert moon["sample_count"] == 10
     assert moon["classification"] == "ESTIMATED_RESEARCH"
     assert moon["median"] == pytest.approx(75)
-    assert "Ay/Mars için nüfus normali yoktur" in moon["limitation_note"]
+    assert "No population norm exists for the Moon or Mars" in moon["limitation_note"]
 
 
 def test_snapshot_rollback_and_release(api_client: tuple[TestClient, Engine]) -> None:
@@ -263,7 +263,7 @@ def test_snapshot_rollback_and_release(api_client: tuple[TestClient, Engine]) ->
     assert rollback.status_code == 200
     assert pinned["profile_version"] == 1
     assert pinned["median"] == pytest.approx(60)
-    assert "Sabitlenmiş profil sürümü v1" in pinned["limitation_note"]
+    assert "Pinned profile version v1" in pinned["limitation_note"]
 
     released = client.post(
         f"/v1/baseline-profiles/{v1['id']}/release",
@@ -295,7 +295,7 @@ def test_rule_status_shows_which_baseline_was_used(
 
     temp = rules["VITAL_TEMP_TREND_V1"]["baseline"]
     assert temp["classification"] == "ESTABLISHED"
-    assert temp["status_label"] == "kişisel_kararlı"
+    assert temp["status_label"] == "personal_stable"
     assert temp["value"] == pytest.approx(36.7, abs=0.1)
     assert rules["MULTI_CARDIO_RESP_V1"]["baseline"]["sample_count"] >= 30
     assert rules["ENV_RADIATION_V1"]["baseline"]["classification"] == "ESTABLISHED"

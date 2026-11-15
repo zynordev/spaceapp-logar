@@ -38,7 +38,7 @@ export function RegionChips({ regions, selected, hovered, onSelect, onHover, onC
   };
 
   return (
-    <div className="b3d-chips" role="toolbar" aria-label="Vücut bölgeleri — oklarla gezin, Enter ile seçin">
+    <div className="b3d-chips" role="toolbar" aria-label="Body regions — use the arrow keys to move, Enter to select">
       {CHIP_ORDER.map((k, i) => {
         const r = regions[k];
         const att = ATTENTION[r.attention];
@@ -55,7 +55,7 @@ export function RegionChips({ regions, selected, hovered, onSelect, onHover, onC
             style={{ ['--c' as string]: att.cssVar }}
             tabIndex={k === current ? 0 : -1}
             aria-pressed={isSel}
-            aria-label={`${r.label_tr}: ${att.label}${alerts ? `, ${alerts} açık uyarı` : ''}`}
+            aria-label={`${r.label_tr}: ${att.label}${alerts ? `, ${alerts} open warning(s)` : ''}`}
             onClick={() => onSelect(k)}
             onKeyDown={(e) => onKey(e, i)}
             onMouseEnter={() => onHover(k)}
@@ -84,7 +84,7 @@ export function RegionChips({ regions, selected, hovered, onSelect, onHover, onC
 export function Legend() {
   const order = ['CRITICAL', 'ALERT', 'WATCH', 'NORMAL', 'UNKNOWN'] as const;
   return (
-    <ul className="b3d-legend" aria-label="Renk açıklaması">
+    <ul className="b3d-legend" aria-label="Colour legend">
       {order.map((a) => {
         const m = ATTENTION[a];
         return (

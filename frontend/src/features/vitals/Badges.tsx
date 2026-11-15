@@ -22,10 +22,10 @@ export function AttBadge({ att, size = 'md' }: { att: string | null | undefined;
   );
 }
 
-export function QualityBadge({ q, prefix = 'Veri' }: { q: string | null | undefined; prefix?: string }) {
+export function QualityBadge({ q, prefix = 'Data' }: { q: string | null | undefined; prefix?: string }) {
   const d = (q && QUALITY[q]) || { label: q || '—', icon: 'question' as const, cls: 'missing' };
   return (
-    <span className={`vt-badge vt-q-${d.cls}`} title="Veri kalitesi">
+    <span className={`vt-badge vt-q-${d.cls}`} title="Data quality">
       <span className="vt-bi" aria-hidden="true"><Icon name={d.icon} size={12} /></span>
       {prefix ? `${prefix}: ${d.label}` : d.label}
     </span>

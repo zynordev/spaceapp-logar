@@ -81,7 +81,7 @@ def _status_code_name(status_code: int) -> str:
 
 
 def _internal_error_response(request_id: str) -> JSONResponse:
-    message = "Beklenmeyen bir sunucu hatası oluştu."
+    message = "An unexpected server error occurred."
     return JSONResponse(
         status_code=500,
         content=error_body("INTERNAL_ERROR", message, request_id, message),
@@ -109,7 +109,7 @@ async def validation_exception_handler(
         status_code=422,
         content=error_body(
             "VALIDATION_ERROR",
-            "İstek doğrulanamadı.",
+            "Request validation failed.",
             _request_id(request),
             jsonable_encoder(exc.errors()),
         ),

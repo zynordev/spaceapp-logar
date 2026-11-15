@@ -15,8 +15,8 @@ import './ground.css';
 
 const ROLE_TR: Record<string, string> = {
   ASTRONAUT: 'Astronot',
-  CREW_MEDICAL_OFFICER: 'Ekip sağlık sorumlusu',
-  GROUND: 'Yer ekibi',
+  CREW_MEDICAL_OFFICER: 'Crew medical officer',
+  GROUND: 'Ground team',
 };
 
 function ackPolicy(user: AuthUser | null, token: string | null): { canAck: boolean; hint: string | null } {
@@ -24,13 +24,13 @@ function ackPolicy(user: AuthUser | null, token: string | null): { canAck: boole
   if (user?.anonymous || (!user && !token)) {
     return {
       canAck: true,
-      hint: 'Anonim demo: onay açık. Oturum açıkken yalnız yer ekibi (GROUND) onaylayabilir.',
+      hint: 'Anonymous demo: acknowledgement is open. When signed in, only the ground team (GROUND) can acknowledge.',
     };
   }
   if (user?.role) {
-    return { canAck: false, hint: `Yalnız yer ekibi onaylayabilir (rolünüz: ${ROLE_TR[user.role] ?? user.role}).` };
+    return { canAck: false, hint: `Only the ground team can acknowledge (your role: ${ROLE_TR[user.role] ?? user.role}).` };
   }
-  return { canAck: true, hint: 'Rol henüz doğrulanmadı; yetkiyi sunucu denetler.' };
+  return { canAck: true, hint: 'Role not yet verified; the server checks permissions.' };
 }
 
 export function GroundPanel() {
@@ -61,18 +61,18 @@ export function GroundPanel() {
     <section className="gp-root" aria-labelledby="gp-title">
       <header className="gp-head">
         <h2 id="gp-title">
-          <Icon name="satellite" size={20} className="gp-head-mark" /> Yer istasyonu ve senkronizasyon
+          <Icon name="satellite" size={20} className="gp-head-mark" /> Ground station and sync
         </h2>
         <p className="gp-muted gp-small">
-          Gemi Dünya'dan bağımsız karar destek verir; bağlantı olduğunda bütünlüğü kontrol edilen paketler doğru
-          yer ekibine gider. Uyarı ve Kritik seviyeler uçuş cerrahına otomatik öncelikli bildirim üretir.
+          The ship gives decision support independently of Earth; when a link is available, integrity-checked packets go
+          to the ground team. Warning and Critical levels automatically create priority notifications for the flight surgeon.
         </p>
       </header>
 
       <LinkHeader status={status.data} error={status.error} offline={offline && !mock} mock={mock} />
 
       {!missionId ? (
-        <p className="gp-note">Görev seçilmedi — senkronizasyon durumu için üstten bir görev seçin.</p>
+        <p className="gp-note">No mission selected — choose a mission above to see sync status.</p>
       ) : (
         <>
           <Escalations items={escalations.data} error={escalations.error} loading={escalations.loading} />
@@ -80,7 +80,7 @@ export function GroundPanel() {
           <section className="gp-rcps" aria-labelledby="gp-rcps-title">
             <div className="gp-section-head">
               <h3 id="gp-rcps-title">
-                <Icon name="swap" size={16} />{' '}Yer ekipleri ve paketler
+                <Icon name="swap" size={16} />{' '}Ground teams and packets
               </h3>
               {statusErr && status.error?.status !== 404 && <p className="gp-note gp-note--warn">{statusErr}</p>}
             </div>

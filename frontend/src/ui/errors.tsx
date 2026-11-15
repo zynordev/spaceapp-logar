@@ -4,20 +4,20 @@ import { Icon } from './icons';
 import { Button } from './primitives';
 import { toast } from './toast';
 
-export const FORBIDDEN_MESSAGE = 'Bu işlem için yetkiniz yok';
+export const FORBIDDEN_MESSAGE = 'You do not have permission for this action';
 
 /** Plain-language Turkish text for any thrown value. */
 export function describeError(error: unknown, what?: string): { title: string; detail?: string } {
   const subject = what ? `${what}: ` : '';
   if (error instanceof ApiError) {
-    if (error.network) return { title: `${subject}Sunucuya ulaşılamıyor`, detail: 'Son bilinen veriler gösteriliyor; otomatik yeniden denenecek.' };
-    if (error.notFound) return { title: `${subject}Bu özellik sunucuda henüz yok`, detail: 'Sunucu güncellendiğinde burada görünecek.' };
-    if (error.forbidden) return { title: `${subject}${FORBIDDEN_MESSAGE}`, detail: 'Farklı bir rolle oturum açmanız gerekebilir.' };
-    if (error.status === 401) return { title: `${subject}Oturum açmanız gerekiyor` };
-    if (error.status === 409) return { title: `${subject}Çakışma`, detail: error.message };
-    if (error.status === 422) return { title: `${subject}Girilen değerler geçersiz`, detail: error.message };
-    if (error.status === 503) return { title: `${subject}Sunucu şu an hazır değil`, detail: error.message };
-    return { title: `${subject}İşlem başarısız (HTTP ${error.status})`, detail: error.message };
+    if (error.network) return { title: `${subject}Cannot reach the server`, detail: 'Showing the last known data; it will retry automatically.' };
+    if (error.notFound) return { title: `${subject}This feature is not on the server yet`, detail: 'It will appear here once the server is updated.' };
+    if (error.forbidden) return { title: `${subject}${FORBIDDEN_MESSAGE}`, detail: 'You may need to sign in with a different role.' };
+    if (error.status === 401) return { title: `${subject}Sign-in required` };
+    if (error.status === 409) return { title: `${subject}Conflict`, detail: error.message };
+    if (error.status === 422) return { title: `${subject}The values entered are not valid`, detail: error.message };
+    if (error.status === 503) return { title: `${subject}The server is not ready right now`, detail: error.message };
+    return { title: `${subject}Request failed (HTTP ${error.status})`, detail: error.message };
   }
   return { title: `${subject}Beklenmeyen hata`, detail: error instanceof Error ? error.message : String(error) };
 }
@@ -47,7 +47,7 @@ export function ErrorNote({ error, what, onRetry, compact }: ErrorNoteProps) {
       </div>
       {onRetry && (
         <Button size="sm" variant="ghost" icon="refresh" onClick={onRetry}>
-          Yeniden dene
+          Retry
         </Button>
       )}
     </div>

@@ -67,7 +67,7 @@ class SceneBoundary extends Component<{ onError: () => void; children: ReactNode
 const MODE_TAG = {
   live: { text: 'CANLI', cls: 'is-live' },
   demo: { text: 'DEMO', cls: 'is-demo' },
-  neutral: { text: 'NÖTR', cls: 'is-neutral' },
+  neutral: { text: 'NEUTRAL', cls: 'is-neutral' },
 } as const;
 
 export interface BodyMapPanelProps {
@@ -146,9 +146,9 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
   );
 
   const fallbackReason = !webgl
-    ? 'Bu cihazda WebGL yok — 2B görünüm kullanılıyor.'
+    ? 'WebGL is not available on this device — using the 2D view.'
     : failed
-      ? '3B görünüm açılamadı — 2B görünüm kullanılıyor.'
+      ? 'The 3D view could not open — using the 2D view.'
       : null;
 
   return (
@@ -163,11 +163,11 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
       <div
         className={`b3d-stage${use3d ? ' is-3d' : ' is-2d'}`}
         role="img"
-        aria-label={`Vücut modeli, genel durum ${ATTENTION[data.overall].label}. Bölgeler aşağıdaki listede.`}
+        aria-label={`Body model, overall status ${ATTENTION[data.overall].label}. Regions are in the list below.`}
       >
         {use3d ? (
           <SceneBoundary onError={onFail}>
-            <Suspense fallback={svg('3B model yükleniyor…')}>
+            <Suspense fallback={svg('3D model loading…')}>
               <BodyScene
                 states={data.states}
                 selected={selected}
@@ -192,11 +192,11 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
       {/* Title and overall status live in the shell's HUD cards; keep the
           accessible name and the honesty notes (demo data / 2D fallback). */}
       <h2 id="b3d-title" className="b3d-sr">
-        Vücut haritası
+        Body map
       </h2>
       {!bare && (data.note || fallbackReason || data.stale) && (
         <p className={`b3d-note is-${data.mode}`} role="status">
-          {[data.stale && data.generatedAt ? `Son güncelleme ${formatWhen(data.generatedAt)} (eski).` : null, data.note, fallbackReason]
+          {[data.stale && data.generatedAt ? `Last updated ${formatWhen(data.generatedAt)} (stale).` : null, data.note, fallbackReason]
             .filter(Boolean)
             .join(' ')}
         </p>
@@ -233,17 +233,17 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
                 className="b3d-regions__demo"
                 aria-pressed={data.demoForced}
                 onClick={() => data.setDemoForced(!data.demoForced)}
-                title="Sunucu verisi yerine örnek bölge verisi göster"
+                title="Show sample region data instead of server data"
               >
-                Örnek veri
+                Sample data
               </button>
             </div>
           </div>
         )}
-        <div className="b3d-bar" role="toolbar" aria-label="Vücut haritası denetimleri">
-          <div className="b3d-bar__group" role="group" aria-label="Görünüm">
+        <div className="b3d-bar" role="toolbar" aria-label="Body map controls">
+          <div className="b3d-bar__group" role="group" aria-label="View">
             <button type="button" onClick={() => setView((v) => ({ kind: 'front', n: v.n + 1 }))} disabled={!use3d}>
-              Önden
+              Front
             </button>
             <button type="button" onClick={() => setView((v) => ({ kind: 'back', n: v.n + 1 }))} disabled={!use3d}>
               Arkadan
@@ -255,7 +255,7 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
                 setView((v) => ({ kind: 'front', n: v.n + 1 }));
               }}
             >
-              Sıfırla
+              Reset
             </button>
             <button type="button" aria-pressed={!use3d} onClick={toggle2d} disabled={!webgl || failed}>
               2B
@@ -267,7 +267,7 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
                 [
                   ['skin', 'Deri'],
                   ['organs', 'Organlar'],
-                  ['skeleton', 'İskelet'],
+                  ['skeleton', 'Skeleton'],
                 ] as const
               ).map(([key, label]) => (
                 <button key={key} type="button" aria-pressed={layers[key]} onClick={() => toggleLayer(key)}>
@@ -277,8 +277,8 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
                   {label}
                 </button>
               ))}
-              <label className="b3d-slider" title="Deri saydamlığı">
-                <span className="b3d-sr">Deri saydamlığı</span>
+              <label className="b3d-slider" title="Skin transparency">
+                <span className="b3d-sr">Skin transparency</span>
                 <input
                   type="range"
                   min={0.05}
@@ -292,29 +292,29 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
               </label>
             </div>
           )}
-          <div className="b3d-bar__group" role="group" aria-label="Bölgeler ve veri">
+          <div className="b3d-bar__group" role="group" aria-label="Regions and data">
             <button
               type="button"
               aria-expanded={regionsOpen}
               aria-controls="b3d-regions"
               onClick={() => setRegionsOpen((o) => !o)}
             >
-              Bölgeler
+              Regions
               {flagged > 0 && <span className="b3d-bar__count">{flagged}</span>}
             </button>
-            <span className={`b3d-mode ${tag.cls}`} title="Bölge verisinin kaynağı">
+            <span className={`b3d-mode ${tag.cls}`} title="Source of region data">
               {tag.text}
             </span>
           </div>
         </div>
       </div>
       <p className="b3d-attrib">
-        {modelKind === 'procedural' && use3d ? 'Basitleştirilmiş model · ' : ''}
+        {modelKind === 'procedural' && use3d ? 'Simplified model · ' : ''}
         3D anatomi: BodyParts3D, © The Database Center for Life Science, CC BY 4.0
       </p>
 
       <span className="b3d-sr" aria-live="polite">
-        {region ? `${region.label_tr} seçildi: ${ATTENTION[region.attention].label}` : ''}
+        {region ? `${region.label_tr} selected: ${ATTENTION[region.attention].label}` : ''}
       </span>
     </section>
   );

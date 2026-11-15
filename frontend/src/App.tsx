@@ -190,7 +190,7 @@ export default function App() {
                     <InputsPanel />
                   </Slot>
                 ) : (
-                  <Slot name="Yer istasyonu" height={360}>
+                  <Slot name="Ground station" height={360}>
                     <GroundPanel />
                   </Slot>
                 )}
@@ -202,7 +202,7 @@ export default function App() {
 
       <footer className="shell-footer">
         SpaceApp Logar · NASA Space Apps 2026 prototype · Explainable decision support; the software issues no tool or equipment commands
-        and does not replace medical diagnosis or treatment.
+        and does not diagnose; it does not prescribe treatment.
       </footer>
 
       <ToastHost />

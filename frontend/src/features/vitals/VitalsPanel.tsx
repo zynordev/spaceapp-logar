@@ -96,7 +96,7 @@ export function VitalsPanel() {
       {def && <ChartSection def={def} rules={rules} alerts={alerts.data ?? []} selectedRuleId={ruleId} />}
 
       <div className="vt-card">
-        <h3 className="vt-h3 vt-card-title">Kurallar</h3>
+        <h3 className="vt-h3 vt-card-title">Rules</h3>
         {!status.data ? (
           status.error ? <p className="vt-muted">Rules could not be loaded right now.</p> : <Skeleton lines={4} height={44} />
         ) : rules.length === 0 ? (

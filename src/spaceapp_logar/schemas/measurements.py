@@ -54,18 +54,18 @@ class MetricSpec:
 METRIC_SPECS: dict[Metric, MetricSpec] = {
     spec.metric: spec
     for spec in (
-        MetricSpec(Metric.HEART_RATE, "Kalp hızı", "bpm", TargetType.CREW_MEMBER, "vital", 20, 250),
-        MetricSpec(Metric.HRV_RMSSD, "Kalp hızı değişkenliği (RMSSD)", "ms", TargetType.CREW_MEMBER, "vital", 5, 300),
+        MetricSpec(Metric.HEART_RATE, "Heart rate", "bpm", TargetType.CREW_MEMBER, "vital", 20, 250),
+        MetricSpec(Metric.HRV_RMSSD, "Heart rate variability (RMSSD)", "ms", TargetType.CREW_MEMBER, "vital", 5, 300),
         MetricSpec(Metric.SPO2, "SpO₂", "%", TargetType.CREW_MEMBER, "vital", 50, 100),
-        MetricSpec(Metric.RESPIRATION_RATE, "Solunum hızı", "breaths/min", TargetType.CREW_MEMBER, "vital", 2, 70),
-        MetricSpec(Metric.BODY_TEMPERATURE, "Vücut sıcaklığı", "°C", TargetType.CREW_MEMBER, "vital", 30, 43),
-        MetricSpec(Metric.SYSTOLIC_BP, "Sistolik tansiyon", "mmHg", TargetType.CREW_MEMBER, "vital", 50, 260),
-        MetricSpec(Metric.DIASTOLIC_BP, "Diyastolik tansiyon", "mmHg", TargetType.CREW_MEMBER, "vital", 25, 160),
-        MetricSpec(Metric.SLEEP_DURATION, "Uyku süresi", "h", TargetType.CREW_MEMBER, "vital", 0, 24),
-        MetricSpec(Metric.CABIN_CO2_PARTIAL_PRESSURE, "Kabin CO₂", "mmHg", TargetType.ENVIRONMENT, "environment", 0, 60),
-        MetricSpec(Metric.CABIN_O2_FRACTION, "Kabin O₂", "%", TargetType.ENVIRONMENT, "environment", 0, 100),
-        MetricSpec(Metric.CABIN_PRESSURE, "Kabin basıncı", "kPa", TargetType.ENVIRONMENT, "environment", 0, 120),
-        MetricSpec(Metric.RADIATION_DOSE_RATE, "Radyasyon doz hızı", "uSv/h", TargetType.ENVIRONMENT, "environment", 0, 100000),
+        MetricSpec(Metric.RESPIRATION_RATE, "Breathing rate", "breaths/min", TargetType.CREW_MEMBER, "vital", 2, 70),
+        MetricSpec(Metric.BODY_TEMPERATURE, "Body temperature", "°C", TargetType.CREW_MEMBER, "vital", 30, 43),
+        MetricSpec(Metric.SYSTOLIC_BP, "Systolic blood pressure", "mmHg", TargetType.CREW_MEMBER, "vital", 50, 260),
+        MetricSpec(Metric.DIASTOLIC_BP, "Diastolic blood pressure", "mmHg", TargetType.CREW_MEMBER, "vital", 25, 160),
+        MetricSpec(Metric.SLEEP_DURATION, "Sleep duration", "h", TargetType.CREW_MEMBER, "vital", 0, 24),
+        MetricSpec(Metric.CABIN_CO2_PARTIAL_PRESSURE, "Cabin CO₂", "mmHg", TargetType.ENVIRONMENT, "environment", 0, 60),
+        MetricSpec(Metric.CABIN_O2_FRACTION, "Cabin O₂", "%", TargetType.ENVIRONMENT, "environment", 0, 100),
+        MetricSpec(Metric.CABIN_PRESSURE, "Cabin pressure", "kPa", TargetType.ENVIRONMENT, "environment", 0, 120),
+        MetricSpec(Metric.RADIATION_DOSE_RATE, "Radiation dose rate", "uSv/h", TargetType.ENVIRONMENT, "environment", 0, 100000),
     )
 }
 

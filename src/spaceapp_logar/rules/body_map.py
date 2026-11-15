@@ -16,15 +16,15 @@ class BodyRegion:
 
 
 REGIONS: tuple[BodyRegion, ...] = (
-    BodyRegion("head", "Baş ve uyku", "Uyku süresi, yorgunluk ve baş ağrısı gibi belirtilerle ilgili ölçümler."),
-    BodyRegion("eyes", "Gözler", "Görme değişikliği belirtilerinin izlenmesi."),
-    BodyRegion("inner_ear", "İç kulak ve denge", "Bulantı ve baş dönmesi gibi denge ile ilgili belirtilerin izlenmesi."),
-    BodyRegion("heart", "Kalp-dolaşım", "Kalp hızı ve tansiyon ölçümleri."),
-    BodyRegion("lungs", "Solunum", "Oksijen satürasyonu ve solunum hızı ölçümleri."),
-    BodyRegion("torso", "Gövde", "Göğüs ve karın bölgesini ilgilendiren genel belirtiler ve kırmızı bayrak bildirimleri."),
-    BodyRegion("musculoskeletal", "Kas-iskelet", "Sırt ağrısı ve kas-iskelet belirtilerinin izlenmesi."),
-    BodyRegion("skin", "Cilt ve vücut ısısı", "Vücut sıcaklığı ölçümleri ve eğilimi."),
-    BodyRegion("cabin", "Kabin ortamı", "Kabin CO₂, O₂, basınç ve radyasyon ölçümleri."),
+    BodyRegion("head", "Head and sleep", "Measurements related to symptoms such as sleep duration, fatigue and headache."),
+    BodyRegion("eyes", "Eyes", "Monitoring of vision change symptoms."),
+    BodyRegion("inner_ear", "Inner ear and balance", "Monitoring of balance-related symptoms such as nausea and dizziness."),
+    BodyRegion("heart", "Heart and circulation", "Heart rate and blood pressure measurements."),
+    BodyRegion("lungs", "Breathing", "Oxygen saturation and breathing rate measurements."),
+    BodyRegion("torso", "Torso", "General symptoms involving the chest and abdomen, and red-flag reports."),
+    BodyRegion("musculoskeletal", "Musculoskeletal", "Monitoring of back pain and musculoskeletal symptoms."),
+    BodyRegion("skin", "Skin and body temperature", "Body temperature measurements and trend."),
+    BodyRegion("cabin", "Cabin environment", "Cabin CO₂, O₂, pressure and radiation measurements."),
 )
 
 REGION_KEYS: tuple[str, ...] = tuple(region.key for region in REGIONS)

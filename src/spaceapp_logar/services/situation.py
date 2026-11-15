@@ -28,17 +28,16 @@ TREND_MINUTES = 30
 CHECK_IN_LOOKBACK_HOURS = 4
 OTHER_MODULE_LOOKBACK_MINUTES = 15
 SYMPTOM_NAMES = {
-    "fatigue": "yorgunluk",
-    "dizziness": "baş dönmesi",
-    "nausea": "bulantı",
-    "pain": "ağrı",
-    "mood_distress": "ruh hali sıkıntısı",
+    "fatigue": "fatigue",
+    "dizziness": "dizziness",
+    "nausea": "nausea",
+    "pain": "pain",
+    "mood_distress": "mood distress",
 }
 
 
 def _num(value: float) -> str:
-    text = f"{value:.2f}".rstrip("0").rstrip(".")
-    return text.replace(".", ",")
+    return f"{value:.2f}".rstrip("0").rstrip(".")
 
 
 def _minutes(delta: timedelta) -> int:
@@ -96,14 +95,14 @@ def _trend_fact(session: Session, record: RuleEvaluationRecord) -> str | None:
         return None
     before, now = earlier.observed_value, record.observed_value
     if abs(now - before) <= 0.02 * max(abs(before), 1e-9):
-        direction = "sabit"
+        direction = "stable"
     elif now > before:
-        direction = "artıyor"
+        direction = "rising"
     else:
-        direction = "azalıyor"
+        direction = "falling"
     minutes = _minutes(record.evaluated_at - earlier.evaluated_at)
     return (
-        f"Eğilim: {minutes} dk önce {_num(before)} {record.unit} → şimdi "
+        f"Trend: {minutes} min ago {_num(before)} {record.unit} → now "
         f"{_num(now)} {record.unit} ({direction})."
     )
 
@@ -121,7 +120,7 @@ def _symptom_fact(session: Session, record: RuleEvaluationRecord, is_crew: bool)
         query.order_by(SubjectiveCheckIn.observed_at.desc()).limit(1)
     )
     if check_in is None:
-        return "Son 4 saatte öznel durum kaydı yok; belirtileri kaydetmek değerlendirmeyi güçlendirir."
+        return "No subjective check-in in the last 4 hours; recording symptoms strengthens the assessment."
     reported = [
         f"{label} {getattr(check_in, name)}/4"
         for name, label in SYMPTOM_NAMES.items()
@@ -130,8 +129,8 @@ def _symptom_fact(session: Session, record: RuleEvaluationRecord, is_crew: bool)
     minutes = _minutes(record.evaluated_at - check_in.observed_at)
     who = "" if is_crew else f" ({check_in.crew_member_id})"
     if not reported:
-        return f"Son öznel kayıt{who} {minutes} dk önce: belirti bildirilmedi."
-    return f"Son öznel kayıt{who} {minutes} dk önce: {', '.join(reported)}."
+        return f"Last subjective check-in{who} {minutes} min ago: no symptoms reported."
+    return f"Last subjective check-in{who} {minutes} min ago: {', '.join(reported)}."
 
 
 def _other_modules_fact(session: Session, record: RuleEvaluationRecord) -> str | None:
@@ -152,15 +151,15 @@ def _other_modules_fact(session: Session, record: RuleEvaluationRecord) -> str |
     for row in rows:
         latest.setdefault(row.target_id, row.value)
     if not latest:
-        return "Karşılaştırılacak başka modül verisi yok; yerel mi genel mi olduğu ayırt edilemiyor."
+        return "No other module data to compare; it cannot be told whether this is local or cabin-wide."
     parts = ", ".join(f"{target} {_num(value)} mmHg" for target, value in sorted(latest.items()))
     if all(value <= CO2_NOMINAL_LIMIT_MMHG for value in latest.values()):
-        verdict = "diğer modüller sınırın altında → yükseklik bu modüle özgü olabilir (yerel birikim)."
+        verdict = "other modules are below the limit → the high reading may be specific to this module (local accumulation)."
     elif all(value > CO2_NOMINAL_LIMIT_MMHG for value in latest.values()):
-        verdict = "diğer modüller de sınırın üzerinde → kabin geneli bir sorun olabilir."
+        verdict = "other modules are also above the limit → a cabin-wide issue is possible."
     else:
-        verdict = "modüller arasında fark var; hava akışını karşılaştır."
-    return f"Diğer modüller (son ölçüm): {parts}; {verdict}"
+        verdict = "modules differ; compare airflow."
+    return f"Other modules (latest reading): {parts}; {verdict}"
 
 
 def situation_for(session: Session, record: RuleEvaluationRecord) -> SituationRead | None:
@@ -171,16 +170,16 @@ def situation_for(session: Session, record: RuleEvaluationRecord) -> SituationRe
 
     if record.rule_id != RED_FLAG_RULE_ID and record.observed_value is not None:
         facts.append(
-            f"Ölçülen: {_num(record.observed_value)} {record.unit} · Sınır: "
-            f"{record.comparison} {_num(record.threshold)} {record.unit} · Pencere: "
-            f"{record.window_minutes} dk."
+            f"Measured: {_num(record.observed_value)} {record.unit} · Limit: "
+            f"{record.comparison} {_num(record.threshold)} {record.unit} · Window: "
+            f"{record.window_minutes} min."
         )
 
     alert = active_alert(session, record)
     if alert is not None:
         minutes = _minutes(record.evaluated_at - alert.opened_at)
         facts.append(
-            "Durum yeni başladı." if minutes < 1 else f"Bu durum {minutes} dakikadır sürüyor."
+            "Condition just started." if minutes < 1 else f"This condition has lasted {minutes} min."
         )
 
     trend = _trend_fact(session, record)
@@ -204,7 +203,7 @@ def situation_for(session: Session, record: RuleEvaluationRecord) -> SituationRe
             base = max([alert.opened_at, *(log.done_at for log in logs)])
             reassess_at = base + timedelta(minutes=card.reassess_minutes)
         if card.steps:
-            facts.append(f"Tamamlanan adımlar: {len(logs)}/{len(card.steps)}.")
+            facts.append(f"Completed steps: {len(logs)}/{len(card.steps)}.")
 
     return SituationRead(
         facts_tr=facts,

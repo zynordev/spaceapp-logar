@@ -38,7 +38,7 @@ def test_catalog_lists_red_flags_with_labels(api_client: tuple[TestClient, Engin
 
     assert len(catalog) == 9
     chest = next(item for item in catalog if item["flag"] == "CHEST_PAIN")
-    assert "Göğüs" in chest["label"]
+    assert "Chest" in chest["label"]
 
 
 def test_red_flag_escalates_immediately_without_any_sensor_data(
@@ -56,7 +56,7 @@ def test_red_flag_escalates_immediately_without_any_sensor_data(
     card = evaluation["action_card"]
     assert card["card_id"] == "RED_FLAG_EMERGENCY_CARD_V2"
     assert card["allows_automatic_vehicle_command"] is False
-    assert "teşhis" in evaluation["explanation"].lower()
+    assert "diagnosis" in evaluation["explanation"].lower()
     assert response.json()["alert_id"] is not None
 
     current = status(client)
@@ -74,7 +74,7 @@ def test_repeated_report_updates_the_same_alert(api_client: tuple[TestClient, En
     report(client, "CHEST_PAIN", "SEVERE_SHORTNESS_OF_BREATH", at="2026-11-14T10:02:00Z")
 
     [alert] = alerts(client)
-    assert "nefes darlığı" in alert["explanation"]
+    assert "shortness of breath" in alert["explanation"]
 
 
 def test_resolution_needs_a_person_and_is_recorded(

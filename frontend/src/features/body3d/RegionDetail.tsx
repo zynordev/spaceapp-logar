@@ -15,10 +15,10 @@ export function formatWhen(iso: string | null | undefined): string {
   if (Number.isNaN(t)) return 'zaman bilinmiyor';
   const mins = Math.round((Date.now() - t) / 60_000);
   let rel: string;
-  if (mins < 1) rel = 'az önce';
-  else if (mins < 60) rel = `${mins} dk önce`;
-  else if (mins < 48 * 60) rel = `${Math.round(mins / 60)} sa önce`;
-  else rel = `${Math.round(mins / 1440)} gün önce`;
+  if (mins < 1) rel = 'just now';
+  else if (mins < 60) rel = `${mins} min ago`;
+  else if (mins < 48 * 60) rel = `${Math.round(mins / 60)} h ago`;
+  else rel = `${Math.round(mins / 1440)} days ago`;
   const abs = mins < 24 * 60 ? timeFmt.format(t) : dateFmt.format(t);
   return `${abs} · ${rel}`;
 }
@@ -44,16 +44,16 @@ export function AttentionBadge({ attention, size = 'md' }: { attention: Attentio
 export function RegionDetail({ region, onClose }: { region: BodyRegionRead | null; onClose: () => void }) {
   if (!region) {
     return (
-      <aside className="b3d-detail is-empty" aria-label="Bölge ayrıntısı">
-        <h3>Bir bölge seçin</h3>
+      <aside className="b3d-detail is-empty" aria-label="Region details">
+        <h3>Select a region</h3>
         <p>
-          Modelde bir organa ya da aşağıdaki bölge düğmelerine tıklayın. Renk ve işaret, o bölgenin dikkat düzeyini
-          gösterir; ayrıntıda hangi kuralın neden tetiklendiğini ve son ölçümleri görürsünüz.
+          Click an organ in the model or one of the region buttons below. Colour and marker show the region's attention level;
+          the details show which rule was triggered and why, along with the latest measurements.
         </p>
         <ul className="b3d-howto">
-          <li>Sürükleyin: modeli döndürün</li>
-          <li>Tekerlek / iki parmak: yakınlaştırın</li>
-          <li>Klavye: Tab ile bölge listesine gelin, oklarla gezin, Enter ile seçin, Esc ile kapatın</li>
+          <li>Drag: rotate the model</li>
+          <li>Wheel / two fingers: zoom</li>
+          <li>Keyboard: Tab to the region list, use the arrow keys, Enter to select, Esc to close</li>
         </ul>
       </aside>
     );
@@ -62,7 +62,7 @@ export function RegionDetail({ region, onClose }: { region: BodyRegionRead | nul
   const cov = COVERAGE_TEXT[region.coverage] ?? COVERAGE_TEXT.GAP;
   const alerts = region.open_alert_ids.length;
   return (
-    <aside className={`b3d-detail att-${region.attention.toLowerCase()}`} aria-label={`${region.label_tr} ayrıntısı`}>
+    <aside className={`b3d-detail att-${region.attention.toLowerCase()}`} aria-label={`${region.label_tr} details`}>
       <div className="b3d-detail-head" style={{ ['--c' as string]: ATTENTION[region.attention].cssVar }}>
         <span className="b3d-detail-icon">
           <RegionIcon region={key} size={22} />
@@ -71,7 +71,7 @@ export function RegionDetail({ region, onClose }: { region: BodyRegionRead | nul
           <h3>{region.label_tr}</h3>
           <AttentionBadge attention={region.attention} />
         </div>
-        <button type="button" className="b3d-close" onClick={onClose} aria-label="Ayrıntıyı kapat">
+        <button type="button" className="b3d-close" onClick={onClose} aria-label="Close details">
           ×
         </button>
       </div>
@@ -80,7 +80,7 @@ export function RegionDetail({ region, onClose }: { region: BodyRegionRead | nul
 
       {alerts > 0 && (
         <p className="b3d-alerts" role="note">
-          <strong>{alerts}</strong> açık uyarı — Uyarılar panelinden eylem kartını açın.
+          <strong>{alerts}</strong> open warning(s) — open the action card from the Warnings panel.
         </p>
       )}
 
@@ -89,10 +89,10 @@ export function RegionDetail({ region, onClose }: { region: BodyRegionRead | nul
         <p>{cov.text}</p>
       </section>
 
-      <section aria-label="Kurallar">
-        <h4>Kurallar ({region.rules.length})</h4>
+      <section aria-label="Rules">
+        <h4>Rules ({region.rules.length})</h4>
         {region.rules.length === 0 ? (
-          <p className="b3d-muted">Bu bölgeye bağlı otomatik kural yok.</p>
+          <p className="b3d-muted">No automatic rule is linked to this region.</p>
         ) : (
           <ul className="b3d-rules">
             {region.rules.map((r) => (
@@ -111,11 +111,11 @@ export function RegionDetail({ region, onClose }: { region: BodyRegionRead | nul
         )}
       </section>
 
-      <section aria-label="Son değerler">
-        <h4>Son değerler</h4>
+      <section aria-label="Latest values">
+        <h4>Latest values</h4>
         {region.latest_values.length === 0 ? (
           <p className="b3d-muted">
-            {region.metrics.length > 0 ? 'Bu bölge için henüz ölçüm gelmedi.' : 'Bu bölge için tanımlı ölçüm yok.'}
+            {region.metrics.length > 0 ? 'No measurement has arrived for this region yet.' : 'No measurement is defined for this region.'}
           </p>
         ) : (
           <table className="b3d-values">

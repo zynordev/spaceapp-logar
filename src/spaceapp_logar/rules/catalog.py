@@ -36,7 +36,7 @@ RULES: dict[str, RuleInfo] = {
     for info in (
         RuleInfo(
             rule_id=CO2_RULE_ID,
-            title="Kabin CO₂ nominal sınırı",
+            title="Cabin CO₂ nominal limit",
             metric="CABIN_CO2_PARTIAL_PRESSURE",
             related_metrics=(),
             target_type="ENVIRONMENT",
@@ -46,7 +46,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=ATMOSPHERE_RULE_ID,
-            title="Kabin O₂ kısmi basıncı",
+            title="Cabin O₂ partial pressure",
             metric="CABIN_O2_FRACTION",
             related_metrics=("CABIN_PRESSURE",),
             target_type="ENVIRONMENT",
@@ -56,7 +56,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=RADIATION_RULE_ID,
-            title="Radyasyon doz hızı ve kümülatif doz",
+            title="Radiation dose rate and cumulative dose",
             metric="RADIATION_DOSE_RATE",
             related_metrics=(),
             target_type="ENVIRONMENT",
@@ -66,7 +66,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=SLEEP_RULE_ID,
-            title="Uyku borcu ve yorgunluk",
+            title="Sleep debt and fatigue",
             metric="SLEEP_DURATION",
             related_metrics=(),
             target_type="CREW_MEMBER",
@@ -76,7 +76,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=MOTION_RULE_ID,
-            title="Hareket hastalığı örüntüsü",
+            title="Motion sickness pattern",
             metric="SUBJECTIVE",
             related_metrics=(),
             target_type="CREW_MEMBER",
@@ -86,7 +86,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=VISION_RULE_ID,
-            title="Görme değişikliği (SANS izlemi)",
+            title="Vision change (SANS monitoring)",
             metric="SUBJECTIVE",
             related_metrics=(),
             target_type="CREW_MEMBER",
@@ -96,7 +96,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=SPO2_RULE_ID,
-            title="Süreli SpO₂ düşüklüğü",
+            title="Sustained low SpO₂",
             metric="SPO2",
             related_metrics=(),
             target_type="CREW_MEMBER",
@@ -106,7 +106,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=TEMP_RULE_ID,
-            title="Vücut sıcaklığı eğilimi",
+            title="Body temperature trend",
             metric="BODY_TEMPERATURE",
             related_metrics=(),
             target_type="CREW_MEMBER",
@@ -116,7 +116,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=CARDIO_RESP_RULE_ID,
-            title="Dinlenme kalp + solunum + belirti",
+            title="Resting heart + breathing + symptoms",
             metric="HEART_RATE",
             related_metrics=("RESPIRATION_RATE",),
             target_type="CREW_MEMBER",
@@ -126,7 +126,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=RED_FLAG_RULE_ID,
-            title="Kırmızı bayrak belirtisi",
+            title="Red flag symptom",
             metric="RED_FLAG",
             related_metrics=(),
             target_type="CREW_MEMBER",
@@ -136,7 +136,7 @@ RULES: dict[str, RuleInfo] = {
         ),
         RuleInfo(
             rule_id=HR_JUMP_RULE_ID,
-            title="Kalp hızı sensör kalitesi",
+            title="Heart rate sensor quality",
             metric="HEART_RATE",
             related_metrics=(),
             target_type="CREW_MEMBER",

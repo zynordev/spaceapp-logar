@@ -89,5 +89,5 @@ def test_status_combines_co2_watch_with_raw_subjective_context(
     assert body["co2"]["observed_value"] == pytest.approx(3.2)
     assert body["latest_check_in"]["pain"] == 2
     assert body["latest_check_in"]["fatigue"] == 1
-    assert "teşhis" in body["limitations"][0]
+    assert "diagnose" in body["limitations"][0]
 

@@ -296,7 +296,7 @@ export function TimeChart(props: Props) {
               <div className="vt-tip-time">{fmtDateTime(active.t, true)}</div>
               <div className="vt-tip-val">{fmtAuto(active.v)} <small>{unit}</small></div>
               <div className="vt-tip-sub">
-                <Icon name={QUALITY[active.quality]?.icon ?? 'question'} size={12} /> Veri: {QUALITY[active.quality]?.label ?? active.quality}
+                <Icon name={QUALITY[active.quality]?.icon ?? 'question'} size={12} /> Data: {QUALITY[active.quality]?.label ?? active.quality}
               </div>
               {active.activity && <div className="vt-tip-sub">Aktivite: {ACTIVITY[active.activity] ?? active.activity}</div>}
             </>

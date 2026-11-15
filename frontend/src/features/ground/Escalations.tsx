@@ -26,7 +26,7 @@ export function Escalations(props: {
     <section className="gp-card gp-esc" aria-labelledby="gp-esc-title">
       <header className="gp-card-head">
         <h3 id="gp-esc-title">
-          <Icon name="plus" size={16} />{' '}Uçuş cerrahına öncelikli bildirimler
+          <Icon name="plus" size={16} />{' '}Priority notifications to the flight surgeon
         </h3>
         {items && (
           <span className={`gp-count ${pending > 0 ? 'gp-count--hot' : ''}`}>
@@ -35,13 +35,13 @@ export function Escalations(props: {
         )}
       </header>
       <p className="gp-muted gp-small">
-        Uyarı veya Kritik seviyede açılan her uyarı için otomatik oluşur ve uçuş cerrahı paketine öncelikli girer.
+        Created automatically for every Warning or Critical alert and added with priority to the flight surgeon packet.
       </p>
 
       {err && <p className={`gp-note ${error?.status === 404 ? '' : 'gp-note--warn'}`}>{err}</p>}
-      {!items && !err && loading && <p className="gp-muted">Yükleniyor…</p>}
+      {!items && !err && loading && <p className="gp-muted">Loading…</p>}
       {items && sorted.length === 0 && (
-        <p className="gp-empty">Öncelikli bildirim yok. Uyarı/Kritik açıldığında burada görünür.</p>
+        <p className="gp-empty">No priority notifications. They appear here when a Warning or Critical alert opens.</p>
       )}
 
       {sorted.length > 0 && (
@@ -61,10 +61,10 @@ export function Escalations(props: {
                   </span>
                   <span className={`gp-badge ${acked ? 'gp-badge--ok' : 'gp-badge--pending'}`}>
                     <Icon name={acked ? 'check' : 'hourglass'} size={14} />{' '}
-                    {acked ? 'Onaylandı' : 'Bekliyor'}
+                    {acked ? 'Acknowledged' : 'Waiting'}
                   </span>
                   <span className="gp-esc-crew">
-                    {e.crew_member_id ? `Ekip üyesi: ${e.crew_member_id}` : 'Ortam / modül'}
+                    {e.crew_member_id ? `Crew member: ${e.crew_member_id}` : 'Environment / module'}
                   </span>
                 </div>
                 <p className="gp-esc-summary">{e.summary_tr}</p>

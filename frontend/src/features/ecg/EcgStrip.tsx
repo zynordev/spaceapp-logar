@@ -7,7 +7,7 @@ import { ECG_ATTRIBUTION_URL, loadEcg, type EcgRecord } from './data';
 import './ecg.css';
 
 export const ECG_LABEL =
-  'Kayıtlı örnek EKG — MIT-BIH NSR 16265 (PhysioNet) · canlı sensör değil · ritim yorumu yapılmaz';
+  'Recorded sample ECG — MIT-BIH NSR 16265 (PhysioNet) · not a live sensor · no rhythm interpretation';
 
 export interface EcgStripProps {
   /** Height of the trace area in CSS px (default 160, compact 96). */
@@ -300,21 +300,21 @@ export function EcgStrip({ height, compact = false, className }: EcgStripProps) 
   // Mirrors geometry(): in the static view 0.2 s lines are dropped when < 4 px apart.
   const staticMinor = rec ? (width / (rec.samples.length / rec.fs)) * MINOR_S >= 4 : true;
   const scaleText = staticView
-    ? `Hareketsiz görünüm: ${duration ?? '—'} s kayıt tam genişlikte · ızgara ${staticMinor ? '0,2 s' : '1 s'} × 0,5 mV`
-    : 'Gerçek hız · küçük kare 0,2 s × 0,5 mV (25 mm/s, 10 mm/mV oranı)';
+    ? `Static view: ${duration ?? '—'} s recording at full width · grid ${staticMinor ? '0.2 s' : '1 s'} × 0.5 mV`
+    : 'Real speed · small square 0.2 s × 0.5 mV (25 mm/s, 10 mm/mV ratio)';
 
   return (
     <figure className={['ecg-strip', compact && 'ecg-strip--compact', className].filter(Boolean).join(' ')}>
       <div className="ecg-strip__head">
         <span className="ecg-strip__tag">
           <Icon name="clock" size={compact ? 14 : 16} />
-          <span>Kayıt · canlı değil</span>
+          <span>Recording · not live</span>
         </span>
         <SourceBadge
           kind="REAL"
           detail={compact ? null : 'PhysioNet'}
           size={compact ? 'xs' : 'sm'}
-          title="Gerçek kayıt: PhysioNet MIT-BIH NSR 16265 (ODC-By). Canlı sensör değil; kalp hızı değeri bu kayıttan gelmez."
+          title="Real recording: PhysioNet MIT-BIH NSR 16265 (ODC-By). Not a live sensor; the heart rate value does not come from this recording."
         />
         {rec && !staticView && (
           <Button
@@ -339,15 +339,15 @@ export function EcgStrip({ height, compact = false, className }: EcgStripProps) 
         <EmptyState
           compact
           icon="info"
-          title="Kayıtlı örnek EKG yüklenemedi"
+          title="Recorded sample ECG could not be loaded"
           action={
             <Button size="sm" variant="secondary" icon="refresh" onClick={() => setAttempt((a) => a + 1)}>
-              Tekrar dene
+              Try again
             </Button>
           }
         >
-          Örnek dosyası (ecg/nsrdb-16265.json) bulunamadı veya okunamadı. Bu sistemde canlı EKG sensörü yok; yerine
-          uydurma bir eğri gösterilmez.
+          The sample file (ecg/nsrdb-16265.json) was not found or could not be read. This system has no live ECG sensor, so
+          no made-up curve is shown.
         </EmptyState>
       )}
 
@@ -356,9 +356,9 @@ export function EcgStrip({ height, compact = false, className }: EcgStripProps) 
           <canvas
             ref={canvasRef}
             role="img"
-            aria-label={`Kayıtlı örnek EKG eğrisi: ${rec.database}, kayıt ${rec.record}, ${rec.signal_name}, ${duration} saniyelik kesit${
-              staticView ? '' : ', döngüde oynatılıyor'
-            }. Canlı veri değildir, ritim yorumu yapılmaz.`}
+            aria-label={`Recorded sample ECG curve: ${rec.database}, record ${rec.record}, ${rec.signal_name}, ${duration}-second excerpt${
+              staticView ? '' : ', playing in a loop'
+            }. Not live data; no rhythm interpretation.`}
           />
         </div>
       )}

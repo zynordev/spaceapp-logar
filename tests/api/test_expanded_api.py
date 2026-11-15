@@ -40,7 +40,7 @@ def test_radiation_scenario_reports_cumulative_dose(api_client: tuple[TestClient
     radiation = by_id(status)["ENV_RADIATION_V1"]
 
     assert radiation["health_attention"] == "ALERT"
-    assert "kümülatif doz" in radiation["explanation"]
+    assert "cumulative dose" in radiation["explanation"]
     assert radiation["action_card"]["card_id"] == "ENV_RADIATION_ALERT_CARD_V2"
     [alert] = [a for a in alerts if a["rule_id"] == "ENV_RADIATION_V1"]
     assert alert["health_attention"] == "ALERT"
@@ -52,7 +52,7 @@ def test_sleep_debt_scenario(api_client: tuple[TestClient, Engine]) -> None:
     sleep = by_id(status)["BEHAV_SLEEP_V1"]
 
     assert sleep["health_attention"] == "ALERT"
-    assert "4,8" in sleep["explanation"]
+    assert "4.8" in sleep["explanation"]
 
 
 def test_gravity_adaptation_scenario(api_client: tuple[TestClient, Engine]) -> None:

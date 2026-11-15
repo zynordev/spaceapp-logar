@@ -49,13 +49,13 @@ def test_co2_card_shows_live_situation(api_client: tuple[TestClient, Engine]) ->
     facts = " | ".join(situation["facts_tr"])
 
     assert co2["action_card"]["card_id"] == "ENV_CO2_WATCH_CARD_V2"
-    assert "Ölçülen:" in facts and "mmHg" in facts
-    assert "dakikadır sürüyor" in facts
+    assert "Measured:" in facts and "mmHg" in facts
+    assert "This condition has lasted" in facts
     # The second module stays nominal, so the rise looks local.
     assert "iss-harmony-node2" in facts
-    assert "yerel birikim" in facts
-    assert "ağrı 2/4" in facts
-    assert "Tamamlanan adımlar: 0/4" in facts
+    assert "local accumulation" in facts
+    assert "pain 2/4" in facts
+    assert "Completed steps: 0/4" in facts
     assert situation["alert_id"] is not None
     assert situation["level_since"] is not None
     level_since = datetime.fromisoformat(situation["level_since"])
@@ -101,7 +101,7 @@ def test_marking_steps_is_recorded_idempotent_and_moves_the_timer(
     [done] = situation["completed_steps"]
     assert done["step_key"] == "check_airflow"
     assert done["crew_member_id"] == "crew-01"
-    assert any("Tamamlanan adımlar: 1/4" in fact for fact in situation["facts_tr"])
+    assert any("Completed steps: 1/4" in fact for fact in situation["facts_tr"])
     # The reassessment timer restarts from the last completed step.
     assert situation["reassess_at"] > co2["situation"]["reassess_at"]
 
@@ -154,6 +154,6 @@ def test_red_flag_situation_has_no_measurement_line(
     ).json()
     facts = response["evaluation"]["situation"]["facts_tr"]
 
-    assert not any(fact.startswith("Ölçülen:") for fact in facts)
-    assert any("Son 4 saatte öznel durum kaydı yok" in fact for fact in facts)
+    assert not any(fact.startswith("Measured:") for fact in facts)
+    assert any("No subjective check-in in the last 4 hours" in fact for fact in facts)
     assert response["evaluation"]["action_card"]["reassess_minutes"] == 5

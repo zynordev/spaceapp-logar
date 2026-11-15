@@ -88,7 +88,7 @@ export function BodySvg({ states, selected, hovered, onHover, onSelect, loadingN
         className="b3d-svg"
         viewBox="0 0 240 440"
         role="img"
-        aria-label="2B vücut haritası. Bölge durumları aşağıdaki listede."
+        aria-label="2D body map. Region statuses are in the list below."
         onMouseLeave={() => onHover(null)}
       >
         {DRAW_ORDER.map((k) => {

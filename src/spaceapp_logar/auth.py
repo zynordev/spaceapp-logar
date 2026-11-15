@@ -106,9 +106,9 @@ def demo_login_enabled() -> bool:
 
 # Fixed demo users for the one-click demo login (no passcodes involved).
 DEMO_LOGIN_USERS: dict[Role, tuple[str, str]] = {
-    Role.ASTRONAUT: ("demo-astronaut", "Astronot (demo)"),
-    Role.CREW_MEDICAL_OFFICER: ("demo-medic", "Mürettebat tıbbi sorumlusu (demo)"),
-    Role.GROUND: ("demo-ground", "Yer kontrol / uçuş cerrahı (demo)"),
+    Role.ASTRONAUT: ("demo-astronaut", "Astronaut (demo)"),
+    Role.CREW_MEDICAL_OFFICER: ("demo-medic", "Crew medical officer (demo)"),
+    Role.GROUND: ("demo-ground", "Ground control / flight surgeon (demo)"),
 }
 
 

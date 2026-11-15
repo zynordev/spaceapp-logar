@@ -28,9 +28,9 @@ ATMOSPHERE_MIN_SAMPLES = 3
 PPO2_WATCH_BELOW_KPA = 18.0
 PPO2_ALERT_BELOW_KPA = 16.0
 ATMOSPHERE_SOURCE = (
-    "DEMO eşik (kanıt sınıfı F): O₂ kısmi basıncı (ppO₂ = O₂ oranı × toplam basınç). "
-    "Deniz seviyesi havası ≈21 kPa; <18 kPa izlenir, <16 kPa genel güvenlik "
-    "referanslarında belirtilerin başladığı düzeydir. Görev atmosfer sınırı değildir."
+    "DEMO threshold (evidence class F): O₂ partial pressure (ppO₂ = O₂ fraction × total pressure). "
+    "Sea-level air ≈21 kPa; <18 kPa is watched, <16 kPa is the level where symptoms begin in general safety "
+    "references. Not a mission atmosphere limit."
 )
 
 # --- Radiation ---------------------------------------------------------------
@@ -41,10 +41,10 @@ RADIATION_WATCH_FACTOR = 3.0
 RADIATION_ALERT_FACTOR = 10.0
 CAREER_LIMIT_MSV = 600.0
 RADIATION_SOURCE = (
-    "DEMO eşik (kanıt sınıfı F): modülün kendi başlangıç doz hızının ≥3 katı "
-    "izlenir, ≥10 katı olası güneş parçacık olayı gibi değerlendirilir. Gerçek "
-    "korunma kararlarını yer ekibinin radyasyon uzmanları verir. NASA kariyer "
-    "efektif doz sınırı 600 mSv'dir (NASA-STD-3001)."
+    "DEMO threshold (evidence class F): a dose rate ≥3× the module's own starting dose rate "
+    "is watched; ≥10× is treated as a possible solar particle event. Real "
+    "protection decisions are made by the ground team's radiation specialists. The NASA career "
+    "effective dose limit is 600 mSv (NASA-STD-3001)."
 )
 
 # --- Sleep -------------------------------------------------------------------
@@ -55,9 +55,9 @@ SLEEP_WATCH_BELOW_H = 6.0
 SLEEP_ALERT_BELOW_H = 5.0
 SLEEP_SYMPTOM_AT_LEAST = 3
 SLEEP_SOURCE = (
-    "DEMO eşik (kanıt sınıfı F): son gecelerin ortalaması <6 saat izlenir; <5 saat "
-    "ve yorgunluk veya ruh hali sıkıntısı ≥3/4 ise seviye yükselir. Uzay uçuşunda "
-    "uyku kaybı ve sirkadiyen bozulma NASA'nın tanımlı risklerindendir."
+    "DEMO threshold (evidence class F): recent-nights average below 6 h is watched; below 5 h "
+    "with fatigue or mood distress ≥3/4 raises the level. Sleep loss and circadian disruption are among NASA's defined spaceflight "
+    "risks."
 )
 
 # --- Motion sickness ---------------------------------------------------------
@@ -65,9 +65,9 @@ MOTION_RULE_ID = "SENS_MOTION_SICKNESS_V1"
 MOTION_SYMPTOM_AT_LEAST = 2
 MOTION_LOOKBACK_HOURS = 6
 MOTION_SOURCE = (
-    "DEMO (kanıt sınıfı F): bulantı ve baş dönmesinin birlikte ≥2/4 bildirilmesi. "
-    "Uzay hareket hastalığı yerçekimi geçişlerinden sonraki ilk günlerde sık görülür. "
-    "Teşhis değildir; başka nedenler dışlanmamıştır."
+    "DEMO (evidence class F): nausea and dizziness reported together at ≥2/4. "
+    "Space motion sickness is common in the first days after gravity transitions. "
+    "Not a diagnosis; other causes have not been ruled out."
 )
 
 # --- Vision ------------------------------------------------------------------
@@ -75,9 +75,9 @@ VISION_RULE_ID = "SANS_VISION_SYMPTOM_V1"
 VISION_AT_LEAST = 2
 VISION_LOOKBACK_HOURS = 24
 VISION_SOURCE = (
-    "DEMO (kanıt sınıfı F): görme değişikliğinin ≥2/4 bildirilmesi. Uzun görevlerde "
-    "uzay uçuşuyla ilişkili nöro-oküler sendrom (SANS) bilinen bir risktir; "
-    "değerlendirme göz muayenesi gerektirir. Teşhis değildir."
+    "DEMO (evidence class F): vision change reported at ≥2/4. On long missions, "
+    "spaceflight-associated neuro-ocular syndrome (SANS) is a known risk; "
+    "assessment requires an eye examination. Not a diagnosis."
 )
 
 
@@ -111,7 +111,7 @@ def _evaluation(
 
 
 def _num(value: float, digits: int = 1) -> str:
-    return f"{value:.{digits}f}".replace(".", ",")
+    return f"{value:.{digits}f}"
 
 
 # --- Cabin atmosphere ---------------------------------------------------------
@@ -131,8 +131,8 @@ def evaluate_cabin_atmosphere(
             comparison="<",
             window_minutes=ATMOSPHERE_WINDOW_MINUTES,
             explanation=(
-                f"Son {ATMOSPHERE_WINDOW_MINUTES} dakikada yeterli kabin O₂ ve basınç "
-                "verisi yok; O₂ kısmi basıncı hesaplanamadı."
+                f"Not enough cabin O₂ and pressure data in the last {ATMOSPHERE_WINDOW_MINUTES} minutes; "
+                "O₂ partial pressure could not be calculated."
             ),
             source=ATMOSPHERE_SOURCE,
         )
@@ -145,10 +145,10 @@ def evaluate_cabin_atmosphere(
         attention, threshold = HealthAttention.NORMAL, PPO2_WATCH_BELOW_KPA
     trend = ""
     if pressure_change_kpa is not None and abs(pressure_change_kpa) >= 0.2:
-        direction = "düşüyor" if pressure_change_kpa < 0 else "artıyor"
+        direction = "falling" if pressure_change_kpa < 0 else "rising"
         trend = (
-            f" Toplam basınç son {ATMOSPHERE_WINDOW_MINUTES} dakikada "
-            f"{_num(abs(pressure_change_kpa), 2)} kPa {direction}."
+            f" Total pressure is {direction} by "
+            f"{_num(abs(pressure_change_kpa), 2)} kPa over the last {ATMOSPHERE_WINDOW_MINUTES} minutes."
         )
     return _evaluation(
         ATMOSPHERE_RULE_ID,
@@ -160,8 +160,8 @@ def evaluate_cabin_atmosphere(
         comparison="<",
         window_minutes=ATMOSPHERE_WINDOW_MINUTES,
         explanation=(
-            f"Kabin O₂ %{_num(o2_percent)} × basınç {_num(pressure_kpa)} kPa → O₂ kısmi "
-            f"basıncı {_num(ppo2, 2)} kPa (izleme sınırı {_num(PPO2_WATCH_BELOW_KPA)} kPa, "
+            f"Cabin O₂ {_num(o2_percent)}% × pressure {_num(pressure_kpa)} kPa → O₂ partial "
+            f"pressure {_num(ppo2, 2)} kPa (watch limit {_num(PPO2_WATCH_BELOW_KPA)} kPa, "
             f"DEMO).{trend}"
         ),
         source=ATMOSPHERE_SOURCE,
@@ -175,8 +175,8 @@ def evaluate_radiation(
     cumulative_msv: float,
 ) -> RuleEvaluation:
     cumulative = (
-        f" Bu görevde kaydedilen kümülatif doz ≈ {_num(cumulative_msv, 3)} mSv "
-        f"(kariyer sınırı {CAREER_LIMIT_MSV:.0f} mSv)."
+        f" Recorded cumulative dose in this mission ≈ {_num(cumulative_msv, 3)} mSv "
+        f"(career limit {CAREER_LIMIT_MSV:.0f} mSv)."
     )
     if recent_mean_usv_h is None:
         return _evaluation(
@@ -188,7 +188,7 @@ def evaluate_radiation(
             threshold=RADIATION_WATCH_FACTOR,
             comparison="x>=",
             window_minutes=RADIATION_WINDOW_MINUTES,
-            explanation=f"Son {RADIATION_WINDOW_MINUTES} dakikada yeterli doz hızı verisi yok.{cumulative}",
+            explanation=f"Not enough dose rate data in the last {RADIATION_WINDOW_MINUTES} minutes.{cumulative}",
             source=RADIATION_SOURCE,
         )
     if baseline_usv_h is None or baseline_usv_h <= 0:
@@ -202,8 +202,8 @@ def evaluate_radiation(
             comparison="x>=",
             window_minutes=RADIATION_WINDOW_MINUTES,
             explanation=(
-                f"Doz hızı {_num(recent_mean_usv_h)} µSv/saat; modül başlangıç değeri "
-                f"henüz oluşmadığı için artış değerlendirilemedi.{cumulative}"
+                f"Dose rate {_num(recent_mean_usv_h)} µSv/h; module baseline "
+                f"not established yet, so the increase could not be assessed.{cumulative}"
             ),
             source=RADIATION_SOURCE,
         )
@@ -224,9 +224,9 @@ def evaluate_radiation(
         comparison=">=",
         window_minutes=RADIATION_WINDOW_MINUTES,
         explanation=(
-            f"Son {RADIATION_WINDOW_MINUTES} dk doz hızı {_num(recent_mean_usv_h)} µSv/saat; "
-            f"modül başlangıcı {_num(baseline_usv_h)} µSv/saat (×{_num(factor)}). "
-            f"İzleme ×{RADIATION_WATCH_FACTOR:.0f}, olası parçacık olayı ×"
+            f"Last {RADIATION_WINDOW_MINUTES} min dose rate {_num(recent_mean_usv_h)} µSv/h; "
+            f"module baseline {_num(baseline_usv_h)} µSv/h (×{_num(factor)}). "
+            f"Watch ×{RADIATION_WATCH_FACTOR:.0f}, possible solar particle event ×"
             f"{RADIATION_ALERT_FACTOR:.0f} (DEMO).{cumulative}"
         ),
         source=RADIATION_SOURCE,
@@ -252,8 +252,8 @@ def evaluate_sleep(nights_h: list[float], symptoms: SleepSymptoms) -> RuleEvalua
             comparison="<",
             window_minutes=SLEEP_NIGHTS * 24 * 60,
             explanation=(
-                f"Uyku borcu için en az {SLEEP_MIN_NIGHTS} gecelik kayıt gerekiyor "
-                f"({len(nights_h)} var)."
+                f"At least {SLEEP_MIN_NIGHTS} nights of records are needed to assess sleep debt "
+                f"({len(nights_h)} available)."
             ),
             source=SLEEP_SOURCE,
         )
@@ -263,15 +263,15 @@ def evaluate_sleep(nights_h: list[float], symptoms: SleepSymptoms) -> RuleEvalua
     if mean < SLEEP_ALERT_BELOW_H and high_symptom >= SLEEP_SYMPTOM_AT_LEAST:
         attention, threshold = HealthAttention.ALERT, SLEEP_ALERT_BELOW_H
         verdict = (
-            f"ortalama {_num(SLEEP_ALERT_BELOW_H)} saatin altında ve yorgunluk/ruh hali "
-            f"sıkıntısı {high_symptom}/4"
+            f"average below {_num(SLEEP_ALERT_BELOW_H)} h and fatigue/mood "
+            f"distress {high_symptom}/4"
         )
     elif mean < SLEEP_WATCH_BELOW_H:
         attention, threshold = HealthAttention.WATCH, SLEEP_WATCH_BELOW_H
-        verdict = f"ortalama {_num(SLEEP_WATCH_BELOW_H)} saatin altında (uyku borcu)"
+        verdict = f"average below {_num(SLEEP_WATCH_BELOW_H)} h (sleep debt)"
     else:
         attention, threshold = HealthAttention.NORMAL, SLEEP_WATCH_BELOW_H
-        verdict = "belirgin uyku borcu yok"
+        verdict = "no marked sleep debt"
     return _evaluation(
         SLEEP_RULE_ID,
         quality=DataQuality.VALID,
@@ -282,7 +282,7 @@ def evaluate_sleep(nights_h: list[float], symptoms: SleepSymptoms) -> RuleEvalua
         comparison="<",
         window_minutes=SLEEP_NIGHTS * 24 * 60,
         explanation=(
-            f"Son {len(nights_h)} gece uyku: {nights_text} saat (ortalama {_num(mean)}); "
+            f"Sleep over the last {len(nights_h)} nights: {nights_text} h (average {_num(mean)}); "
             f"{verdict} (DEMO)."
         ),
         source=SLEEP_SOURCE,
@@ -304,8 +304,8 @@ def evaluate_motion_sickness(
             comparison=">=",
             window_minutes=MOTION_LOOKBACK_HOURS * 60,
             explanation=(
-                f"Son {MOTION_LOOKBACK_HOURS} saatte öznel durum kaydı yok; hareket "
-                "hastalığı örüntüsü değerlendirilemedi."
+                f"No subjective status record in the last {MOTION_LOOKBACK_HOURS} hours; motion "
+                "sickness pattern could not be assessed."
             ),
             source=MOTION_SOURCE,
         )
@@ -314,9 +314,9 @@ def evaluate_motion_sickness(
         HealthAttention.WATCH if both >= MOTION_SYMPTOM_AT_LEAST else HealthAttention.NORMAL
     )
     verdict = (
-        "birlikte görülüyor; hareket hastalığı örüntüsüyle uyumlu olabilir"
+        "seen together; may be consistent with a motion sickness pattern"
         if attention is HealthAttention.WATCH
-        else "birlikte belirgin değil"
+        else "not marked together"
     )
     return _evaluation(
         MOTION_RULE_ID,
@@ -328,8 +328,8 @@ def evaluate_motion_sickness(
         comparison=">=",
         window_minutes=MOTION_LOOKBACK_HOURS * 60,
         explanation=(
-            f"Bulantı {nausea}/4, baş dönmesi {dizziness}/4: {verdict} (DEMO). Teşhis "
-            "değildir; CO₂, enfeksiyon ve iç kulak gibi başka nedenler dışlanmamıştır."
+            f"Nausea {nausea}/4, dizziness {dizziness}/4: {verdict} (DEMO). Not a diagnosis; "
+            "other causes such as CO₂, infection and inner-ear problems have not been ruled out."
         ),
         source=MOTION_SOURCE,
     )
@@ -346,7 +346,7 @@ def evaluate_vision(vision_change: int | None) -> RuleEvaluation:
             threshold=VISION_AT_LEAST,
             comparison=">=",
             window_minutes=VISION_LOOKBACK_HOURS * 60,
-            explanation="Son 24 saatte görme değişikliği sorusu yanıtlanmadı.",
+            explanation="Vision change question not answered in the last 24 hours.",
             source=VISION_SOURCE,
         )
     attention = (
@@ -362,11 +362,11 @@ def evaluate_vision(vision_change: int | None) -> RuleEvaluation:
         comparison=">=",
         window_minutes=VISION_LOOKBACK_HOURS * 60,
         explanation=(
-            f"Bildirilen görme değişikliği {vision_change}/4"
+            f"Reported vision change {vision_change}/4"
             + (
-                "; göz muayenesiyle değerlendirilmesi gerekir (DEMO). Teşhis değildir."
+                "; eye examination needed to assess (DEMO). Not a diagnosis."
                 if attention is HealthAttention.WATCH
-                else "; izleme sınırının altında."
+                else "; below the watch limit."
             )
         ),
         source=VISION_SOURCE,

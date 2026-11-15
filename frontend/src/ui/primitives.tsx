@@ -115,7 +115,7 @@ export function Field({ label, hint, error, children, className, optional }: Fie
     <div className={cx('ui-field', error ? 'ui-field--error' : null, className)}>
       <label className="ui-field__label" htmlFor={id}>
         {label}
-        {optional && <span className="ui-field__optional"> (isteğe bağlı)</span>}
+        {optional && <span className="ui-field__optional"> (optional)</span>}
       </label>
       {cloneElement(child as ReactElement<Record<string, unknown>>, {
         id,
@@ -207,7 +207,7 @@ export interface SpinnerProps {
   label?: string | null;
 }
 
-export function Spinner({ size = 18, label = 'Yükleniyor…' }: SpinnerProps) {
+export function Spinner({ size = 18, label = 'Loading…' }: SpinnerProps) {
   return (
     <span className="ui-spinner" role={label ? 'status' : undefined} style={{ width: size, height: size }}>
       {label && <span className="sr-only">{label}</span>}

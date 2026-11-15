@@ -10,7 +10,7 @@ import type { AuthMeRead, DemoRoleRead, TokenRead } from './types';
 const DEMO_ROLE_LABEL: Record<string, string> = {
   ASTRONAUT: 'Astronot',
   CREW_MEDICAL_OFFICER: 'Flight surgeon / Crew health officer',
-  GROUND: 'Yer ekibi',
+  GROUND: 'Ground team',
 };
 
 export interface LoginDialogProps {

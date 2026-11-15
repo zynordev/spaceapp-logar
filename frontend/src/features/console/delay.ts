@@ -16,13 +16,13 @@ export interface Preset {
 // One-way light time. Mars varies with orbital geometry; the rounded presets
 // follow the brief (en yakın ~4 dk, ortalama ~12,5 dk, en uzak ~24 dk).
 export const PRESETS: Preset[] = [
-  { id: 'leo', label: 'Dünya yörüngesi', seconds: 0, hint: '≈ 0 sn' },
-  { id: 'moon', label: 'Ay', seconds: 1.3, hint: '≈ 1,3 sn' },
-  { id: 'mars-near', label: 'Mars en yakın', seconds: 240, hint: '≈ 4 dk' },
-  { id: 'mars-avg', label: 'Mars ortalama', seconds: 750, hint: '≈ 12,5 dk' },
-  { id: 'mars-far', label: 'Mars en uzak', seconds: 1440, hint: '≈ 24 dk' },
-  { id: 'server', label: 'Sunucu ayarı', seconds: null, hint: 'sunucu' },
-  { id: 'custom', label: 'Özel', seconds: null, hint: 'saniye' },
+  { id: 'leo', label: 'Earth orbit', seconds: 0, hint: '≈ 0 s' },
+  { id: 'moon', label: 'Moon', seconds: 1.3, hint: '≈ 1.3 s' },
+  { id: 'mars-near', label: 'Mars closest approach', seconds: 240, hint: '≈ 4 min' },
+  { id: 'mars-avg', label: 'Mars average', seconds: 750, hint: '≈ 12.5 min' },
+  { id: 'mars-far', label: 'Mars farthest', seconds: 1440, hint: '≈ 24 min' },
+  { id: 'server', label: 'Server setting', seconds: null, hint: 'server' },
+  { id: 'custom', label: 'Custom', seconds: null, hint: 'seconds' },
 ];
 
 export const COMPRESSIONS = [1, 10, 60] as const;

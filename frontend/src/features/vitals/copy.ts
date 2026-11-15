@@ -54,7 +54,7 @@ export const TIME_SCALE: Record<string, string> = {
 
 export const ACTIVITY: Record<string, string> = {
   REST: 'Dinlenme',
-  LIGHT: 'Hafif aktivite',
+  LIGHT: 'Light activity',
   EXERCISE: 'Egzersiz',
   SLEEP: 'Uyku',
 };

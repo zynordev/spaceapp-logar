@@ -96,7 +96,7 @@ def create_measurement_batch(
     if len(payload.measurements) > MAX_BATCH_SIZE:
         raise HTTPException(
             status_code=413,
-            detail=f"Bir istekte en fazla {MAX_BATCH_SIZE} ölçüm gönderilebilir.",
+            detail=f"A single request can contain at most {MAX_BATCH_SIZE} measurements.",
         )
     valid: list[MeasurementCreate] = []
     rejected: list[RejectedItem] = []
@@ -220,7 +220,7 @@ def measurement_trend(
         )
     since_utc = _as_utc(since) if since is not None else until_utc - _DEFAULT_WINDOW[bucket]
     if since_utc >= until_utc:
-        raise HTTPException(status_code=422, detail="since, until değerinden önce olmalı.")
+        raise HTTPException(status_code=422, detail="since must be before until.")
 
     def floor(moment: datetime) -> datetime:
         if bucket == "hour":
@@ -232,7 +232,7 @@ def measurement_trend(
     if span > MAX_TREND_BUCKETS:
         raise HTTPException(
             status_code=422,
-            detail=f"En fazla {MAX_TREND_BUCKETS} dilim istenebilir; aralığı daraltın.",
+            detail=f"At most {MAX_TREND_BUCKETS} buckets can be requested; narrow the range.",
         )
 
     spec = METRIC_SPECS[metric]

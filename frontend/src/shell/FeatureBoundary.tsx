@@ -41,7 +41,7 @@ export class FeatureBoundary extends Component<Props, State> {
           icon="refresh"
           onClick={() => (chunk ? window.location.reload() : this.setState({ error: null }))}
         >
-          Yeniden dene
+          Retry
         </Button>
       </div>
     );

@@ -17,10 +17,10 @@ type Phase =
 
 function ackError(e: unknown): string {
   if (e instanceof ApiError) {
-    if (e.status === 403) return 'Yalnız yer ekibi onaylayabilir.';
-    if (e.status === 409) return 'Paket değişti, yeniden hazırla.';
-    if (e.status === 404) return 'Onay uç noktası sunucuda henüz yok (/v1/sync/ack).';
-    if (e.status === 0) return 'Sunucuya ulaşılamıyor — onay gönderilemedi.';
+    if (e.status === 403) return 'Only the ground team can acknowledge.';
+    if (e.status === 409) return 'Packet changed, prepare it again.';
+    if (e.status === 404) return 'The acknowledgement endpoint is not on the server yet (/v1/sync/ack).';
+    if (e.status === 0) return 'Cannot reach the server — acknowledgement not sent.';
     return serverMessage(e);
   }
   return String(e);
@@ -28,9 +28,9 @@ function ackError(e: unknown): string {
 
 function packetError(e: unknown): string {
   if (e instanceof ApiError) {
-    if (e.status === 404) return 'Paket uç noktası sunucuda henüz yok (/v1/sync/packet). Önizleme için ?mock=1 ekleyin.';
-    if (e.status === 0) return 'Sunucuya ulaşılamıyor — paket hazırlanamadı.';
-    if (e.status === 403) return 'Bu paketi hazırlama yetkiniz yok.';
+    if (e.status === 404) return 'The packet endpoint is not on the server yet (/v1/sync/packet). Add ?mock=1 to preview.';
+    if (e.status === 0) return 'Cannot reach the server — packet could not be prepared.';
+    if (e.status === 403) return 'You do not have permission to prepare this packet.';
     return serverMessage(e);
   }
   return String(e);
@@ -94,7 +94,7 @@ export function RecipientCard(props: {
       const res = mock ? await mockAck(body) : await api<SyncAckRead>('POST', '/v1/sync/ack', body);
       if (mock) bumpData();
       setPhase({ k: 'acked', packet, ack: res });
-      setMsg({ text: `Onaylandı: ${formatTime(res.acked_at)} · ${res.acked_by}`, tone: 'ok' });
+      setMsg({ text: `Acknowledged: ${formatTime(res.acked_at)} · ${res.acked_by}`, tone: 'ok' });
     } catch (e) {
       const conflict = e instanceof ApiError && e.status === 409;
       setPhase(conflict ? { k: 'idle' } : { k: 'ready', packet });
@@ -118,7 +118,7 @@ export function RecipientCard(props: {
 
       <dl className="gp-rcp-stats">
         <div>
-          <dt>Bekleyen öğe</dt>
+          <dt>Pending items</dt>
           <dd className={pending ? 'gp-hot' : undefined}>{pending ?? '—'}</dd>
         </div>
         <div>
@@ -130,7 +130,7 @@ export function RecipientCard(props: {
                 <span className="gp-muted"> ({formatAgo(status.last_ack_at)})</span>
               </>
             ) : (
-              'Henüz yok'
+              'None yet'
             )}
           </dd>
         </div>
@@ -144,21 +144,21 @@ export function RecipientCard(props: {
           disabled={phase.k === 'loading' || phase.k === 'acking'}
           aria-describedby={`${baseId}-t`}
         >
-          {phase.k === 'loading' ? 'Hazırlanıyor…' : packet ? 'Yeniden hazırla' : 'Paketi hazırla'}
+          {phase.k === 'loading' ? 'Preparing…' : packet ? 'Prepare again' : 'Prepare packet'}
         </button>
       </div>
 
       {packet && (
-        <div className="gp-packet" role="group" aria-label={`${info.label} paket önizlemesi`}>
+        <div className="gp-packet" role="group" aria-label={`${info.label} packet preview`}>
           <dl className="gp-packet-grid">
             <div>
-              <dt>Öğe</dt>
+              <dt>Item</dt>
               <dd>{packet.item_count}</dd>
             </div>
             <div>
-              <dt>Aralık</dt>
+              <dt>Range</dt>
               <dd className="gp-small">
-                {packet.since ? formatTime(packet.since) : 'Başlangıçtan'} → {formatTime(packet.until)}
+                {packet.since ? formatTime(packet.since) : 'From start'} → {formatTime(packet.until)}
               </dd>
             </div>
             <div className="gp-packet-wide">
@@ -168,16 +168,16 @@ export function RecipientCard(props: {
               </dd>
             </div>
             <div className="gp-packet-wide">
-              <dt>İmza</dt>
+              <dt>Signature</dt>
               <dd>
                 {packet.signature ? (
                   <span className="gp-badge gp-badge--ok">
                     <Icon name="check" size={14} />{' '}
-                    {packet.signature_alg ?? 'HMAC-SHA256'} imzalı
+                    {packet.signature_alg ?? 'HMAC-SHA256'} signed
                   </span>
                 ) : (
                   <span className="gp-badge gp-badge--muted">
-                    <Icon name="circle" size={14} />{' '}İmzasız (demo)
+                    <Icon name="circle" size={14} />{' '}Unsigned (demo)
                   </span>
                 )}
               </dd>
@@ -185,7 +185,7 @@ export function RecipientCard(props: {
           </dl>
 
           {kinds.size > 0 ? (
-            <ul className="gp-kinds" aria-label="Öğe türleri">
+            <ul className="gp-kinds" aria-label="Item types">
               {[...kinds.entries()].map(([k, n]) => (
                 <li key={k} className={`gp-kind gp-kind--${k.toLowerCase()}`}>
                   {kindLabel(k)} <strong>{n}</strong>
@@ -193,12 +193,12 @@ export function RecipientCard(props: {
               ))}
             </ul>
           ) : (
-            <p className="gp-empty gp-small">Paket boş — son onaydan bu yana yeni öğe yok.</p>
+            <p className="gp-empty gp-small">Packet is empty — no new items since the last acknowledgement.</p>
           )}
 
           {packet.items.length > 0 && (
             <details className="gp-items">
-              <summary>Öğeleri göster ({packet.items.length})</summary>
+              <summary>Show items ({packet.items.length})</summary>
               <ol>
                 {packet.items.slice(0, 50).map((it) => (
                   <li key={`${it.kind}-${it.id}`}>
@@ -209,7 +209,7 @@ export function RecipientCard(props: {
                 ))}
               </ol>
               {packet.items.length > 50 && (
-                <p className="gp-muted gp-small">İlk 50 öğe gösteriliyor; tamamı JSON dosyasında.</p>
+                <p className="gp-muted gp-small">Showing the first 50 items; all are in the JSON file.</p>
               )}
             </details>
           )}
@@ -225,7 +225,7 @@ export function RecipientCard(props: {
               disabled={!canAck || phase.k === 'acking' || phase.k === 'acked'}
               aria-describedby={ackHint ? `${baseId}-hint` : undefined}
             >
-              {phase.k === 'acking' ? 'Onaylanıyor…' : phase.k === 'acked' ? <><Icon name="check" size={14} />{' '}Onaylandı</> : 'Yer ekibi onayı (ack)'}
+              {phase.k === 'acking' ? 'Acknowledging…' : phase.k === 'acked' ? <><Icon name="check" size={14} />{' '}Acknowledged</> : 'Ground team acknowledgement (ack)'}
             </button>
           </div>
           {ackHint && (

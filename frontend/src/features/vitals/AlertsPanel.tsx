@@ -255,7 +255,7 @@ export function AlertsPanel() {
               situation={ruleCard.situation}
               alertId={null}
               completedKeys={[]}
-              context={`Kural: ${ruleCard.title}`}
+              context={`Rule: ${ruleCard.title}`}
               readOnly
             />
           ) : alerts.data ? (

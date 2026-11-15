@@ -76,15 +76,15 @@ function HazardRow({ hazard }: { hazard: HazardRead }) {
             </p>
             {sel.indicators_tr.length > 0 && (
               <p className="gp-small">
-                <span className="gp-muted">Göstergeler: </span>
+                <span className="gp-muted">Indicators: </span>
                 {sel.indicators_tr.join(', ')}
               </p>
             )}
             {sel.rules.length > 0 && (
               <p className="gp-small">
-                <span className="gp-muted">Kurallar: </span>
+                <span className="gp-muted">Rules: </span>
                 {sel.rules
-                  .map((x) => `${x.title} (${x.validation_status === 'APPROVED' ? 'onaylı' : 'DEMO, uzman doğrulaması bekliyor'})`)
+                  .map((x) => `${x.title} (${x.validation_status === 'APPROVED' ? 'approved' : 'DEMO, awaiting expert validation'})`)
                   .join('; ')}
               </p>
             )}
@@ -106,20 +106,20 @@ export function CoverageMap(props: { data: CoverageRead | null; error: ApiError 
     <section className="gp-card gp-cov" aria-labelledby="gp-cov-title">
       <header className="gp-card-head">
         <h3 id="gp-cov-title">
-          <Icon name="grid" size={16} />{' '}Risk kapsam haritası
+          <Icon name="grid" size={16} />{' '}Risk coverage map
         </h3>
         {data && <span className="gp-count">{total} risk</span>}
       </header>
 
       {data && (
         <p className="gp-cov-summary">
-          {total} riskin <strong>{sum.RULE ?? 0}</strong> tanesi için karar destek kuralı var,{' '}
-          <strong>{sum.DATA_ONLY ?? 0}</strong> tanesi için yalnızca veri toplanıyor,{' '}
-          <strong>{sum.GAP ?? 0}</strong> tanesi henüz kapsanmıyor.
+          {total} risks: <strong>{sum.RULE ?? 0}</strong> have a decision support rule,{' '}
+          <strong>{sum.DATA_ONLY ?? 0}</strong> have data collected only,{' '}
+          <strong>{sum.GAP ?? 0}</strong> are not covered yet.
         </p>
       )}
 
-      <ul className="gp-legend" aria-label="Gösterim açıklaması">
+      <ul className="gp-legend" aria-label="Legend">
         {ORDER.map((k) => (
           <li key={k} className={`gp-cov--${k.toLowerCase()}`}>
             <span className="gp-legend-key">
@@ -131,7 +131,7 @@ export function CoverageMap(props: { data: CoverageRead | null; error: ApiError 
       </ul>
 
       {err && <p className={`gp-note ${data ? 'gp-note--warn' : ''}`}>{err}</p>}
-      {!data && !err && loading && <p className="gp-muted">Yükleniyor…</p>}
+      {!data && !err && loading && <p className="gp-muted">Loading…</p>}
 
       {data && (
         <ul className="gp-hz-list">

@@ -39,9 +39,9 @@ def evaluate_co2_nominal(
             data_quality=effective_quality,
             attention=HealthAttention.UNKNOWN,
             explanation=(
-                f"Son bir saat için kabin ppCO₂ ortalaması yok "
+                f"No cabin ppCO₂ average for the last hour "
                 f"({effective_quality.value}); "
-                "sağlık dikkati değerlendirilemedi."
+                "health attention could not be assessed."
             ),
         )
 
@@ -51,8 +51,8 @@ def evaluate_co2_nominal(
             data_quality=data_quality,
             attention=HealthAttention.UNKNOWN,
             explanation=(
-                f"Kabin ppCO₂ verisi {data_quality.value}; "
-                "güvenilir sağlık dikkati üretilemedi."
+                f"Cabin ppCO₂ data is {data_quality.value}; "
+                "no reliable health attention could be produced."
             ),
         )
 
@@ -62,8 +62,8 @@ def evaluate_co2_nominal(
             data_quality=DataQuality.FAULT,
             attention=HealthAttention.UNKNOWN,
             explanation=(
-                "Kabin ppCO₂ ortalaması sonlu olmayan veya negatif bir değer; "
-                "sensör/veri hattı kontrol edilmeli."
+                "Cabin ppCO₂ average is a non-finite or negative value; "
+                "the sensor/data line should be checked."
             ),
         )
 
@@ -73,9 +73,9 @@ def evaluate_co2_nominal(
             data_quality=DataQuality.VALID,
             attention=HealthAttention.WATCH,
             explanation=(
-                f"Bir saatlik ortalama kabin ppCO₂ değeri "
-                f"{one_hour_average_ppco2_mmhg:.2f} mmHg; NASA nominal üst "
-                f"sınırı {CO2_NOMINAL_LIMIT_MMHG:.2f} mmHg üzerinde."
+                f"One-hour average cabin ppCO₂ value is "
+                f"{one_hour_average_ppco2_mmhg:.2f} mmHg; above the NASA nominal "
+                f"upper limit of {CO2_NOMINAL_LIMIT_MMHG:.2f} mmHg."
             ),
         )
 
@@ -84,9 +84,9 @@ def evaluate_co2_nominal(
         data_quality=DataQuality.VALID,
         attention=HealthAttention.NORMAL,
         explanation=(
-            f"Bir saatlik ortalama kabin ppCO₂ değeri "
-            f"{one_hour_average_ppco2_mmhg:.2f} mmHg; NASA nominal üst "
-            f"sınırı {CO2_NOMINAL_LIMIT_MMHG:.2f} mmHg aşılmadı."
+            f"One-hour average cabin ppCO₂ value is "
+            f"{one_hour_average_ppco2_mmhg:.2f} mmHg; the NASA nominal "
+            f"upper limit of {CO2_NOMINAL_LIMIT_MMHG:.2f} mmHg was not exceeded."
         ),
     )
 

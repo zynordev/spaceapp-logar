@@ -7,8 +7,8 @@ import { useApp } from '../../lib/store';
 export type TourId = 'co2' | 'redflag';
 
 export const TOUR_SCENARIO: Record<TourId, { scenarioId: string; title: string }> = {
-  co2: { scenarioId: 'co2-headache', title: 'CO₂ + baş ağrısı' },
-  redflag: { scenarioId: 'chest-pain-red-flag', title: 'Kırmızı bayrak' },
+  co2: { scenarioId: 'co2-headache', title: 'CO₂ + headache' },
+  redflag: { scenarioId: 'chest-pain-red-flag', title: 'Red flag' },
 };
 
 interface DemoRunLite {
@@ -99,11 +99,11 @@ export const useTour = create<TourState>((set, get) => ({
       const msg =
         e instanceof ApiError
           ? e.network
-            ? 'Sunucuya ulaşılamıyor; senaryo çalıştırılamadı.'
+            ? 'Cannot reach the server; the scenario could not run.'
             : e.forbidden
-              ? 'Bu rol senaryo çalıştıramıyor.'
-              : `Senaryo çalıştırılamadı (${e.message}).`
-          : 'Senaryo çalıştırılamadı.';
+              ? 'This role cannot run scenarios.'
+              : `The scenario could not run (${e.message}).`
+          : 'The scenario could not run.';
       set({ phase: 'error', error: msg });
     }
   },

@@ -20,8 +20,8 @@ GOES_10_MEV_SEP_ID = "2024-05-10T13:35:00-SEP-001"
 GOES_100_MEV_SEP_ID = "2024-05-11T02:10:00-SEP-001"
 
 PROVENANCE_NOTE_TR = (
-    "Olay zamanlaması gerçek NASA DONKI kaydından (Mayıs 2024 SEP, GOES >10 MeV "
-    "başlangıcı 10 Mayıs 13:35Z); doz değerleri sentetiktir."
+    "Event timing is from the real NASA DONKI record (May 2024 SEP, GOES >10 MeV "
+    "onset 10 May 13:35Z); dose values are synthetic."
 )
 
 

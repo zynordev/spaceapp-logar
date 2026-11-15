@@ -16,8 +16,8 @@ from spaceapp_logar.rules.models import DataQuality, HealthAttention, RuleEvalua
 
 RED_FLAG_RULE_ID = "RED_FLAG_SYMPTOM_V1"
 RED_FLAG_SOURCE = (
-    "DEMO (kanıt sınıfı F): docs/biyo.md bölüm 10 kırmızı bayrak sınıfları. "
-    "Uçuş tıbbı doğrulaması bekler; teşhis değildir."
+    "DEMO (evidence class F): docs/biyo.md section 10 red-flag classes. "
+    "Awaits flight medicine validation; not a diagnosis."
 )
 RED_FLAG_SOURCE_URI = "docs/DEMO_RULES.md"
 
@@ -35,17 +35,17 @@ class RedFlag(StrEnum):
 
 
 RED_FLAG_LABELS: dict[RedFlag, str] = {
-    RedFlag.CHEST_PAIN: "Göğüs ağrısı veya baskı hissi",
-    RedFlag.SEVERE_SHORTNESS_OF_BREATH: "Ciddi nefes darlığı",
-    RedFlag.FAINTING_OR_LOSS_OF_CONSCIOUSNESS: "Bayılma veya bilinç kaybı",
-    RedFlag.NEW_CONFUSION: "Yeni bilinç bulanıklığı veya kafa karışıklığı",
+    RedFlag.CHEST_PAIN: "Chest pain or a feeling of pressure",
+    RedFlag.SEVERE_SHORTNESS_OF_BREATH: "Severe shortness of breath",
+    RedFlag.FAINTING_OR_LOSS_OF_CONSCIOUSNESS: "Fainting or loss of consciousness",
+    RedFlag.NEW_CONFUSION: "New clouding of consciousness or confusion",
     RedFlag.NEW_NEUROLOGICAL_SYMPTOM: (
-        "Yeni nörolojik belirti (konuşma bozukluğu, yüzde/kolda güçsüzlük)"
+        "New neurological symptom (speech difficulty, weakness in face/arm)"
     ),
-    RedFlag.SUDDEN_VISION_CHANGE: "Ani ve ciddi görme değişikliği",
-    RedFlag.UNCONTROLLED_BLEEDING: "Durdurulamayan kanama",
-    RedFlag.RAPID_WORSENING: "Hızla kötüleşen durum",
-    RedFlag.MULTIPLE_CREW_SYMPTOMS: "Birden fazla ekip üyesinde aynı anda belirti",
+    RedFlag.SUDDEN_VISION_CHANGE: "Sudden and severe vision change",
+    RedFlag.UNCONTROLLED_BLEEDING: "Uncontrolled bleeding",
+    RedFlag.RAPID_WORSENING: "Rapidly worsening condition",
+    RedFlag.MULTIPLE_CREW_SYMPTOMS: "Symptoms in several crew members at the same time",
 }
 
 
@@ -57,14 +57,14 @@ def evaluate_red_flags(flags: list[RedFlag]) -> RuleEvaluation:
         data_quality=DataQuality.VALID,
         health_attention=HealthAttention.CRITICAL,
         observed_value=float(len(flags)),
-        unit="belirti",
+        unit="symptom",
         threshold=1.0,
         comparison=">=",
         window_minutes=0,
         explanation=(
-            f"Kırmızı bayrak bildirildi: {labels}. Sensör ölçümleri normal olsa "
-            "bile bu belirti acil değerlendirme gerektirebilir; sistem hiçbir "
-            "ortalamayı beklemeden acil prosedüre yönlendirir. Bu bir teşhis değildir."
+            f"Red flag reported: {labels}. Even when sensor measurements are normal, "
+            "this symptom may require urgent evaluation; the system directs to the "
+            "emergency procedure without waiting for any average. This is not a diagnosis."
         ),
         source=RED_FLAG_SOURCE,
         source_uri=RED_FLAG_SOURCE_URI,
@@ -78,13 +78,13 @@ def evaluate_red_flag_closed(resolved_by: str, resolved_at: datetime) -> RuleEva
         data_quality=DataQuality.VALID,
         health_attention=HealthAttention.NORMAL,
         observed_value=0.0,
-        unit="belirti",
+        unit="symptom",
         threshold=1.0,
         comparison=">=",
         window_minutes=0,
         explanation=(
-            f"Kırmızı bayrak olayı {resolved_by} tarafından değerlendirildi ve "
-            f"{resolved_at:%Y-%m-%d %H:%M} UTC'de kapatıldı. Etkin kırmızı bayrak yok."
+            f"Red-flag event was reviewed by {resolved_by} and closed at "
+            f"{resolved_at:%Y-%m-%d %H:%M} UTC. No active red flag."
         ),
         source=RED_FLAG_SOURCE,
         source_uri=RED_FLAG_SOURCE_URI,

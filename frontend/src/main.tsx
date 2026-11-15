@@ -34,7 +34,7 @@ function Root() {
       {!consoleView ? (
         <App />
       ) : (
-        <Suspense fallback={<p style={{ padding: 24 }}>Yer kontrol konsolu yükleniyor…</p>}>
+        <Suspense fallback={<p style={{ padding: 24 }}>Loading ground control console…</p>}>
           <GroundConsoleApp />
         </Suspense>
       )}

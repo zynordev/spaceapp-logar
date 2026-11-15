@@ -23,10 +23,10 @@ from spaceapp_logar.services.status_view import (
 router = APIRouter(prefix="/v1/crew", tags=["crew-status"])
 
 LIMITATIONS = [
-    "Öznel girişler bağlam bilgisidir; tek başına teşhis veya alarm üretmez.",
-    "CO₂ WATCH nominal habitat sınırıdır; görev-özel CRITICAL eşiği değildir.",
-    "DEMO etiketli kuralların eşikleri genel klinik referanslardır; uçuş tıbbı "
-    "uzmanı doğrulaması bekler.",
+    "Subjective entries are context information; on their own they do not diagnose or generate an alarm.",
+    "CO₂ WATCH is the nominal habitat limit; it is not a mission-specific CRITICAL threshold.",
+    "Thresholds of DEMO-labelled rules are general clinical references; they await "
+    "validation by a flight medicine expert.",
 ]
 
 

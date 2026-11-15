@@ -9,17 +9,17 @@ export function EarthResponseLine({ er }: { er: EarthResponse | null | undefined
   if (!er) return null;
   const decision =
     er.owner === 'CREW_MEDICAL_OFFICER'
-      ? 'karar gemideki sağlık sorumlusunda'
-      : `yer ekibi pencere içinde yanıt verebilir · sorumlu: ${er.owner_label_tr}`;
+      ? 'the decision rests with the crew medical officer on board'
+      : `ground team can respond within the window · owner: ${er.owner_label_tr}`;
   return (
-    <div className={`prof-er${er.ground_can_respond_in_time ? '' : ' is-onboard'}`} role="group" aria-label="Dünya'nın yanıt süresi">
+    <div className={`prof-er${er.ground_can_respond_in_time ? '' : ' is-onboard'}`} role="group" aria-label="Earth response time">
       <Icon name={er.ground_can_respond_in_time ? 'signal' : 'user'} size={14} />
       <p className="prof-er__line">
-        Dünya'nın yanıt süresi <strong className="prof-num">~{fmtDelay(er.round_trip_seconds)}</strong>
+        Earth response time <strong className="prof-num">~{fmtDelay(er.round_trip_seconds)}</strong>
         {er.act_within_minutes != null && (
           <>
             {' '}
-            · harekete geçme penceresi <strong className="prof-num">{er.act_within_minutes} dk</strong>
+            · action window <strong className="prof-num">{er.act_within_minutes} dk</strong>
           </>
         )}{' '}
         → {decision}

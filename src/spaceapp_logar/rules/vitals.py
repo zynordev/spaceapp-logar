@@ -20,8 +20,8 @@ SPO2_WINDOW_MINUTES = 10
 SPO2_WATCH_BELOW = 95.0
 SPO2_ALERT_BELOW = 92.0
 SPO2_SOURCE = (
-    "DEMO eşik (kanıt sınıfı F): genel klinik referans, SpO₂ ≥%95 olağan, "
-    "<%92 belirgin düşüklük. Görev/uçuş tıbbı eşiği değildir."
+    "DEMO threshold (evidence class F): general clinical reference, SpO₂ ≥95% usual, "
+    "<92% marked low. Not a mission or flight-medicine threshold."
 )
 
 # --- Body temperature -------------------------------------------------------
@@ -30,8 +30,8 @@ TEMP_WINDOW_MINUTES = 60
 TEMP_WATCH_DELTA_C = 1.0
 TEMP_ALERT_ABSOLUTE_C = 38.0
 TEMP_SOURCE = (
-    "DEMO eşik (kanıt sınıfı F): kişisel başlangıçtan ≥+1,0 °C süreli sapma "
-    "izlenir; ≥38,0 °C genel klinik ateş referansıdır. Uçuş tıbbı eşiği değildir."
+    "DEMO threshold (evidence class F): a sustained deviation of ≥+1.0 °C from the personal baseline "
+    "is watched; ≥38.0 °C is a general clinical fever reference. Not a flight-medicine threshold."
 )
 
 # --- Resting heart + respiration with symptoms ------------------------------
@@ -42,9 +42,9 @@ RR_REST_ABOVE = 20.0
 SYMPTOM_SCORE_AT_LEAST = 2
 SYMPTOM_LOOKBACK_MINUTES = 120
 CARDIO_RESP_SOURCE = (
-    "DEMO eşik (kanıt sınıfı F): dinlenmede kişisel başlangıcın ≥20 bpm "
-    "üstünde kalp hızı ve >20/dk solunum (genel klinik referans) birlikte; "
-    "öznel belirti ≥2/4 ise seviye yükselir. Uçuş tıbbı eşiği değildir."
+    "DEMO threshold (evidence class F): resting heart rate ≥20 bpm above the personal baseline "
+    "together with breathing rate >20/min (general clinical reference); "
+    "if the subjective symptom score is ≥2/4 the level rises. Not a flight-medicine threshold."
 )
 
 # --- Heart-rate data quality ------------------------------------------------
@@ -52,8 +52,8 @@ HR_JUMP_RULE_ID = "DATA_HR_JUMP_V1"
 HR_JUMP_BPM = 40.0
 HR_JUMP_MAX_SECONDS = 120
 HR_JUMP_SOURCE = (
-    "DEMO veri kalitesi kuralı (kanıt sınıfı F): iki dakika içinde >40 bpm "
-    "sıçrama fiziksel olarak şüpheli kabul edilir ve sağlık alarmı üretmez."
+    "DEMO data quality rule (evidence class F): a jump of >40 bpm within two minutes "
+    "is treated as physically suspect and does not raise a health alarm."
 )
 
 
@@ -105,10 +105,10 @@ def _insufficient(
         comparison=comparison,
         window_minutes=window.window_minutes,
         explanation=(
-            f"Son {window.window_minutes} dakikada yeterli güvenilir {what} verisi yok "
-            f"({window.valid_minute_buckets}/{window.required_minute_buckets} dakika, "
-            f"en uzun boşluk {window.longest_missing_run_minutes} dk); "
-            "sağlık dikkati değerlendirilemedi."
+            f"Not enough reliable {what} data in the last {window.window_minutes} minutes "
+            f"({window.valid_minute_buckets}/{window.required_minute_buckets} minutes, "
+            f"longest gap {window.longest_missing_run_minutes} min); "
+            "health attention could not be assessed."
         ),
         source=source,
     )
@@ -118,18 +118,18 @@ def evaluate_spo2(window: MinuteWindow) -> RuleEvaluation:
     if window.average is None:
         return _insufficient(
             SPO2_RULE_ID, "%", SPO2_WATCH_BELOW, "<", window, SPO2_SOURCE,
-            "dinlenme/hafif aktivite SpO₂",
+            "resting/light-activity SpO₂",
         )
     mean = window.average
     if mean < SPO2_ALERT_BELOW:
         attention, threshold = HealthAttention.ALERT, SPO2_ALERT_BELOW
-        text = f"belirgin düşüklük referansı %{SPO2_ALERT_BELOW:.0f} altında"
+        text = f"below the marked-low reference of {SPO2_ALERT_BELOW:.0f}%"
     elif mean < SPO2_WATCH_BELOW:
         attention, threshold = HealthAttention.WATCH, SPO2_WATCH_BELOW
-        text = f"olağan referans %{SPO2_WATCH_BELOW:.0f} altında"
+        text = f"below the usual reference of {SPO2_WATCH_BELOW:.0f}%"
     else:
         attention, threshold = HealthAttention.NORMAL, SPO2_WATCH_BELOW
-        text = f"olağan referans %{SPO2_WATCH_BELOW:.0f} ve üzerinde"
+        text = f"at or above the usual reference of {SPO2_WATCH_BELOW:.0f}%"
     return _evaluation(
         rule_id=SPO2_RULE_ID,
         data_quality=DataQuality.VALID,
@@ -140,8 +140,8 @@ def evaluate_spo2(window: MinuteWindow) -> RuleEvaluation:
         comparison="<",
         window_minutes=window.window_minutes,
         explanation=(
-            f"Son {window.window_minutes} dakikalık dinlenme/hafif aktivite SpO₂ "
-            f"ortalaması %{mean:.1f}; {text} (DEMO eşik)."
+            f"Average resting/light-activity SpO₂ over the last {window.window_minutes} minutes: "
+            f"{mean:.1f}%; {text} (DEMO threshold)."
         ),
         source=SPO2_SOURCE,
     )
@@ -154,7 +154,7 @@ def evaluate_temperature(
     if window.average is None:
         return _insufficient(
             TEMP_RULE_ID, "°C", TEMP_ALERT_ABSOLUTE_C, ">=", window, TEMP_SOURCE,
-            "vücut sıcaklığı",
+            "body temperature",
         )
     mean = window.average
     if mean >= TEMP_ALERT_ABSOLUTE_C:
@@ -168,9 +168,9 @@ def evaluate_temperature(
             comparison=">=",
             window_minutes=window.window_minutes,
             explanation=(
-                f"Son {window.window_minutes} dakikalık vücut sıcaklığı ortalaması "
-                f"{mean:.2f} °C; genel ateş referansı {TEMP_ALERT_ABSOLUTE_C:.1f} °C "
-                "ve üzerinde (DEMO eşik)."
+                f"Average body temperature over the last {window.window_minutes} minutes: "
+                f"{mean:.2f} °C; at or above the general fever reference of {TEMP_ALERT_ABSOLUTE_C:.1f} °C "
+                "(DEMO threshold)."
             ),
             source=TEMP_SOURCE,
         )
@@ -185,15 +185,15 @@ def evaluate_temperature(
             comparison=">=",
             window_minutes=window.window_minutes,
             explanation=(
-                f"Vücut sıcaklığı ortalaması {mean:.2f} °C; kişisel başlangıç değeri "
-                "henüz oluşmadığı için eğilim değerlendirilemedi."
+                f"Average body temperature {mean:.2f} °C; trend could not be assessed because no personal baseline "
+                "has been established yet."
             ),
             source=TEMP_SOURCE,
         )
     watch_level = baseline_c + TEMP_WATCH_DELTA_C
     delta = mean - baseline_c
     attention = HealthAttention.WATCH if mean >= watch_level else HealthAttention.NORMAL
-    verdict = "üzerinde" if attention is HealthAttention.WATCH else "altında"
+    verdict = "above" if attention is HealthAttention.WATCH else "below"
     return _evaluation(
         rule_id=TEMP_RULE_ID,
         data_quality=DataQuality.VALID,
@@ -204,9 +204,9 @@ def evaluate_temperature(
         comparison=">=",
         window_minutes=window.window_minutes,
         explanation=(
-            f"Son {window.window_minutes} dakikalık ortalama {mean:.2f} °C; kişisel "
-            f"başlangıç {baseline_c:.2f} °C (fark {delta:+.2f} °C). İzleme sınırı "
-            f"+{TEMP_WATCH_DELTA_C:.1f} °C'nin {verdict} (DEMO eşik)."
+            f"Average over the last {window.window_minutes} minutes: {mean:.2f} °C; personal "
+            f"baseline {baseline_c:.2f} °C (difference {delta:+.2f} °C). Mean is "
+            f"{verdict} the watch limit of +{TEMP_WATCH_DELTA_C:.1f} °C (DEMO threshold)."
         ),
         source=TEMP_SOURCE,
     )
@@ -230,7 +230,7 @@ def evaluate_cardio_resp(
         missing = hr_window if hr_window.average is None else rr_window
         return _insufficient(
             CARDIO_RESP_RULE_ID, "bpm", HR_REST_DELTA_BPM, ">=", missing,
-            CARDIO_RESP_SOURCE, "dinlenme kalp/solunum",
+            CARDIO_RESP_SOURCE, "resting heart/breathing rate",
         )
     hr = hr_window.average
     rr = rr_window.average
@@ -245,8 +245,8 @@ def evaluate_cardio_resp(
             comparison=">=",
             window_minutes=hr_window.window_minutes,
             explanation=(
-                f"Dinlenme kalp hızı {hr:.0f} bpm, solunum {rr:.0f}/dk; kişisel "
-                "dinlenme başlangıcı henüz oluşmadığı için değerlendirilemedi."
+                f"Resting heart rate {hr:.0f} bpm, breathing rate {rr:.0f}/min; personal "
+                "resting baseline has not been established yet, so it could not be assessed."
             ),
             source=CARDIO_RESP_SOURCE,
         )
@@ -260,15 +260,15 @@ def evaluate_cardio_resp(
     if hr_high and rr_high and symptomatic:
         attention = HealthAttention.ALERT
         verdict = (
-            "kalp ve solunum hızı birlikte yüksek ve öznel belirti "
+            "heart and breathing rates both high and subjective symptoms "
             f"({', '.join(symptoms.fields)}) ≥{SYMPTOM_SCORE_AT_LEAST}/4"
         )
     elif hr_high and rr_high:
         attention = HealthAttention.WATCH
-        verdict = "kalp ve solunum hızı birlikte yüksek; belirgin öznel belirti yok"
+        verdict = "heart and breathing rates both high; no marked subjective symptoms"
     else:
         attention = HealthAttention.NORMAL
-        verdict = "birlikte yükselme koşulu yok"
+        verdict = "no joint rise condition met"
     return _evaluation(
         rule_id=CARDIO_RESP_RULE_ID,
         data_quality=DataQuality.VALID,
@@ -279,9 +279,9 @@ def evaluate_cardio_resp(
         comparison=">=",
         window_minutes=hr_window.window_minutes,
         explanation=(
-            f"Son {hr_window.window_minutes} dk dinlenme: kalp hızı {hr:.0f} bpm "
-            f"(kişisel başlangıç {hr_baseline_bpm:.0f}, sınır {hr_limit:.0f}), solunum "
-            f"{rr:.0f}/dk (sınır >{RR_REST_ABOVE:.0f}); {verdict} (DEMO eşik)."
+            f"Last {hr_window.window_minutes} min resting: heart rate {hr:.0f} bpm "
+            f"(personal baseline {hr_baseline_bpm:.0f}, limit {hr_limit:.0f}), breathing rate "
+            f"{rr:.0f}/min (limit >{RR_REST_ABOVE:.0f}); {verdict} (DEMO threshold)."
         ),
         source=CARDIO_RESP_SOURCE,
     )
@@ -309,9 +309,9 @@ def evaluate_hr_jump(
             comparison="jump>",
             window_minutes=2,
             explanation=(
-                f"Kalp hızı {previous_bpm:.0f} → {latest_bpm:.0f} bpm "
-                f"({seconds_between:.0f} sn içinde {jump:.0f} bpm sıçrama); fiziksel "
-                "olarak şüpheli. Sensör doğrulanmadan sağlık alarmı üretilmez."
+                f"Heart rate {previous_bpm:.0f} → {latest_bpm:.0f} bpm "
+                f"({jump:.0f} bpm jump within {seconds_between:.0f} s); physically "
+                "suspect. No health alarm is raised until the sensor is verified."
             ),
             source=HR_JUMP_SOURCE,
         )
@@ -325,9 +325,9 @@ def evaluate_hr_jump(
         comparison="jump>",
         window_minutes=2,
         explanation=(
-            "Kalp hızı sinyalinde fiziksel olarak şüpheli sıçrama yok."
+            "No physically suspect jump in the heart rate signal."
             if jump is not None
-            else "Karşılaştırılacak yakın tarihli önceki ölçüm yok; sıçrama denetimi geçildi."
+            else "No recent previous measurement to compare; jump check passed."
         ),
         source=HR_JUMP_SOURCE,
     )

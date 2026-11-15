@@ -45,7 +45,7 @@ export function loadEcg(): Promise<EcgRecord> {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         // A missing file may come back as an HTML page: JSON.parse rejects it.
         const body: unknown = await res.json();
-        if (!isRecord(body)) throw new Error('Geçersiz EKG dosyası');
+        if (!isRecord(body)) throw new Error('Invalid ECG file');
         return body;
       })
       .catch((e: unknown) => {
