@@ -32,3 +32,16 @@ def test_set_mission_profile_never_raises(monkeypatch):
 
     monkeypatch.setattr(mod, "_set_mission_profile", boom)
     assert mod.set_mission_profile("demo-x", "MARS") is False
+
+
+def test_seed_demo_sets_mars_profile_without_http_client(database_url, make_alembic_config) -> None:
+    from spaceapp_logar.seed_demo import MARS_SCENARIO
+    from spaceapp_logar.services.mission_profiles import get_profile_name
+
+    command.upgrade(make_alembic_config(database_url), "head")
+    engine = create_database_engine(database_url)
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+    with factory() as session:
+        missions = seed_demo(session)
+        assert get_profile_name(session, missions[MARS_SCENARIO]) == "MARS"
+    engine.dispose()

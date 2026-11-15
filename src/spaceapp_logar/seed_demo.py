@@ -23,7 +23,6 @@ logger = logging.getLogger("spaceapp_logar.seed_demo")
 
 SEED_SCENARIOS = ("co2-headache", "chest-pain-red-flag", "radiation-spe")
 MARS_SCENARIO = "radiation-spe"
-PROFILE_ROUTE = "/v1/missions/{mission_id}/profile"
 
 
 def _existing_mission(session: Session, scenario_id: str) -> str | None:
@@ -37,40 +36,33 @@ def _existing_mission(session: Session, scenario_id: str) -> str | None:
     return None
 
 
-def set_mission_profile(mission_id: str, profile: str) -> bool:
-    """Set the mission profile through the API if that route exists.
+def set_mission_profile(mission_id: str, profile: str, session: Session | None = None) -> bool:
+    """Store the mission profile directly through the service layer.
 
-    Never raises: the production image has no dev dependencies (httpx), and the
-    seed must not abort the boot.
+    Never raises: the seed must not abort the boot. Uses the database session
+    instead of an HTTP test client, because the production image has no dev
+    dependencies (httpx).
     """
 
     try:
-        return _set_mission_profile(mission_id, profile)
+        return _set_mission_profile(mission_id, profile, session)
     except Exception as exc:  # noqa: BLE001 - seed must never abort boot
         logger.warning("could not set profile %s on %s: %s", profile, mission_id, exc)
         return False
 
 
-def _set_mission_profile(mission_id: str, profile: str) -> bool:
-    from fastapi.testclient import TestClient
+def _set_mission_profile(mission_id: str, profile: str, session: Session | None) -> bool:
+    from spaceapp_logar.services.mission_profiles import set_profile
 
-    from spaceapp_logar.auth import Role, auth_configured, issue_token
-    from spaceapp_logar.main import app
+    if session is None:
+        from spaceapp_logar.db.session import SessionFactory
 
-    if not any(getattr(route, "path", "") == PROFILE_ROUTE for route in app.routes):
-        logger.info("mission profile API not available; skipping profile for %s", mission_id)
-        return False
-    headers = {}
-    if auth_configured():
-        token, _ = issue_token("demo-seed", Role.CREW_MEDICAL_OFFICER)
-        headers["Authorization"] = f"Bearer {token}"
-    with TestClient(app) as client:
-        response = client.post(
-            f"/v1/missions/{mission_id}/profile", json={"profile": profile}, headers=headers
-        )
-    if response.status_code >= 400:
-        logger.warning("could not set profile %s on %s: %s", profile, mission_id, response.status_code)
-        return False
+        with SessionFactory() as own_session:
+            set_profile(own_session, mission_id, profile, "demo-seed")
+            own_session.commit()
+        return True
+    set_profile(session, mission_id, profile, "demo-seed")
+    session.commit()
     return True
 
 
@@ -87,7 +79,7 @@ def seed_demo(session: Session, set_profile: bool = True) -> dict[str, str]:
             logger.info("scenario %s seeded as %s", scenario_id, mission_id)
         missions[scenario_id] = mission_id
     if set_profile:
-        set_mission_profile(missions[MARS_SCENARIO], "MARS")
+        set_mission_profile(missions[MARS_SCENARIO], "MARS", session)
     return missions
 
 
