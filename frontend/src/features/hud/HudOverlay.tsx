@@ -10,6 +10,9 @@ import { displayUnit } from '../vitals/copy';
 import { rulesForMetric, targetFor, useAlerts, useCrewStatus, useMetrics, useSeries, useVitalsUi, worst } from '../vitals/data';
 import { fmtAuto, fmtClock, relTime, toMs } from '../vitals/format';
 import type { MeasurementPoint, MetricDef, RuleStatus } from '../vitals/types';
+import { EcgStrip } from '../ecg';
+// From the file, not the folder index: the console stays its own lazy chunk.
+import { GroundConsoleLink } from '../console/GroundConsoleLink';
 
 export type DetailTab = 'rules' | 'inputs' | 'ground';
 
@@ -82,7 +85,20 @@ function Panel({ title, id, aside, children, className }: { title: string; id: s
 
 /* -------------------------------------------------------------- metric row */
 
-function MetricRow({ def, pair = null, rules, onOpen }: { def: MetricDef; pair?: MetricDef | null; rules: RuleStatus[]; onOpen: (m: string) => void }) {
+function MetricRow({
+  def,
+  pair = null,
+  rules,
+  onOpen,
+  below,
+}: {
+  def: MetricDef;
+  pair?: MetricDef | null;
+  rules: RuleStatus[];
+  onOpen: (m: string) => void;
+  /** Rendered under the row, outside the button (e.g. the recorded ECG strip). */
+  below?: ReactNode;
+}) {
   const crewId = useApp((s) => s.crewId);
   const envId = useApp((s) => s.environmentTargetId);
   const now = useNow(30_000);
@@ -137,6 +153,7 @@ function MetricRow({ def, pair = null, rules, onOpen }: { def: MetricDef; pair?:
           )}
         </span>
       </button>
+      {below}
     </li>
   );
 }
@@ -313,6 +330,9 @@ function ClockPanel({ onOpen }: { onOpen: (tab: DetailTab) => void }) {
           </div>
         )}
       </dl>
+      <div className="hud-console">
+        <GroundConsoleLink />
+      </div>
     </Panel>
   );
 }
@@ -336,12 +356,28 @@ export function HudOverlay({ scenarioId, onOpen }: HudOverlayProps) {
         <Panel title="Vital bulgular" id="hud-vitals-title">
           <ul className="hud-rows">
             {pick(metrics, VITAL_ORDER).map((m) => (
-              <MetricRow key={m.metric} def={m} pair={m.metric === 'SYSTOLIC_BP' ? dia : null} rules={rules} onOpen={openMetric} />
+              <MetricRow
+                key={m.metric}
+                def={m}
+                pair={m.metric === 'SYSTOLIC_BP' ? dia : null}
+                rules={rules}
+                onOpen={openMetric}
+                below={
+                  m.metric === 'HEART_RATE' ? (
+                    // Recorded sample, not the source of the number above (see ecg/README).
+                    <div className="hud-ecg">
+                      <EcgStrip compact height={56} />
+                    </div>
+                  ) : undefined
+                }
+              />
             ))}
           </ul>
         </Panel>
+      </div>
+      <div className="hud__cabin">
         <Panel title="Kabin ortamı" id="hud-cabin-title">
-          <ul className="hud-rows">
+          <ul className="hud-rows hud-rows--strip">
             {pick(metrics, ENV_ORDER).map((m) => (
               <MetricRow key={m.metric} def={m} rules={rules} onOpen={openMetric} />
             ))}
