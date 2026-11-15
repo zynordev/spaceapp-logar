@@ -420,3 +420,4 @@ button.dz-room__col:hover { background: rgba(255, 255, 255, 0.04); }
 .dz-ecg .ecg-strip__label, .dz-ecg .ecg-strip__meta { font-size: 11px; line-height: 14px; margin: 0; }
 .dz-pcol--blood { grid-template-rows: 26px 94px 26px 30px; }
 .dz-window__label { font-size: 26px; line-height: 33px; overflow-wrap: normal; word-break: keep-all; hyphens: none; }
+.dz-room__bar.dz-bar--none { font-size: 21px; letter-spacing: 0; }

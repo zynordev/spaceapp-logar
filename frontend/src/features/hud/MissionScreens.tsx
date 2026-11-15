@@ -80,12 +80,11 @@ function Bar({ level, text, className = '' }: { level: string | null; text?: str
  * and UNKNOWN stays grey ("unknown is not normal"). Otherwise the share
  * decides: 70-100 green, 35-69 yellow, 0-34 red.
  */
+/** Ring colour is the share itself: 70-100 green, 35-69 yellow, 0-34 red,
+ * no data grey. Only a CRITICAL state overrides the share and turns the ring
+ * red (e.g. a radiation emergency); a WARNING or WATCH never does. */
 function ringBand(pct: number | null, level?: string | null): 'normal' | 'watch' | 'alert' | 'critical' | 'unknown' {
-  const lv = (level ?? '').toUpperCase();
-  if (lv === 'CRITICAL') return 'critical';
-  if (lv === 'ALERT') return 'alert';
-  if (lv === 'WATCH') return 'watch';
-  if (lv === 'UNKNOWN') return 'unknown';
+  if ((level ?? '').toUpperCase() === 'CRITICAL') return 'critical';
   if (pct === null) return 'unknown';
   if (pct >= 70) return 'normal';
   if (pct >= 35) return 'watch';
@@ -216,10 +215,10 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
       </span>
       <span className="dz-crew__list" style={box(448, 147, 150, 44)}>
         <span>
-          ›Fizyolojik <b className={physio ? `t-${physio.health_attention.toLowerCase()}` : undefined}>{physio ? attentionMeta(physio.health_attention).label : '—'}</b>
+          ›Physiologic <b className={physio ? `t-${physio.health_attention.toLowerCase()}` : undefined}>{physio ? attentionMeta(physio.health_attention).label : '—'}</b>
         </span>
         <span>
-          ›Kan <b>{blood}</b>
+          ›Blood <b>{blood}</b>
         </span>
       </span>
       <span className="dz-crew__resume" style={box(183, 201, 412, 36)}>
