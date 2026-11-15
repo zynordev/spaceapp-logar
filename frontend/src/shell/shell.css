@@ -164,7 +164,22 @@
     var(--scene-bottom);
 }
 .hud__scene { position: absolute; inset: 0; z-index: 0; }
-.hud__scene > .shell-slot { position: absolute; inset: 0; }
+.hud {
+  --hud-pad: var(--sp-5);
+  --hud-gap: var(--sp-5);
+  --hud-left: 320px;
+  --hud-right: 300px;
+}
+/* The body fills the centre channel between the card columns and below the
+ * cabin row (--hud-top-h is measured in HudOverlay), so its own floating
+ * controls (b3d-*) never sit under a HUD card. */
+.hud__scene > .shell-slot {
+  position: absolute;
+  top: calc(var(--hud-pad) + var(--hud-top-h, 104px) + var(--sp-2));
+  bottom: 0;
+  left: calc(var(--hud-pad) + var(--hud-left) + var(--hud-gap) - var(--sp-3));
+  right: calc(var(--hud-pad) + var(--hud-right) + var(--hud-gap) - var(--sp-3));
+}
 .hud__scene > .shell-slot > * { flex: 1; min-height: 0; height: 100%; }
 .hud__scene .shell-skeleton { background: transparent; border: 0; }
 .hud__overlay {
@@ -172,13 +187,13 @@
   inset: 0;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) minmax(264px, 300px);
+  grid-template-columns: var(--hud-left) minmax(0, 1fr) var(--hud-right);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     'left top right'
     'left .   right';
-  gap: var(--sp-4) var(--sp-5);
-  padding: var(--sp-5);
+  gap: var(--sp-4) var(--hud-gap);
+  padding: var(--hud-pad);
   pointer-events: none;
 }
 .hud__overlay > .shell-crash { grid-column: 1 / -1; align-self: start; pointer-events: auto; }
@@ -211,13 +226,15 @@
 .hud__right > .hud-clock { margin-top: auto; }
 
 @media (max-width: 1280px) {
-  .hud__overlay { grid-template-columns: minmax(264px, 296px) minmax(0, 1fr) minmax(248px, 280px); gap: var(--sp-3); padding: var(--sp-4); }
-  .hud__top { display: grid; grid-template-columns: repeat(2, minmax(148px, 168px)); justify-content: center; }
+  .hud { --hud-pad: var(--sp-4); --hud-gap: var(--sp-3); --hud-left: 288px; --hud-right: 272px; }
+  .hud__top { flex-wrap: nowrap; }
+  .hud__top > .hud-card { flex: 1 1 0; min-width: 132px; max-width: 168px; }
 }
 /* Narrow screens: the scene becomes a band and the cards flow below it. */
 @media (max-width: 1100px), (max-height: 640px) {
   .hud { height: auto; min-height: 0; overflow: visible; background: var(--scene-bottom); }
-  .hud__scene { position: relative; height: 58vh; min-height: 360px; }
+  .hud__scene { position: relative; height: 58vh; min-height: 460px; }
+  .hud__scene > .shell-slot { inset: 0; }
   .hud__overlay {
     position: static;
     grid-template-columns: repeat(2, minmax(0, 1fr));

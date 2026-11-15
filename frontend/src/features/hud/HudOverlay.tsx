@@ -1,7 +1,7 @@
 // HUD layer floating over the full-screen 3D body scene. Every number comes
 // from the API (status, measurements, alerts, sync status); missing data is
 // shown as "—" with an explicit reason, never as a made-up value.
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { qs, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
 import {
@@ -407,6 +407,16 @@ export function HudOverlay({ scenarioId, onOpen }: HudOverlayProps) {
   const vitals = ordered(metrics.filter((m) => m.category !== 'environment'), VITAL_ORDER);
   const env = ordered(metrics.filter((m) => m.category === 'environment'), ENV_ORDER);
   const hr = byId('HEART_RATE');
+  // Publish the cabin row height so the shell can start the 3D scene below it.
+  const topRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = topRef.current;
+    const hud = el?.closest<HTMLElement>('.hud');
+    if (!el || !hud) return;
+    const ro = new ResizeObserver(() => hud.style.setProperty('--hud-top-h', `${el.offsetHeight}px`));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const openMetric = (metric: string) => {
     select(metric);
     onOpen('rules');
@@ -426,7 +436,7 @@ export function HudOverlay({ scenarioId, onOpen }: HudOverlayProps) {
           />
         ))}
       </div>
-      <div className="hud__top" role="group" aria-label="Kabin ortamı">
+      <div className="hud__top" role="group" aria-label="Kabin ortamı" ref={topRef}>
         {env.map((m) => (
           <MetricCard key={m.metric} def={m} rules={rules} onOpen={openMetric} />
         ))}
