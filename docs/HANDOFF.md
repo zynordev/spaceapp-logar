@@ -1,6 +1,6 @@
 # Backend Devir Notu
 
-Son güncelleme: 14 Kasım 2026 (teslim: 15 Kasım 2026, NASA Space Apps)
+Son güncelleme: 15 Kasım 2026 (teslim günü, NASA Space Apps)
 
 Bu belge projeyi devralacak geliştiricinin mevcut durumu yeniden keşfetmeden
 güvenle devam etmesi içindir. Bugünkü oturumun ayrıntılı günlüğü, kararların
@@ -16,25 +16,28 @@ doğrulaması bekler.
 | Kişi | Rol |
 |---|---|
 | `piebio` | Backend + araştırma; Claude ile çalışıyor |
-| Halil Erdem Yanık | Backend; [ortak iş panosunun](WORK_BOARD.md) koordinatörü |
-| Hakan | Frontend; kendi arayüzünü tasarlıyor (şu an auth header göndermiyor) |
+| Halil Erdem Yanık | Backend; ekip koordinasyonu |
+| Hakan | Frontend |
 | Kuzey | Antigravity aracıyla CI, `Dockerfile`, `render.yaml` ve `SUBMISSION.md`'yi hazırladı; şimdilik bu işten çekildi |
+
+`docs/WORK_BOARD.md` artık kullanılmıyor; güncel durum bu belge ve
+[SESSION_STATUS.md](SESSION_STATUS.md) içindedir.
 
 ## Devir anındaki Git durumu
 
-- Herkes aynı `main` dalında çalışır.
-- `8e3e7a3` (isteğe bağlı token auth + roller) ve belge commit'leri (`aa52bea`,
-  `9a92a07`) `origin/main`'e push edildi; bu belge güncellenirken
-  `HEAD` = `origin/main` = `9a92a07`. Sonraki belge commit'leri bunun üstüne gelir.
-- CI: `aa52bea` için `test` ve `test-postgres` yeşil; `9a92a07` için de CI yeşil.
-- Proje klasöründeki `.claude/` dizini alt ajanların worktree'lerini barındırır
-  (`worktree-agent-ad4cee321b7ed7d95`: toplu ölçüm/CSV ve log/hata gövdesi;
-  `worktree-agent-af568f6b7abd41ec4`: auth). İkisinin işi de `main`'e alındı;
-  dizin commit'lenmez ve temizlenebilir.
-- Paralel bir fork oturumunun açtığı PR #1 (`infra/mvp-exit`) 14 Kasım'da merge
-  edilmeden kapatıldı; işleri ana oturumda `main`'e alındı. Uzak `infra/mvp-exit`
-  dalı ve yerel `../spaceapp-logar-infra` worktree'si hâlâ duruyor; silinmeleri
+- 15 Kasım'da paralel yapı (altı backend izi A-F, beş arayüz izi) ayrı dallarda
+  yürüdü ve `main`'e merge edildi. Bu belge yazılırken `main` ucu `a561bde`
+  ("Merge HUD mission-screen design").
+- Commit yazarlığı ekip kararıyla Halil Erdem Yanık / `zynordev` olarak durur;
+  geçmişin yeniden yazılması **planlandı, yapılmadı**. Yeniden yazım yapılırsa
+  commit kimlikleri değişir ve bu belgedeki kimlikler eskir.
+- Proje klasöründeki `.claude/` dizini alt ajanların worktree'lerini barındırır;
+  commit'lenmez ve temizlenebilir.
+- `infra/mvp-exit` uzak dalı ve yerel `../spaceapp-logar-infra` worktree'si hâlâ
+  duruyor (14 Kasım'daki PR #1 merge edilmeden kapatılmıştı); silinmeleri
   `piebio`'nun kararıdır.
+- Son commit için CI sonucu bu belgede doğrulanmadı; push sonrası GitHub'da
+  `test`, `test-postgres` ve `frontend` işlerine bakın.
 
 ## İlk yapılacak Git işlemi
 
@@ -75,8 +78,12 @@ MAIN SERBEST — <commit kimliği> — <test sonucu> — <açık not>
 uv run uvicorn spaceapp_logar.main:app --reload
 ```
 
-- Panel: `http://127.0.0.1:8000/` (`/ui/`'ye yönlendirir; vanilla JS, çevrimdışı,
-  CDN veya build adımı yok).
+- Panel: `http://127.0.0.1:8000/` (`/ui/`'ye yönlendirir). Önce arayüzü derleyin:
+  `cd frontend && npm ci && npm run build` (Node 22+). FastAPI `frontend/dist`
+  klasörünü sunar (`dashboard.py`, `SPACEAPP_UI_DIST`); derleme yoksa `/ui/` nasıl
+  derleneceğini söyleyen yerleşik bir sayfa döner. Geliştirme: `npm run dev`
+  (`http://localhost:5173/ui/`, `/v1` ve `/health` arka uca yönlenir;
+  `VITE_BACKEND`, `VITE_PORT`).
 - API dokümantasyonu: `http://127.0.0.1:8000/docs`
 - `GET /health`: servis durumu + `schema` alanı (`current` / `outdated` /
   `unknown`). Veritabanı revizyonu kodun head'iyle eşleşmezse (genellikle şema
@@ -92,8 +99,10 @@ Ortam değişkenleri (kaynak koddan doğrulandı):
 | `SPACEAPP_DATABASE_URL`, sonra `DATABASE_URL` | `sqlite:///./spaceapp-logar.db` | `postgres://` ve `postgresql://` önekleri `postgresql+psycopg://`'a çevrilir |
 | `SPACEAPP_CORS_ORIGINS` | localhost/127.0.0.1 üzerinde 5173 ve 3000 | Virgülle ayrılmış origin listesi |
 | `SPACEAPP_AUTH_REQUIRED` | `false` | `1`/`true`/`yes` ile açılır |
-| `SPACEAPP_AUTH_SECRET` | yok | Token imzalama anahtarı; yoksa `POST /v1/auth/token` 503 döner |
+| `SPACEAPP_AUTH_SECRET` | yok | Token imzalama anahtarı; senkron paketlerini de imzalar; yoksa `POST /v1/auth/token` 503 döner |
 | `SPACEAPP_AUTH_USERS` | yok | `id:ROL:passcode` girdileri, virgülle ayrılmış; parolalar yalnız ortamda tutulur, repoya yazılmaz |
+| `SPACEAPP_UI_DIST` | `frontend/dist` | Arayüz derlemesinin klasörü |
+| `SPACEAPP_LINK_DELAY_SECONDS` | yok | Yer bağlantısı gecikmesi (saniye); `GET /v1/sync/status` döner |
 | `SPACEAPP_ALEMBIC_INI` | repo kökündeki `alembic.ini` | Şema kontrolünün kod head'ini okuduğu dosya |
 | `TEST_DATABASE_URL` | yok | Testleri PostgreSQL'e karşı koşturur |
 | `PORT` | `8000` | Yalnız Docker imajı: uvicorn portu (`Dockerfile` CMD) |
@@ -107,7 +116,7 @@ Bugün eklenenler dahil, ana başlıklar (ayrıntı için
 - **CO2:** son 60 dakikalık pencere, veri yeterliliği/boşluk/kalite bayrakları;
   onaylı `ENV_CO2_WATCH_CARD_V1` ve `piebio` onaylı V2 kartı. Biyoloji
   rehberindeki CO2 senaryoları kural ve API seviyesinde test edilir.
-- **Çok metrikli kural motoru:** 11 metrik (kalp hızı, SpO2, solunum, vücut
+- **Çok metrikli kural motoru:** 12 metrik (kalp hızı, HRV_RMSSD [yalnız veri], SpO2, solunum, vücut
   sıcaklığı, sistolik/diyastolik tansiyon, uyku, kabin CO2/O2/basınç, radyasyon
   doz hızı). Genel ölçüm ucu `POST /v1/measurements`; eski
   `POST /v1/observations` (yalnız CO2) geriye uyumluluk için durur.
@@ -149,10 +158,28 @@ Bugün eklenenler dahil, ana başlıklar (ayrıntı için
 - **Demo:** 9 sentetik senaryo (`GET /v1/demo/scenarios`,
   `POST /v1/demo/scenarios/{id}/run`), OSDR yükleme
   (`POST /v1/demo/osdr-labs/import`). Mevcut veri silinmez.
-- **Panel:** çevrimdışı izleme paneli; risk kapsamı, kişisel normal durumu,
-  eylem kartı V2 ve kırmızı bayrak akışı dahil.
+- **Aktivite bildirimi:** `/v1/activities` (başlat / bitir / güncel);
+  `observations.activity_source` (`SENSOR` | `DECLARED`); süre dolunca bağlam
+  bilinmiyor (`EXPIRED`); `CrewStatusRead.current_activity`. Migration 0015.
+- **Vücut haritası:** `GET /v1/crew/{id}/body-map`, `rules/body_map.py`, 9 sabit
+  bölge; kural ve metrik -> bölge tek tablodur (yeni kural eklenince tabloya da
+  eklenmeli; test zorlar).
+- **Rutinler, periyodik testler, seriler:** `/v1/routines/*`; DEMO aralıklar;
+  ilaç hatırlatması yoktur. Migration 0016.
+- **Yer ile senkron + otomatik uçuş hekimi eskalasyonu:** `/v1/sync/status|packet|ack|escalations`;
+  SHA-256 + isteğe bağlı HMAC; onay için `GROUND` rolü; alarm başına bir
+  eskalasyon. Migration 0017.
+- **Eğilim ve HRV:** `GET /v1/measurements/trend`; `HRV_RMSSD` yalnız veridir
+  (kural/eşik yok).
+- **Kimlik uçları:** `GET /v1/auth/config`, `GET /v1/auth/me`.
+- **Arayüz (`frontend/`):** Vite + React 19 + TypeScript + React Three Fiber;
+  HUD tarzı görev ekranı, 3D vücut haritası (BodyParts3D 4.0, CC BY 4.0; atıf:
+  `frontend/public/models/ATTRIBUTION.md`), 2D yedek, giriş penceresi,
+  çevrimdışı öncelikli (CDN yok). Eski `src/spaceapp_logar/web/` paneli
+  kaldırıldı.
 - **Altyapı:** SQLite (WAL, `busy_timeout=30000`) ve PostgreSQL desteği; CORS;
-  GitHub Actions CI (`test` + `test-postgres`); `Dockerfile` ve `render.yaml`.
+  GitHub Actions CI (`test`, `test-postgres`, `frontend`); çok aşamalı
+  `Dockerfile` (Node derlemesi + Python) ve `render.yaml`.
 
 Genel durum kuralı: herhangi bir kural bilinmiyorsa ve hiçbiri NORMAL üstünde
 değilse genel durum UNKNOWN'dur (kötü veri ≠ normal sağlık). Sorulmamış veya
@@ -160,7 +187,7 @@ isteğe bağlı girdiler "Bilinmiyor" üretmez.
 
 ## Veritabanı durumu
 
-On dört Alembic migration'ı sıralıdır; head `20261114_0014`:
+On yedi Alembic migration'ı sıralıdır; head `20261115_0017`:
 
 1. `20261114_0001_create_observations.py`
 2. `20261114_0002_create_rule_evaluations.py`
@@ -176,9 +203,14 @@ On dört Alembic migration'ı sıralıdır; head `20261114_0014`:
 12. `20261114_0012_create_baseline_profiles.py`
 13. `20261114_0013_add_baseline_to_rule_evaluations.py`
 14. `20261114_0014_widen_rule_evaluation_source.py` — `rule_evaluations.source`
-    `VARCHAR(255)` → `TEXT`. Radyasyon kuralının kaynak metni 266 karakterdir;
-    PostgreSQL bu yüzden tüm demo senaryolarında hata veriyordu, SQLite
-    uzunluğu zorlamadığı için fark edilmemişti.
+    `VARCHAR(255)` → `TEXT` (PostgreSQL'de 266 karakterlik radyasyon kaynak metni
+    için gerekti).
+15. `20261115_0015_create_activity_declarations.py` — `activity_declarations` ve
+    `observations.activity_source`.
+16. `20261115_0016_create_routines.py` — `routine_schedules`,
+    `routine_completions`.
+17. `20261115_0017_create_ground_sync.py` — `ground_sync_acks`,
+    `ground_escalations`.
 
 Yeni migration veri silmemeli; hem SQLite hem PostgreSQL'de çalışmalıdır
 (SQLite için `batch_alter_table`). Destrüktif migration için Halil'in açık onayı
@@ -186,17 +218,16 @@ gerekir.
 
 ## Test durumu
 
-`8e3e7a3` commit'inde:
-
-- SQLite: **317 geçti, 2 atlandı** (atlananlar PostgreSQL'e özgü 2 test).
-- Gömülü PostgreSQL 16.2 (`pgserver`): **319 geçti**.
-- CI'da `aa52bea` (auth kodunu ve 319 testi içerir) için `test` ve
-  `test-postgres` yeşil.
+- SQLite (`a561bde`, 15 Kasım): **371 geçti, 2 atlandı** (atlananlar PostgreSQL'e
+  özgü 2 test); 373 test toplanıyor.
+- PostgreSQL ve CI sonuçları bu commit için bu belgede doğrulanmadı. Önceki
+  durum (14 Kasım, `8e3e7a3`): gömülü PostgreSQL'de tüm testler geçmişti.
+- Arayüz için ayrı test yoktur; CI `frontend` işi `tsc --noEmit` ve `vite build`
+  koşar.
+- Hızlı kontrol: `uv run pytest -q tests/test_dashboard.py`.
 
 Makinede PostgreSQL veya Docker yoksa tüm test seti gömülü bir PostgreSQL'e
-karşı şöyle koşulur (betik geçici bir veritabanı başlatır, `TEST_DATABASE_URL`
-ile pytest çalıştırır, sonra sunucuyu durdurur; geliştirme veritabanına
-dokunmaz):
+karşı şöyle koşulur (geçici veritabanı; geliştirme veritabanına dokunmaz):
 
 ```bash
 uv run --with pgserver python scripts/test_postgres_local.py
@@ -208,39 +239,49 @@ uv run --with pgserver python scripts/test_postgres_local.py
   sınıfı F.
 - Canlı veri sentetiktir; gerçek olan yalnız OSDR Inspiration4 laboratuvar
   değerleridir.
-- Panelde giriş akışı yoktur: `SPACEAPP_AUTH_REQUIRED` açılırsa panel ve
-  Hakan'ın frontend'i (auth header göndermiyor) çalışmaz.
 - Token iptali ve yenilemesi yoktur; parolalar ortamda düz metin tutulur
   (üretim kimlik sistemi değildir).
-- Rol kuralı yalnız kırmızı bayrak alarmını kapatmada uygulanır
-  (`CREW_MEDICAL_OFFICER`, yalnız kimliği doğrulanmış çağıranlar için;
-  bayrak kapalıyken anonim demo erişimi açık kalır).
+- Rol kuralları yalnız ikidir: kırmızı bayrak kapatma (`CREW_MEDICAL_OFFICER`)
+  ve senkron onayı (`GROUND`); yalnız kimliği doğrulanmış çağıranlar için,
+  bayrak kapalıyken anonim demo erişimi açık kalır.
+- Aktivite bitirme sahiplik denetlemez (başka ekip üyesinin bildirimi
+  bitirilebilir).
+- Rutin varsayılanlarının tekrar çağrılabilirliği koddadır; veritabanında
+  benzersizlik kısıtı yoktur.
+- Senkron durumundaki `pending_items` yaklaşıktır (alınma zamanına göre sayılır,
+  en fazla 5000 öğe).
+- BodyParts3D 4.0'da akciğer parankimi ve iç kulak labirenti etiketi yoktur:
+  akciğerler bronş ağacı ve akciğer damarlarıyla, `inner_ear` bölgesi dış kulakla
+  gösterilir.
+- Makine öğrenmesi, teşhis ve ilaç önerisi yoktur; HRV için eşik yoktur.
 - Render'da hangi veritabanının kullanılacağına karar verilmedi; `render.yaml`
   yalnız web servisini tanımlar, veritabanı eklenmedi.
 - Belirtiye dayalı kurallar (hareket hastalığı, görme) en fazla İzle seviyesine
   çıkar.
-- `AGENTS.md` var olmayan `/home/kuzey/RULES.md` dosyasına işaret eder ve
-  "195 test" gibi eski bilgi içerir. Kuzey'in dosyasıdır; dokunulmadı.
+- `AGENTS.md` var olmayan `/home/kuzey/RULES.md` dosyasına işaret eder ve eski
+  test sayısı gibi eskimiş bilgi içerir. Kuzey'in dosyasıdır; dokunulmadı.
 
 ## Devralan geliştirici için önerilen sonraki adımlar
 
-1. Push edilmemiş commit kaldıysa push etmek (sıra alınarak, fetch + ayrışma
-   kontrolüyle) ve son commit'te iki CI işinin yeşil olduğunu doğrulamak.
-2. `infra/mvp-exit` uzak dalının ve `spaceapp-logar-infra` worktree'sinin
-   temizlenmesi (`piebio` kararı).
-3. [WORK_BOARD.md](WORK_BOARD.md)'ye bugünkü işler için satır eklemek — önce
-   `piebio`'ya sorulur; pano koordinatörü Halil'dir.
-4. Hakan'ın frontend'i ile entegrasyon (uç sözleşmeleri, CORS origin'i, ileride
-   auth header).
+1. Push edilmemiş commit varsa push etmek (fetch + ayrışma kontrolüyle) ve son
+   commit'te `test`, `test-postgres` ve `frontend` CI işlerinin yeşil olduğunu
+   doğrulamak.
+2. Commit yazarlığı geçmişinin yeniden yazılması (ekip kararı, planlandı):
+   yapılacaksa tüm ekibe duyurulur, herkes yeniden klonlar.
+3. Arayüzü gerçek tarayıcıda gözden geçirmek: `models/body.glb` ve
+   `ATTRIBUTION.md` ile 3D vücut, WebGL olmayan ortamda 2D yedek, giriş penceresi
+   (`SPACEAPP_AUTH_REQUIRED=true` ile).
+4. Aktivite bitirmeye sahiplik denetimi; rutin varsayılanları için benzersizlik
+   kısıtı (yeni migration).
 5. Render veritabanı kararı (SQLite diskte mi, yönetilen PostgreSQL mi) ve buna
-   göre `render.yaml`.
-6. Panele giriş akışı; ardından token iptal/yenileme ve rol kurallarının
-   genişletilmesi.
-7. Aktivite bildirimi fikri ("Egzersize başla/bitir"; süre dolunca bağlam
-   bilinmiyor olur) konuşuldu, uygulanmadı.
-8. `.claude/` altındaki alt ajan worktree'lerinin temizlenmesi.
-9. Sunum ve 30 saniyelik video provası ([teslim paketi](SUBMISSION.md)).
-10. Uzun vadede: DEMO eşiklerin uçuş tıbbı uzmanınca doğrulanması.
+   göre `render.yaml`; canlı dağıtım yapılırsa gerçek adresi `SUBMISSION.md`'ye
+   ekleme.
+6. `infra/mvp-exit` uzak dalının, `spaceapp-logar-infra` worktree'sinin ve
+   `.claude/` altındaki alt ajan worktree'lerinin temizlenmesi.
+7. Sunum ve 30 saniyelik video provası ([teslim paketi](SUBMISSION.md)); video
+   senaryosu yeni React arayüzüne göre güncellendi, ekran adları değişmiş olabilir.
+8. Uzun vadede: DEMO eşiklerin uçuş tıbbı uzmanınca doğrulanması; HRV için
+   doğrulanmış bir eşik bulunmadan kural eklenmemesi.
 
 ## Değiştirilemeyecek ürün sınırları
 
@@ -252,8 +293,7 @@ uv run --with pgserver python scripts/test_postgres_local.py
 - Yeni tıbbi eşik, teşhis iddiası veya eylem kartı metni kullanıcı onayı
   gerektirir; kart metni değişirse yeni sürüm açılır.
 - Auth bayrağı varsayılan olarak kapalı kalır.
-- Push yalnız `MAIN BENDE` sırasıyla yapılır; yapay zekâ ajanları açık talep
-  olmadan push veya deploy yapmaz.
+- Yapay zekâ ajanları açık talep olmadan push veya deploy yapmaz.
 
 ## Başlıca kaynak dosyalar
 
@@ -265,5 +305,5 @@ uv run --with pgserver python scripts/test_postgres_local.py
 - Biyoloji karar rehberi: [biyo.md](biyo.md)
 - Araştırma aşamaları: [RESEARCH_PLAN.md](RESEARCH_PLAN.md)
 - Git düzeni: [GIT_WORKFLOW.md](GIT_WORKFLOW.md)
-- Aktif görevler: [WORK_BOARD.md](WORK_BOARD.md)
+- Paralel yapı sözleşmesi (tarihsel; kod esastır): [CONTRACT_PARALLEL_BUILD.md](CONTRACT_PARALLEL_BUILD.md)
 - Teslim paketi: [SUBMISSION.md](SUBMISSION.md)

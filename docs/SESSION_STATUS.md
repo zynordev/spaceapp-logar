@@ -2,229 +2,163 @@
 
 Bu dosya, bir sonraki çalışma oturumunun (insan ya da yapay zekâ) hiçbir
 şeyi yeniden keşfetmeden devam edebilmesi içindir. Ayrıntılı teknik belgeler
-için: `docs/HANDOFF.md`, `docs/ALARM_RULES.md`, `docs/DEMO_RULES.md`,
-`docs/GIT_WORKFLOW.md`, `docs/WORK_BOARD.md`, `docs/biyo.md`.
+için: `docs/HANDOFF.md`, `docs/API_DATA_MODEL.md`, `docs/ALARM_RULES.md`,
+`docs/DEMO_RULES.md`, `docs/GIT_WORKFLOW.md`, `docs/biyo.md`.
 
 > Sistem bir **prototip karar-destek aracıdır; teşhis koymaz.** Yalnız kabin
 > CO2 kuralı NASA-STD-3001'e dayanır. Diğer bütün eşikler **DEMO** etiketlidir
 > (kanıt sınıfı F) ve uçuş tıbbı doğrulaması bekler.
 
-## 1. Tarih ve özet
+Son güncelleme: 15 Kasım 2026, teslim günü (NASA Space Apps). Bu dosya `main`
+ucu `a561bde` anında yazıldı; sonraki commit'ler bunun üstüne gelir.
 
-- Tarih: 14 Kasım 2026. Teslim (NASA Space Apps): **15 Kasım 2026**.
-- Ekip:
-  - **piebio**: backend + araştırma (Claude ile çalışıyor).
-  - **Halil Erdem Yanık**: backend; `docs/WORK_BOARD.md` koordinatörü.
-  - **Hakan**: frontend; kendi arayüzünü tasarlıyor; şu an auth header göndermiyor.
-  - **Kuzey**: Antigravity aracıyla CI, Dockerfile, `render.yaml`, `docs/SUBMISSION.md`
-    yaptı; şimdilik bu işten çekildi.
-- Özet: Tek metrikli CO2 kuralından başlayan backend; bugün sonunda çok metrikli
-  kural motoru (11 metrik), alarm yaşam döngüsü, eylem kartı V2, kırmızı bayrak,
-  çevrimdışı panel (`/ui/`), gerçek NASA OSDR Inspiration4 lab verisi, ortam
-  bağlamı + kişisel normal, şema kontrolü, PostgreSQL desteği, toplu ölçüm + CSV
-  adaptörü, JSON log + `X-Request-ID`, isteğe bağlı token auth + roller içeriyor.
+## 1. Özet
 
-## 2. Bugün yapılanlar (kronolojik, `main` sırası, en eskiden en yeniye)
+- Ekip: **piebio** (backend + araştırma; Claude ile çalışıyor), **Halil Erdem
+  Yanık** (backend, koordinasyon), **Hakan** (frontend), **Kuzey** (Antigravity
+  ile CI, Dockerfile, `render.yaml`, `SUBMISSION.md`; şimdilik çekildi).
+- 14 Kasım'da backend: 11 metrikli kural motoru, alarm yaşam döngüsü, eylem
+  kartı V2, kırmızı bayrak, OSDR lab verisi, ortam bağlamı + kişisel normal,
+  PostgreSQL, toplu ölçüm, JSON log, isteğe bağlı token auth + roller, eski
+  vanilla JS paneli.
+- 15 Kasım'da: altı backend izi (A-F) ve beş arayüz izi paralel yürüdü ve
+  `main`'e merge edildi. Sonuç: yeni React arayüzü, vücut haritası, aktivite
+  bildirimi, rutinler, yer ile senkron, eğilim ve HRV (aşağıda).
 
-Kaynak: `git log --oneline -n 60`. Hepsi 14 Kasım 2026.
+## 2. 15 Kasım'da yapılanlar
 
-**Başlangıç ve araştırma (zynordev, Halil)**
-- `f7a3ad3`, `a3e743b` — ilk commit, README.
-- `7837df9` araştırma planı · `1b8c2e2` iş akışı + gösterge taslağı ·
-  `bc3dba0` MVP gösterge kapsamı onayı · `7066f41` backend yığın karşılaştırması.
+Paralel yapının sözleşmesi [CONTRACT_PARALLEL_BUILD.md](CONTRACT_PARALLEL_BUILD.md)
+dosyasındaydı; o dosya tarihsel kayıttır, **kod esastır**. Çalışma, ana oturumun
+başlattığı yapay zekâ alt ajanlarıyla ayrı dallarda (worktree) yürütüldü ve
+`main`'e merge edildi.
 
-**İlk backend ve CO2 (Halil)**
-- `671cc8a` FastAPI iskeleti · `df07609` açıklanabilir alarm kuralları taslağı ·
-  `0de9aeb` CO2 WATCH kuralı · `f185f47` API/veri modeli önerisi.
-- `fefa64a` CO2 gözlem sözleşmesi · `3b2ce5f` gözlem migration'ı ·
-  `24b7f78` gözlemleri API ile kaydetme · `7e5d227` kayan CO2 penceresi ·
-  `d0d6d37` kural değerlendirme kanıtı · `a58309c` öznel check-in ·
-  `14c60ac` birleşik ekip durumu · `6e9381c` CO2 eylem kartı önerisi ·
-  `2bb9587` biyoloji karar rehberi (`docs/biyo.md`).
+**Backend (ayrıntı: [API_DATA_MODEL.md](API_DATA_MODEL.md))**
+- A: `GET /v1/auth/config` (token istemez), `GET /v1/auth/me`.
+- B: aktivite bildirimleri `/v1/activities` (migration 0015);
+  `observations.activity_source` = `SENSOR` | `DECLARED`; süre dolunca bağlam
+  bilinmiyor (`EXPIRED`); `CrewStatusRead.current_activity`.
+- C: `GET /v1/crew/{id}/body-map`, `rules/body_map.py`, 9 sabit bölge.
+- D: rutinler, periyodik testler ve seriler `/v1/routines/*` (migration 0016);
+  DEMO aralıklar; ilaç hatırlatması yoktur. Rutin tamamlamada aynı dilime tekrar
+  tamamlama seriyi şişirmez, gelecekteki `completed_at` reddedilir.
+- E: yer ile senkron ve otomatik uçuş hekimi eskalasyonu `/v1/sync/status|packet|ack|escalations`
+  (migration 0017); SHA-256 + isteğe bağlı HMAC-SHA256; onay için `GROUND` rolü;
+  `SPACEAPP_LINK_DELAY_SECONDS`; alarm başına bir eskalasyon.
+- F: `GET /v1/measurements/trend` (saatlik/günlük sepetler, en fazla 1000) ve
+  `HRV_RMSSD` metriği (yalnız veri; kural/eşik yok). Metrik sayısı 12 oldu.
 
-**CO2 kartı, Git düzeni, yaşam döngüsü**
-- `3ebb073` + `f1fc478` — onaylı CO2 WATCH eylem kartı V1 (piebio).
-- `b704e59` — biyoloji rehberinden CO2 senaryo testleri.
-- `5d2acf7` Git iş akışı · `01aabd8` backend devir notu (Halil).
-- `6741e2f` + `1278503` — alarm yaşam döngüsü + periyodik laboratuvar sonuçları.
+**Arayüz (`frontend/`, sıfırdan)**
+- Vite + React 19 + TypeScript + React Three Fiber; HUD tarzı görev ekranı;
+  vitals, grafikler, alarmlar, eylem kartı V2, "Neden bu durum?"; girişler
+  (öznel durum, aktivite, rutinler, lab, kırmızı bayrak, demo); yer istasyonu
+  paneli (senkron, eskalasyon, risk kapsamı); giriş penceresi; çevrimdışı
+  öncelikli (CDN yok).
+- Gerçekçi 3D vücut haritası: BodyParts3D 4.0 (CC BY 4.0) türevi GLB; atıf
+  `frontend/public/models/ATTRIBUTION.md`; GLB yoksa prosedürel gövde, 3D
+  çalışmazsa 2D yedek.
+- `src/spaceapp_logar/dashboard.py` arayüzü `/ui/` altında `frontend/dist`
+  klasöründen sunar (`SPACEAPP_UI_DIST`); derleme yoksa bilgi sayfası. Eski
+  `src/spaceapp_logar/web/` paneli kaldırıldı.
+- `Dockerfile` çok aşamalı (Node derlemesi + Python); CI'ya `frontend` işi eklendi.
 
-**Kural motoru, panel, OSDR**
-- `233abbc` — çok metrikli kural motoru + demo senaryoları (DEMO vital kurallar:
-  SpO2, sıcaklık eğilimi, dinlenme kalp+solunum+belirti, kalp hızı sensör kalitesi).
-- `d631f8d` — çevrimdışı panel (`/ui/`, vanilla JS, CDN/derleme yok).
-- `c5aa47c` — gerçek OSDR Inspiration4 lab verisi (OSD-569 CBC, OSD-575 CMP;
-  252 değer: uçuş öncesi 108 / sonrası 144; hemoglobin birimi g/dL doğrulandı).
-- `a06bf1d` — demo kuralları, panel ve OSDR belgeleri.
+**Belgeler:** README, API/veri modeli, devir notu, bu dosya ve `SUBMISSION.md`
+koda göre güncellendi; `WORK_BOARD.md` artık kullanılmıyor.
 
-**CORS, CI, kırmızı bayrak, dağıtım**
-- `871caea` — yerel frontend dev sunucuları için CORS (5173 / 3000).
-- `00ed0e9` — GitHub Actions CI (Kuzey).
-- `9c6c8b5`, `422cb3e`, `5654c35` — kırmızı bayrak: anında CRITICAL; panelden
-  bildirme ve elle kapatma; belgeler.
-- `3a46915` SQLite WAL + busy_timeout · `9187079` Dockerfile + `render.yaml` ·
-  `d1221e7` `docs/SUBMISSION.md` (Kuzey).
+## 3. Alınan kararlar
 
-**Eylem kartı V2 ve kapsam genişletmesi**
-- `e7829b1`, `028834a`, `5d7fbf6` — eylem kartı V2 (adım nedenleri, yeniden
-  değerlendirme sayacı, yükselme/kapanma koşulları, olası açıklamalar, canlı
-  durum, "Yaptım" adım kaydı); CO2 V2 kartı piebio onaylı.
-- `792ecd0`, `9fd1ac0`, `0ec5a42` — kapsam: kabin O2 kısmi basıncı, radyasyon +
-  kümülatif doz, uyku borcu, hareket hastalığı, görme/SANS; öznel forma
-  görme/sırt ağrısı/burun tıkanıklığı; NASA'nın 5 tehlikesi ve kesitler arası
-  bir veri güvenilirliği grubuna göre risk kapsam haritası
-  (`rules/risk_coverage.py`; toplam 21 risk = 11 kural, 4 sadece veri, 6
-  boşluk); 9 demo senaryosu.
-- `a684072` — `SUBMISSION.md`'deki abartılı/yanlış iddialar düzeltildi (piebio onayı).
-
-**Altyapı (MVP çıkışı)**
-- `e218f87`, `e8d4d28` — ortam bağlamı + kişisel normal servisi + profil
-  sürümleri (migration 0011-0013); panelde kişisel normal durumu.
-- `4842661` — çalışma anında eski şema tespiti (eski şemada 503, `/health`
-  `schema` alanı).
-- `0140bf5` — SQLite yanında PostgreSQL (migration 0014: `rule_evaluations.source`
-  TEXT; 266 > 255 uzunluk hatası).
-- `68809c6` — `POST /v1/measurements/batch` + CSV telemetri adaptörü
-  (`services/adapters/csv_telemetry.py`) — alt ajan, cherry-pick.
-- `980c93f` — `X-Request-ID`, JSON istek logları, tutarlı hata gövdeleri — alt
-  ajan, cherry-pick. Bu commit'te CI kırmızıydı.
-- `2e029f7` — 422 hata gövdesi testi yerel veritabanından bağımsız yapıldı; CI
-  tekrar yeşil.
-- `8e3e7a3` — isteğe bağlı token auth + roller — alt ajan, cherry-pick.
-- `aa52bea` — belge commit'i: bu dosya, README, `API_DATA_MODEL.md`,
-  `HANDOFF.md`, `SUBMISSION.md` güncellemesi ve `scripts/test_postgres_local.py`.
-- `9a92a07` — belgeler arası tutarlılık düzeltmeleri (`API_DATA_MODEL.md`).
-- `8e3e7a3`, `aa52bea` ve `9a92a07` `origin/main`'e push edildi.
-
-## 3. Alınan kararlar ve gerekçeleri
-
-- **Yeni eşikler DEMO / kanıt sınıfı F.** Teşhis, ilaç, doz yok. Gerekçe: kanıta
-  dayalı tek eşik CO2 (NASA-STD-3001); diğerleri doğrulanmadı.
-- **Eylem kartı metni değişirse yeni sürüm.** V1 eski kayıtlar için katalogda
-  kalır. Gerekçe: geçmiş alarmlar gösterildikleri metinle izlenebilmeli.
-- **Sorulmamış/isteğe bağlı girdiler "Bilinmiyor" üretmez.** Gerekçe: boş
-  bırakılan isteğe bağlı alan veri eksikliği değildir.
-- **Belirtiye dayalı kurallar (hareket hastalığı, görme) en fazla İzle seviyesi.**
-  Gerekçe: öznel girdi tek başına yükseltme kanıtı değildir.
-- **Genel durum UNKNOWN:** herhangi bir kural bilinmiyorsa ve hiçbiri NORMAL
-  üstünde değilse. Gerekçe: eksik veriyle "her şey normal" denmez.
-- **Kırmızı bayrak:** anında CRITICAL; otomatik kapanmaz, elle kapatılır
-  (`POST /v1/alerts/{alert_id}/resolve`). Geçerli token'la yapılan çağrıda
-  yalnız `CREW_MEDICAL_OFFICER` kapatabilir (değilse 403). Auth kapalıyken
-  token'sız ya da geçersiz token'lı çağrı anonim demo olarak açık kalır.
-  Ölçüme dayalı alarmlar bu uçtan kapatılamaz (409).
-- **Madde 2 (şema kontrolü) ve 3 (PostgreSQL) ana oturumda kaldı** (piebio kararı).
-  Paralel fork oturumunun açtığı PR #1 (`infra/mvp-exit`) bunlarla çakışıyordu.
-- **Auth bayrağı varsayılan kapalı** (`SPACEAPP_AUTH_REQUIRED`, varsayılan
-  `false`). Kapalıyken geçersiz token yok sayılır ve loglanır; açıkken 401.
-  Gerekçe: panel ve Hakan'ın frontend'i bugün token göndermiyor.
-- **`SUBMISSION.md` iddiaları koda uydurulur**, tersi değil (piebio onayı).
+- **Commit yazarlığı:** ekip kararıyla commit'ler Halil Erdem Yanık / `zynordev`
+  adına durur. Geçmişin yeniden yazılması **planlandı, henüz yapılmadı**;
+  yapılırsa commit kimlikleri değişir ve belgelerdeki kimlikler eskir.
+- **Kod esastır:** paralel yapı sözleşmesi tarihsel kayıttır; belgeler koda
+  uydurulur, tersi değil. `SUBMISSION.md` abartı içermez.
+- **Yeni eşikler DEMO / kanıt sınıfı F;** teşhis, ilaç, doz yok. Rutin
+  kataloğunda ilaç hatırlatması hiçbir zaman yer almaz.
+- **HRV yalnız veridir:** doğrulanmış eşik olmadan kural eklenmez.
+- **Eskalasyon kural tabanlıdır:** sabit yönlendirme tablosu; makine öğrenmesi yok.
+- **Eylem kartı metni değişirse yeni sürüm;** V1 eski kayıtlar için katalogda kalır.
+- **Genel durum UNKNOWN** kuralı: kötü veri normal sağlık sayılmaz. Süresi dolan
+  aktivite bildirimi de bağlamı "bilinmiyor" yapar.
+- **Kırmızı bayrak** anında CRITICAL; otomatik kapanmaz, elle kapatılır
+  (token varsa `CREW_MEDICAL_OFFICER`).
+- **Auth bayrağı varsayılan kapalı** (`SPACEAPP_AUTH_REQUIRED`). Arayüzün giriş
+  penceresi vardır, ama demo/teslimde kapalı tutulur.
+- **3D anatomi:** BodyParts3D 4.0 (CC BY 4.0) kullanılır, atıf zorunludur;
+  görselleştirme sınırları dürüstçe belirtilir (aşağıda).
+- **Tek arayüz:** eski vanilla JS paneli kaldırıldı, yenisi tek arayüzdür.
 
 ## 4. Şu anki durum
 
-- Branch: `main`. Bu bölüm güncellenirken `HEAD` = `origin/main` = `9a92a07`;
-  `git rev-list --left-right --count HEAD...origin/main` → `0 0`. `8e3e7a3`
-  (auth) ve belge commit'leri (`aa52bea`, `9a92a07`) push edildi. Bu düzeltmeden
-  sonraki belge commit'leri bunun üstüne gelir; push durumunu `git status -sb`
-  ile kontrol et.
-- CI (`.github/workflows/ci.yml`): iki iş — `test` (SQLite) ve `test-postgres`
-  (`postgres:16` servisi, `TEST_DATABASE_URL`). `2e029f7` için yeşil; `980c93f`
-  için kırmızıydı. `aa52bea` (auth kodunu ve 319 testin tamamını içerir) için
-  iki iş de yeşil (`gh run view 43613836436`). `9a92a07` için de CI yeşil
-  (`gh run list`, koşu `43613887562`).
-- Testler (`8e3e7a3`): 319 test toplanıyor. SQLite: 317 geçti, 2 atlandı
-  (`tests/db/test_postgres.py`, yalnız PostgreSQL). Gömülü PostgreSQL 16.2
-  (pgserver): 319 geçti.
-- Yerel PostgreSQL doğrulaması: makinede PostgreSQL/Docker yok.
-  `uv run --with pgserver python scripts/test_postgres_local.py` gömülü
-  PostgreSQL başlatıp `TEST_DATABASE_URL` ile tüm seti koşar.
-  `scripts/test_postgres_local.py` `aa52bea` ile repoya eklendi.
-- Yerel sunucu: bir terminal sekmesinde
-  `uv run uvicorn spaceapp_logar.main:app --reload` çalışıyor. `/` → `/ui/`
-  yönlendirir; API belgeleri `/docs`; sağlık `/health`.
-- Veritabanı: varsayılan `sqlite:///./spaceapp-logar.db` (`./spaceapp-logar.db`,
-  `.gitignore`'da), migration 0014'te (head). URL sırası:
-  `SPACEAPP_DATABASE_URL` → `DATABASE_URL` → varsayılan.
-- Ortam değişkenleri (uygulama kodundan): `SPACEAPP_DATABASE_URL`, `DATABASE_URL`,
-  `SPACEAPP_CORS_ORIGINS` (varsayılan localhost/127.0.0.1 için 5173 ve 3000),
-  `SPACEAPP_AUTH_REQUIRED`, `SPACEAPP_AUTH_SECRET` (yoksa `POST /v1/auth/token`
-  503), `SPACEAPP_AUTH_USERS` (`id:ROLE:passcode`, virgülle), `SPACEAPP_ALEMBIC_INI`.
-  Roller: `ASTRONAUT`, `CREW_MEDICAL_OFFICER`, `GROUND`. Token ömrü 12 saat.
-  Ayrıca testlerde `TEST_DATABASE_URL` (PostgreSQL ile test), Docker'da `PORT`
-  (varsayılan 8000).
-- Dağıtım: `Dockerfile` CMD = `alembic upgrade head` → OSDR içe aktarma →
-  uvicorn (`$PORT`, varsayılan 8000). `render.yaml`: tek web servisi (docker,
-  free, frankfurt), yalnız `SPACEAPP_CORS_ORIGINS="*"`; veritabanı tanımı yok.
-- Çalışma ağacı (`9a92a07` anında): izlenmeyen tek şey `.claude/` (alt ajan
-  worktree'leri, commit'lenmez). Belge güncellemeleri ve
-  `scripts/test_postgres_local.py` `aa52bea` / `9a92a07` ile commit'lendi.
+- Branch: `main`, ucu `a561bde` ("Merge HUD mission-screen design"). Push durumu
+  bu belgede doğrulanmadı: `git status -sb` ve
+  `git rev-list --left-right --count HEAD...origin/main` ile bakın.
+- Testler (SQLite, `a561bde`): **371 geçti, 2 atlandı** (PostgreSQL'e özgü 2 test);
+  373 test toplanıyor. PostgreSQL koşusu ve CI sonucu bu commit için doğrulanmadı.
+- CI (`.github/workflows/ci.yml`): `test` (SQLite), `frontend` (Node 22,
+  `npm ci` + `npm run build`) ve `test-postgres` (`postgres:16`). Son commit
+  için sonuçlar doğrulanmadı.
+- Migration head: `20261115_0017` (17 migration).
+- Çalıştırma: `uv sync`, `uv run alembic upgrade head`,
+  `cd frontend && npm ci && npm run build`, `uv run uvicorn spaceapp_logar.main:app`.
+  Geliştirme: `cd frontend && npm run dev` (`VITE_BACKEND`, `VITE_PORT`).
+- Ortam değişkenleri: `SPACEAPP_DATABASE_URL`, `DATABASE_URL`,
+  `SPACEAPP_CORS_ORIGINS`, `SPACEAPP_AUTH_REQUIRED`, `SPACEAPP_AUTH_SECRET`,
+  `SPACEAPP_AUTH_USERS`, `SPACEAPP_ALEMBIC_INI`, `SPACEAPP_UI_DIST`,
+  `SPACEAPP_LINK_DELAY_SECONDS`, testlerde `TEST_DATABASE_URL`, Docker'da `PORT`.
+- Dağıtım: `Dockerfile` (Node derlemesi, sonra `alembic upgrade head` → OSDR
+  içe aktarma → uvicorn) ve `render.yaml` (tek web servisi, veritabanı yok).
+  Henüz dağıtılmadı.
+- Canlı veri sentetiktir; gerçek olan yalnız OSDR Inspiration4 lab değerleridir
+  (252 değer). Makine öğrenmesi yoktur.
 
-## 5. Paralel oturumlar / ajanlar ve branch'leri
+## 5. Bilinen sınırlar
 
-| Branch | Nerede | İçerik | Durum |
-| --- | --- | --- | --- |
-| `infra/mvp-exit` | yerel + `origin`; worktree `../spaceapp-logar-infra` | `c7736d9` şema kontrolü + yapılandırılmış log + request id; `c236d6b` PostgreSQL + CI; `f2694ff` source TEXT | Fork oturumu. PR #1 `gh pr list`'te **CLOSED**. İş `main`'de ayrı commit'lerle yapıldı; branch ve worktree hâlâ duruyor. |
-| `worktree-agent-ad4cee321b7ed7d95` | `.claude/worktrees/agent-ad4cee321b7ed7d95` | `9e7f254` toplu ölçüm + CSV; `78b9c34` request id/JSON log/hata gövdesi | `main`'e cherry-pick edildi (`68809c6`, `980c93f`). |
-| `worktree-agent-af568f6b7abd41ec4` | `.claude/worktrees/agent-af568f6b7abd41ec4` | `a373483` token auth + roller | `main`'e cherry-pick edildi (`8e3e7a3`). |
+- Aktivite bitirme sahiplik denetlemez (başka ekip üyesinin bildirimi bitirilebilir).
+- Rutin varsayılanlarının tekrar çağrılabilirliği (idempotency) koddadır;
+  veritabanında benzersizlik kısıtı yoktur.
+- `GET /v1/sync/status` içindeki bekleyen sayıları yaklaşıktır.
+- BodyParts3D 4.0'da akciğer parankimi ve iç kulak labirenti etiketi yoktur:
+  akciğerler bronş ağacı ve akciğer damarlarıyla, `inner_ear` bölgesi dış kulakla
+  gösterilir.
+- DEMO eşikler uçuş tıbbı uzmanınca doğrulanmadı.
+- Token'lar demo kimliğidir (iptal, yenileme, parola özeti yok); rol kuralları
+  yalnız kırmızı bayrak kapatma ve senkron onayı için vardır.
+- Render'da veritabanı kararı yok; ücretsiz planda SQLite dosyası kalıcı değildir.
+- `AGENTS.md` var olmayan `/home/kuzey/RULES.md`'ye işaret eder ve eski bilgi
+  içerir (Kuzey'in dosyası; dokunulmadı).
 
-- `.claude/` commit'lenmez; iki alt ajan worktree'si ve branch'i temizlenebilir.
+## 6. Açık işler
 
-## 6. Açık işler ve bekleyen kararlar
+- Son commit'i push etmek ve üç CI işinin yeşil olduğunu doğrulamak.
+- Commit yazarlığı geçmişinin yeniden yazılması (planlandı; yapılırsa herkes
+  yeniden klonlar, force-push gerekir ve ekibe önceden duyurulur).
+- Arayüzü gerçek tarayıcıda gözden geçirmek: 3D vücut (GLB ve atıf dosyası
+  yerinde mi), 2D yedek, giriş penceresi.
+- Aktivite sahiplik denetimi ve rutin benzersizlik kısıtı (yeni migration).
+- Render veritabanı kararı; dağıtım yapılırsa gerçek adresin `SUBMISSION.md`'ye
+  eklenmesi.
+- `infra/mvp-exit` uzak dalı, `../spaceapp-logar-infra` ve `.claude/` altındaki
+  worktree'lerin temizlenmesi (piebio kararı).
+- Sunum ve 30 saniyelik video provası; senaryo yeni arayüze göre güncellendi.
+- Uzun vadede: DEMO eşiklerin uçuş tıbbı uzmanınca doğrulanması.
 
-- **Push:** `8e3e7a3`, `aa52bea`, `9a92a07` push edildi. Sonraki belge
-  commit'leri de `GIT_WORKFLOW.md` sırasına göre (MAIN BENDE / MAIN SERBEST)
-  push edilir. — piebio
-- **PR #1 / `infra/mvp-exit`:** PR kapalı görünüyor; uzak branch ve
-  `../spaceapp-logar-infra` worktree'si silinsin mi? — piebio
-- **`docs/WORK_BOARD.md`'ye satır eklemek:** önce piebio'ya sorulacak;
-  koordinatör Halil. — piebio / Halil
-- **Render'da veritabanı:** karar yok; `render.yaml`'a DB eklenmedi. Render
-  belgesine göre (`render.com/docs/free`) ücretsiz web servislerinin dosya
-  sistemi geçicidir ve kalıcı disk eklenemez; yeniden dağıtım, yeniden başlatma
-  veya uyku sonrası SQLite dosyası kaybolur. — ekip
-- **Panelde giriş akışı yok:** auth bayrağı açıkken panel çalışmaz. — backend
-- **Token iptal/yenileme yok;** rol kuralı yalnız kırmızı bayrak elle kapatmada
-  (`require_role` tek kullanım: `api/alerts.py`). — backend
-- **DEMO eşikler** uçuş tıbbı doğrulaması bekliyor. — dış uzman
-- **Canlı veri sentetik** (demo senaryoları); gerçek veri yalnız OSDR lab. — bilgi
-- **Hakan'ın frontend'i ile entegrasyon** (CORS hazır; auth header yok). — Hakan + backend
-- **Aktivite bildirimi** ("Egzersize başla/bitir", süre dolunca bilinmiyor):
-  konuşuldu, yapılmadı. — piebio
-- **`AGENTS.md`:** var olmayan `/home/kuzey/RULES.md`'ye işaret ediyor, "195
-  test" gibi eski bilgi içeriyor. Kuzey'in dosyası; dokunulmadı. — Kuzey / ekip
-- **Alt ajan worktree'lerinin temizlenmesi.** — piebio
-- **Sunum/video provası** (`docs/SUBMISSION.md`). — ekip
+## 7. Dikkat edilecekler
 
-## 7. Bilinen riskler ve dikkat edilecekler
-
-- Herkes aynı `main`'de: push öncesi `git fetch` +
-  `git rev-list --left-right --count HEAD...origin/main`; **asla force-push**.
-- Her push sonrası iki CI işini (test, test-postgres) kontrol et (`gh run list`).
-  Auth kodu (`8e3e7a3`) `aa52bea` koşusunda iki işte de yeşil.
-- Auth açılırsa (`SPACEAPP_AUTH_REQUIRED=true`) panel ve frontend 401 alır.
-  Demo/teslimde kapalı tut. Gerçek secret/parola repoya yazılmaz.
-- Token'lar demo kimliğidir: iptal yok, yenileme yok, parola özeti yok.
-- Yeni migration eklenirse çalışan sunucunun veri uçları eski şemada 503
-  (`SCHEMA_OUTDATED`) döner; `/health` 200 ile `schema: outdated` gösterir.
-  Önce `uv run alembic upgrade head`.
-- Şema/metin uzunlukları PostgreSQL'de katıdır (0014 örneği); yeni alanlarda
-  PostgreSQL testini de koş.
+- Push öncesi `git fetch` ve ayrışma kontrolü; **force-push yok** (yazarlık
+  yeniden yazımı ekip kararıyla ayrıca ele alınır).
+- Yeni migration eklenirse çalışan sunucunun veri uçları 503 `SCHEMA_OUTDATED`
+  döner; önce `uv run alembic upgrade head`.
+- Auth açılırsa arayüz giriş penceresi çıkarır; gerçek secret/parola repoya
+  yazılmaz.
 - `SUBMISSION.md` ve sunumda: teşhis iddiası yok; yalnız CO2 NASA-STD-3001;
-  diğerleri DEMO (kanıt sınıfı F); canlı veri sentetik.
-- Commit yazar tarihleri cherry-pick ve rebase yüzünden yer yer sırasız
-  görünür (ör. `68809c6`, `980c93f`, `8e3e7a3`, `5d2acf7`, `e7829b1`); sırayı
-  `git log` (topolojik) belirler.
+  diğerleri DEMO; canlı veri sentetik; yapay zekâ araçlarının kullanımı
+  beyan edilir.
 
-## 8. Sonraki oturumda ilk 5 adım
+## 8. Sonraki oturumda ilk adımlar
 
-1. `git fetch` + `git status -sb` +
-   `git rev-list --left-right --count HEAD...origin/main`; push edilmemiş commit
-   kaldıysa MAIN BENDE ile push et, CI'nın iki işinin yeşil olduğunu doğrula.
-2. Testleri koş: `uv run pytest` (beklenen 317 geçti / 2 atlandı); PostgreSQL
-   için `uv run --with pgserver python scripts/test_postgres_local.py`
-   (beklenen 319 geçti).
-3. piebio'ya sor: `infra/mvp-exit` branch/worktree silinsin mi, `.claude/`
-   worktree'leri temizlensin mi, `WORK_BOARD.md`'ye satır eklensin mi.
-4. Hakan ile frontend entegrasyonunu dene (auth kapalı, CORS 5173/3000);
-   Render veritabanı kararını ekiple netleştir.
-5. Teslim provası: sunucuyu aç, `/ui/`'den demo senaryolarını çalıştır,
-   `docs/SUBMISSION.md` iddialarını panel çıktısıyla karşılaştır.
+1. `git fetch`, `git status -sb`, ayrışma kontrolü; push edilmemiş commit varsa
+   push et ve CI'yı doğrula.
+2. `uv run alembic upgrade head`, `uv run pytest` (SQLite'ta 371 geçti / 2
+   atlandı bekleniyor), `cd frontend && npm ci && npm run build`.
+3. Sunucuyu aç, `/ui/`'den demo senaryolarını çalıştır, `docs/SUBMISSION.md`
+   iddialarını ekran çıktısıyla karşılaştır.
+4. piebio'ya sor: yazarlık geçmişi yeniden yazımı ne zaman, eski dallar silinsin mi.

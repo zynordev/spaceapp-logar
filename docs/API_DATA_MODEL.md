@@ -1,6 +1,6 @@
 # API ve Veri Modeli
 
-Son güncelleme: 14 Kasım 2026
+Son güncelleme: 15 Kasım 2026
 
 Durum: **Onaylandı (Onay Kapısı D tamamlandı)**
 
@@ -159,7 +159,7 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
 - [x] `alert_event` yaşam döngüsü, `GET /v1/alerts` ve `POST /v1/alerts/{id}/acknowledge`
 - [x] `POST /v1/lab-results` ve `GET /v1/crew/{id}/lab-results` periyodik laboratuvar kartı
 
-- [x] Genel ölçüm ucu `POST /v1/measurements` (11 metrik, birim ve hedef türü
+- [x] Genel ölçüm ucu `POST /v1/measurements` (12 metrik, birim ve hedef türü
   doğrulaması, isteğe bağlı `activity_state`); zaman serisi, metrik kataloğu ve
   görev listesi uçları
 - [x] DEMO vital kuralları, kural başına son durum ve genel dikkat seviyesi
@@ -198,6 +198,20 @@ Her madde ayrı doğrulanacak; bütün veri modeli tek seferde kodlanmayacaktır
 - [x] Gözlemlenebilirlik: `X-Request-ID`, JSON istek logları, tutarlı hata gövdesi
 - [x] İsteğe bağlı token kimlik doğrulama ve roller (`POST /v1/auth/token`,
   `SPACEAPP_AUTH_REQUIRED` varsayılan kapalı)
+
+15 Kasım 2026'da eklenenler (ayrıntı aşağıda "15 Kasım uçları" bölümünde):
+
+- [x] `GET /v1/auth/config` (token istemez) ve `GET /v1/auth/me`
+- [x] Aktivite bildirimleri: `/v1/activities`, `activity_declarations` tablosu ve
+  `observations.activity_source` (migration 0015)
+- [x] Vücut haritası: `GET /v1/crew/{id}/body-map`, 9 sabit bölge
+  (`rules/body_map.py`; migration yok)
+- [x] Rutinler, periyodik testler ve seriler: `/v1/routines/*`,
+  `routine_schedules` ve `routine_completions` (migration 0016)
+- [x] Yer ile senkron ve otomatik uçuş hekimi eskalasyonu: `/v1/sync/*`,
+  `ground_sync_acks` ve `ground_escalations` (migration 0017)
+- [x] Eğilim: `GET /v1/measurements/trend`; `HRV_RMSSD` metriği (yalnız veri)
+- [x] React arayüzü `frontend/` (`/ui/` altında FastAPI sunar)
 
 ### Genel ölçüm sözleşmesi
 
@@ -465,8 +479,8 @@ yeniden denetlenir.
   "detail": {
     "code": "SCHEMA_OUTDATED",
     "message": "Veritabanı şeması kodun gerisinde (veritabanı: ..., kod: ...). Çalıştırın: uv run alembic upgrade head",
-    "database_revision": "20261114_0013",
-    "code_revision": "20261114_0014"
+    "database_revision": "20261115_0016",
+    "code_revision": "20261115_0017"
   },
   "error": {"code": "SERVICE_UNAVAILABLE", "message": "SERVICE_UNAVAILABLE", "request_id": "..."}
 }
@@ -605,15 +619,120 @@ Roller: `ASTRONAUT`, `CREW_MEDICAL_OFFICER`, `GROUND`.
   Token yoksa (bayrak kapalı) gövdedeki `crew_member_id` zorunludur, yoksa `422`.
   Bu kişi `acknowledged_by`, `resolved_by` ve adım kaydındaki `crew_member_id`
   olarak saklanır.
-- Rol kuralı şu an yalnız `resolve` (kırmızı bayrak kapatma) için vardır: token
-  ile çağrılırsa yalnız `CREW_MEDICAL_OFFICER` kapatabilir, diğerleri `403`.
+- Rol kuralları: `resolve` (kırmızı bayrak kapatma) token ile çağrılırsa yalnız
+  `CREW_MEDICAL_OFFICER` yapabilir; `sync/ack` token ile çağrılırsa yalnız
+  `GROUND` yapabilir. Diğerleri `403`.
   Anonim demo erişiminde (bayrak kapalı) rol denetlenmez.
 
-Sınırlamalar: çevrimdışı panel `Authorization` başlığı göndermez ve giriş akışı
-yoktur; bayrak açılırsa panel çalışmaz. Token kullanıcısı yalnız `acknowledge`,
-`steps` ve `resolve` uçlarında aktör olarak kullanılır; diğer bütün uçlar (öznel
-kontrol, gözlem/ölçüm, laboratuvar, kırmızı bayrak, ortam, profil) kişi bilgisini
-gövdeden alır.
+Sınırlamalar: React arayüzünün giriş penceresi vardır (`GET /v1/auth/config`
+ile algılanır, token `sessionStorage`'da tutulur). Token kullanıcısı kişi olarak
+`acknowledge`, `steps`, `resolve`, aktivite bildirimi ve rutin tamamlama (ve
+`sync/ack`'in `acked_by` alanı) uçlarında kullanılır; öznel kontrol,
+gözlem/ölçüm, laboratuvar, kırmızı bayrak, ortam ve profil uçları kişi bilgisini
+gövdeden alır. Aktivite bitirme sahiplik denetlemez.
+
+### 15 Kasım uçları
+
+Bu bölüm koddan yazıldı; kod esastır. Ek olarak
+[CONTRACT_PARALLEL_BUILD.md](CONTRACT_PARALLEL_BUILD.md) paralel yapının
+sözleşmesidir ve yapı sonrası tarihsel kayıt sayılır. Tüm zaman damgaları UTC.
+
+**Kimlik.** `GET /v1/auth/config` (token istemez) -> `{auth_required,
+auth_configured}`. `GET /v1/auth/me` -> `{user_id, role, anonymous}`; bayrak
+kapalı ve token yoksa `{user_id: "demo-anonymous", role: null, anonymous: true}`,
+bayrak açık ve token yoksa `401`.
+
+**Aktivite bildirimi (migration 0015).**
+
+- `POST /v1/activities`: gövde `mission_id`, `crew_member_id` (yalnız token
+  yokken zorunlu), `activity_state` (`REST` / `LIGHT` / `EXERCISE` / `SLEEP`),
+  `planned_minutes` (5-240), isteğe bağlı `started_at`, `source_type`
+  (`MANUAL` | `SYNTHETIC`), `scenario_id`. Aynı ekip üyesinin açık bildirimi yeni
+  başlangıçta bitirilir. `201 ActivityRead`.
+- `POST /v1/activities/{id}/end`: isteğe bağlı `ended_at`; zaten bitmişse `409`.
+  **Sınırlama:** bitirme çağıranın bildirimin sahibi olup olmadığını denetlemez.
+- `GET /v1/activities/current?mission_id&crew_member_id&at` ->
+  `{state: ACTIVE | EXPIRED | NONE, activity, remaining_seconds, message_tr}`.
+  `EXPIRED`: son bildirimin `expected_end_at` zamanı geçti ve bitiş bildirilmedi;
+  aktivite bağlamı **bilinmiyor** sayılır.
+- Ölçüm kaydında sensör `activity_state` verdiyse `activity_source = SENSOR`;
+  vermediyse ve o anda geçerli bir bildirim varsa bildirilen durum damgalanır
+  (`DECLARED`); yoksa ikisi de boş kalır. `CrewStatusRead.current_activity`
+  durum cevabında aynı bilgiyi taşır.
+
+**Vücut haritası (migration yok).**
+`GET /v1/crew/{id}/body-map?mission_id&environment_target_id` -> `BodyMapRead`
+(`overall_attention`, `regions`). Dokuz sabit anahtar: `head`, `eyes`,
+`inner_ear`, `heart`, `lungs`, `torso`, `musculoskeletal`, `skin`, `cabin`.
+Her bölge: `attention` (bölgedeki en kötü kural seviyesi), `coverage`
+(`RULE` | `DATA_ONLY` | `GAP`), `rules`, `metrics`, `latest_values`,
+`open_alert_ids`. Kural ve metrik -> bölge eşlemesi `rules/body_map.py`
+içindeki tek tablodur; katalogdaki her kural bu tabloda bulunmalıdır (test
+zorlar). Bölge açıklamaları tanı koymaz, yalnız ilgili ölçüm ve kuralları
+gruplar.
+
+**Rutinler ve periyodik testler (migration 0016).** Tür kataloğu: `HYDRATION`
+(120 dk), `EXERCISE` (1440), `SLEEP_WINDOW` (1440), `CHECK_IN` (240),
+`BODY_MASS_WEEKLY` (10080), `GRIP_STRENGTH_WEEKLY` (10080),
+`MUSCULOSKELETAL_ASSESSMENT_BIWEEKLY` (20160); parantezdekiler DEMO
+varsayılan aralıklardır, kanıt alanı `DEMO`. **İlaç hatırlatması yoktur.**
+
+- `GET /v1/routines/catalog`; `POST /v1/routines` (`interval_minutes` 30-20160,
+  `anchor_at`); `POST /v1/routines/defaults` (her tür için bir etkin takvim);
+  `GET /v1/routines/due?mission_id&crew_member_id&at` (`OVERDUE`, `DUE`,
+  `UPCOMING` sırasıyla, `current_streak` ve `best_streak` ile);
+  `POST /v1/routines/{id}/complete` (`completed_at` gelecekte olamaz).
+- Dilimler `anchor_at + k * interval` anında açılır. Dilim açıldıktan sonra
+  aralığın dörtte biri kadar süre `DUE`, sonrası `OVERDUE`. Aynı dilime yapılan
+  tekrar tamamlama seriyi şişirmez.
+- **Sınırlama:** `defaults` tekrar çağrılabilirliği (idempotency) koddadır (mevcut
+  etkin takvimi yeniden kullanır); veritabanında benzersizlik kısıtı yoktur,
+  eşzamanlı çağrılar yinelenen takvim üretebilir.
+- Tablolar: `routine_schedules` (`active` bayrağı), `routine_completions`.
+
+**Yer ile senkron ve eskalasyon (migration 0017).** Alıcılar: `FLIGHT_SURGEON`,
+`LIFE_SUPPORT`, `RADIATION`, `MISSION_CONTROL`. Yönlendirme `services/ground_sync.py`
+içindeki sabit tablodur (kural tabanlı; makine öğrenmesi yoktur).
+
+- `GET /v1/sync/status?mission_id` -> alıcı başına `pending_items`,
+  `last_ack_at`, `last_packet_id`; `link_delay_seconds` (`SPACEAPP_LINK_DELAY_SECONDS`,
+  tanımsızsa `null`); `pending_escalations`. **Sınırlama:** bekleyen sayıları
+  son onaydan beri alınan kayıtlara göre ve en fazla 5000 öğe taranarak hesaplanır,
+  yaklaşıktır.
+- `GET /v1/sync/packet?mission_id&recipient&limit` (`limit` 1-5000, varsayılan
+  500; en eski öğeler önce) -> `SyncPacketRead` (`items`, `sha256`, `signature`,
+  `signature_alg`). Paket (görev, alıcı, `since`, `until`) ve saklı veri için
+  saf bir fonksiyondur: `packet_id` UUID5'tir, aynı pencere aynı baytları ve
+  aynı özeti üretir. Öğeler sistemin **aldığı** zamana göre kesilir; geç gelen
+  veri de teslim edilir. `sha256`, `sha256` ve `signature` alanları hariç tüm
+  gövdenin kanonik JSON'u (anahtarlar sıralı, `(',', ':')` ayırıcı, UTF-8)
+  üzerindendir. `SPACEAPP_AUTH_SECRET` tanımlıysa ayrıca HMAC-SHA256 imzası
+  (`signature_alg: "HMAC-SHA256"`) eklenir; yoksa `null`.
+- `POST /v1/sync/ack` gövde `{mission_id, recipient, packet_id, sha256, until}`:
+  paket yeniden hesaplanır, özet uyuşmazsa `409`; token varsa `GROUND` rolü
+  gerekir (aksi `403`). Aynı paketi ikinci kez onaylamak ilk onayı döner.
+  `FLIGHT_SURGEON` onayı paketteki eskalasyonları `ACKED` yapar.
+- `GET /v1/sync/escalations?mission_id&status`: ALERT veya CRITICAL alarm
+  açıldığında (kırmızı bayrak dahil) alarm başına **bir kez** otomatik oluşan
+  kayıtlar (`alert_id` üzerinde benzersiz indeks).
+- Tablolar: `ground_sync_acks`, `ground_escalations` (paket anlık görüntüsü ve
+  `packet_sha256` ile).
+
+**Eğilim ve HRV.** `GET /v1/measurements/trend?mission_id&target_id&metric&bucket=hour|day&since&until`
+-> `{unit, bucket, since, until, buckets: [{start, end, count, mean, min, max}]}`;
+en fazla 1000 sepet (aşılırsa `422`); yalnız kalitesi `VALID` ve fiziksel
+olarak mümkün aralıktaki ölçümler toplanır; verisi olmayan sepetler atlanır;
+pencere `[since, until)`'dir, verilmezse saatlikte son 7, günlükte son 30 gündür;
+saat dilimi olmayan zaman damgası UTC sayılır. `HRV_RMSSD` (`ms`, mürettebat,
+kategori `vital`) **yalnız veridir**: kural veya eşik yoktur, risk kapsamında
+`DATA_ONLY`; vücut haritasında `heart` bölgesine yazılır. Elle laboratuvar
+girişi mevcut `POST /v1/lab-results` ile yapılır.
+
+**Arayüz sunumu.** `frontend/dist` klasörü `/ui/` altında
+`src/spaceapp_logar/dashboard.py` ile sunulur (`SPACEAPP_UI_DIST` ile değişir).
+Derleme yoksa `/ui/` `200` ile bir bilgi sayfası döner. Vite çıktısı içerik
+özetli `assets/` dosyalarını sınırsız önbelleğe alır, `index.html` önbelleğe
+alınmaz. Eski `src/spaceapp_logar/web/` paneli kaldırıldı.
 
 ### Migration listesi
 
@@ -633,6 +752,9 @@ gövdeden alır.
 | `20261114_0012` | `baseline_profiles` ve `baseline_profile_activations` |
 | `20261114_0013` | `rule_evaluations.baseline_value`, `baseline_classification`, `baseline_sample_count`, `baseline_profile_version` |
 | `20261114_0014` | `rule_evaluations.source` `VARCHAR(255)` → `TEXT` |
+| `20261115_0015` | `activity_declarations` tablosu ve `observations.activity_source` (`SENSOR` / `DECLARED`, boş bırakılabilir) |
+| `20261115_0016` | `routine_schedules` ve `routine_completions` |
+| `20261115_0017` | `ground_sync_acks` ve `ground_escalations` (alarm başına benzersiz eskalasyon) |
 
 ### Güncel uç listesi
 
@@ -640,16 +762,32 @@ gövdeden alır.
 |---|---|
 | `GET /health` | Süreç ve şema durumu |
 | `POST /v1/auth/token` | Demo kullanıcısına token verir |
+| `GET /v1/auth/config` | Yetkilendirme açık mı / yapılandırılmış mı (token istemez) |
+| `GET /v1/auth/me` | Çağıranın kimliği ve rolü |
 | `POST /v1/observations` | CO₂ gözlemi (ilk uç) |
 | `POST /v1/measurements` | Tek vital/çevre ölçümü + kurallar |
 | `POST /v1/measurements/batch` | Toplu ölçüm |
 | `GET /v1/measurements` | Bir metriğin zaman serisi |
+| `GET /v1/measurements/trend` | Saatlik/günlük eğilim sepetleri |
 | `GET /v1/metrics` | Metrik kataloğu |
 | `GET /v1/missions` | Görev listesi |
 | `POST /v1/check-ins` | Öznel durum kontrolü |
 | `POST /v1/lab-results` | Laboratuvar sonucu |
 | `GET /v1/crew/{crew_member_id}/lab-results` | Laboratuvar kartı |
-| `GET /v1/crew/{crew_member_id}/status` | Kural durumları ve genel dikkat seviyesi |
+| `GET /v1/crew/{crew_member_id}/status` | Kural durumları, genel dikkat seviyesi ve `current_activity` |
+| `GET /v1/crew/{crew_member_id}/body-map` | Dokuz bölgeli vücut haritası |
+| `POST /v1/activities` | Aktivite bildirimi başlatır |
+| `POST /v1/activities/{activity_id}/end` | Aktiviteyi bitirir |
+| `GET /v1/activities/current` | Güncel aktivite (`ACTIVE` / `EXPIRED` / `NONE`) |
+| `GET /v1/routines/catalog` | Rutin ve periyodik test kataloğu |
+| `POST /v1/routines` | Rutin takvimi oluşturur |
+| `POST /v1/routines/defaults` | Varsayılan takvimleri oluşturur |
+| `GET /v1/routines/due` | Zamanı gelen rutinler ve seriler |
+| `POST /v1/routines/{schedule_id}/complete` | Rutini tamamlandı işaretler |
+| `GET /v1/sync/status` | Alıcı başına senkron durumu |
+| `GET /v1/sync/packet` | Alıcıya özel imzalı/özetli paket |
+| `POST /v1/sync/ack` | Paketi onaylar (`GROUND`) |
+| `GET /v1/sync/escalations` | Otomatik uçuş hekimi eskalasyonları |
 | `GET /v1/alerts` | Alarm listesi |
 | `POST /v1/alerts/{alert_id}/acknowledge` | Alarmı gördüm |
 | `POST /v1/alerts/{alert_id}/steps` | Eylem kartı adımı yapıldı |

@@ -1,3 +1,5 @@
+> Not (15 Kasım 2026): Bu belge paralel yapının sözleşmesiydi ve tarihsel kayıttır; **kod esastır**. Güncel uçlar için `docs/API_DATA_MODEL.md` ve `/docs` kullanılmalıdır.
+
 # SpaceApp Logar — API contract for the parallel build (15 Nov 2026)
 
 Single source of truth for the 6 backend tracks (they MUST implement exactly
