@@ -1,9 +1,18 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
 
-from spaceapp_logar.auth import auth_configured, authenticate, issue_token
-from spaceapp_logar.schemas.auth import TokenRead, TokenRequest
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from spaceapp_logar.auth import (
+    User,
+    auth_configured,
+    auth_required,
+    authenticate,
+    current_user,
+    issue_token,
+)
+from spaceapp_logar.schemas.auth import AuthConfigRead, MeRead, TokenRead, TokenRequest
 
 # Not protected by current_user: this is where a token is obtained.
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
@@ -33,3 +42,17 @@ def create_token(payload: TokenRequest) -> TokenRead:
         role=user.role,
         user_id=user.user_id,
     )
+
+
+@router.get("/config", response_model=AuthConfigRead)
+def read_auth_config() -> AuthConfigRead:
+    """Public auth settings so a client knows whether to ask for a login."""
+
+    return AuthConfigRead(auth_required=auth_required(), auth_configured=auth_configured())
+
+
+@router.get("/me", response_model=MeRead)
+def read_me(user: Annotated[User, Depends(current_user)]) -> MeRead:
+    """The caller's identity; anonymous demo user when auth is not required."""
+
+    return MeRead(user_id=user.user_id, role=user.role, anonymous=user.anonymous)
