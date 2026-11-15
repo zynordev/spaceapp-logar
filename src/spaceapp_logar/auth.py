@@ -100,6 +100,18 @@ def configured_users() -> dict[str, tuple[Role, str]]:
     return users
 
 
+def demo_login_enabled() -> bool:
+    return os.getenv("SPACEAPP_DEMO_LOGIN", "false").strip().lower() in {"1", "true", "yes"}
+
+
+# Fixed demo users for the one-click demo login (no passcodes involved).
+DEMO_LOGIN_USERS: dict[Role, tuple[str, str]] = {
+    Role.ASTRONAUT: ("demo-astronaut", "Astronot (demo)"),
+    Role.CREW_MEDICAL_OFFICER: ("demo-medic", "Mürettebat tıbbi sorumlusu (demo)"),
+    Role.GROUND: ("demo-ground", "Yer kontrol / uçuş cerrahı (demo)"),
+}
+
+
 def _b64(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
 

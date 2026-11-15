@@ -4,6 +4,16 @@ services:
     runtime: docker
     plan: free
     region: frankfurt
+    healthCheckPath: /health
+    # NOTE: the free plan has an ephemeral disk, so the SQLite DB is re-created
+    # and re-seeded (SPACEAPP_SEED_DEMO) on every boot/spin-up. Demo data only.
     envVars:
       - key: SPACEAPP_CORS_ORIGINS
         value: "*"
+      - key: SPACEAPP_DEMO_LOGIN
+        value: "true"
+      - key: SPACEAPP_AUTH_SECRET
+        generateValue: true
+      - key: SPACEAPP_SEED_DEMO
+        value: "true"
+      # SPACEAPP_LINK_DELAY_SECONDS intentionally unset: the mission profile decides.

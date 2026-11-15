@@ -29,6 +29,18 @@ class AuthConfigRead(BaseModel):
     auth_configured: bool
 
 
+class DemoRoleRead(BaseModel):
+    role: Role
+    user_id: str
+    label_tr: str
+
+
+class DemoLoginRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    role: Role
+
+
 class MeRead(BaseModel):
     user_id: str
     role: Role | None

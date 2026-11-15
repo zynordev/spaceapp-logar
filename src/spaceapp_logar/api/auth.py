@@ -8,11 +8,20 @@ from spaceapp_logar.auth import (
     User,
     auth_configured,
     auth_required,
+    DEMO_LOGIN_USERS,
     authenticate,
     current_user,
+    demo_login_enabled,
     issue_token,
 )
-from spaceapp_logar.schemas.auth import AuthConfigRead, MeRead, TokenRead, TokenRequest
+from spaceapp_logar.schemas.auth import (
+    AuthConfigRead,
+    DemoLoginRequest,
+    DemoRoleRead,
+    MeRead,
+    TokenRead,
+    TokenRequest,
+)
 
 # Not protected by current_user: this is where a token is obtained.
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
@@ -41,6 +50,39 @@ def create_token(payload: TokenRequest) -> TokenRead:
         expires_at=datetime.fromtimestamp(expires, tz=timezone.utc),
         role=user.role,
         user_id=user.user_id,
+    )
+
+
+@router.get("/demo-roles", response_model=list[DemoRoleRead])
+def list_demo_roles() -> list[DemoRoleRead]:
+    """Roles offered by the one-click demo login; empty unless SPACEAPP_DEMO_LOGIN is on."""
+
+    if not demo_login_enabled():
+        return []
+    return [
+        DemoRoleRead(role=role, user_id=user_id, label_tr=label)
+        for role, (user_id, label) in DEMO_LOGIN_USERS.items()
+    ]
+
+
+@router.post("/demo-login", response_model=TokenRead)
+def demo_login(payload: DemoLoginRequest) -> TokenRead:
+    """Signed token for a fixed demo user of the chosen role (no passcode).
+
+    404 unless SPACEAPP_DEMO_LOGIN is on; 503 without SPACEAPP_AUTH_SECRET.
+    """
+
+    if not demo_login_enabled():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Demo login is not enabled")
+    if not auth_configured():
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Authentication is not configured")
+    user_id, _label = DEMO_LOGIN_USERS[payload.role]
+    token, expires = issue_token(user_id, payload.role)
+    return TokenRead(
+        access_token=token,
+        expires_at=datetime.fromtimestamp(expires, tz=timezone.utc),
+        role=payload.role,
+        user_id=user_id,
     )
 
 
