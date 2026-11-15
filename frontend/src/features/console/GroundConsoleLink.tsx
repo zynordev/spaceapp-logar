@@ -14,13 +14,13 @@ export interface GroundConsoleLinkProps {
   label?: string;
 }
 
-export function GroundConsoleLink({ compact, className, label = 'Yer kontrol konsolu' }: GroundConsoleLinkProps) {
+export function GroundConsoleLink({ compact, className, label = 'Ground control console' }: GroundConsoleLinkProps) {
   return (
     <a
       href={GROUND_CONSOLE_HASH}
       className={`console-entry${compact ? ' console-entry--compact' : ''}${className ? ` ${className}` : ''}`}
-      aria-label={compact ? `${label} (ışık gecikmesi simülasyonu)` : undefined}
-      title={compact ? label : 'Dünya görev kontrolünün gecikmeli görünümü'}
+      aria-label={compact ? `${label} (light-delay simulation)` : undefined}
+      title={compact ? label : 'Delayed view of Earth mission control'}
     >
       <Icon name="signal" size={16} />
       {!compact && <span>{label}</span>}

@@ -30,7 +30,7 @@ export interface EarthResponse {
 
 /** Display reference only (same values as the contract); the server is the source. */
 export const PROFILE_OPTIONS: { id: MissionProfile; label: string; delay: string; title: string }[] = [
-  { id: 'ISS', label: 'ISS', delay: '≈0 sn', title: 'Alçak Dünya yörüngesi (TDRS uyduları üzerinden): tek yön ≈0–2 sn' },
-  { id: 'MOON', label: 'Ay', delay: '1,3 sn', title: 'Ay: tek yön ≈1,2–1,4 sn' },
-  { id: 'MARS', label: 'Mars', delay: '3–22 dk', title: 'Mars: tek yön ≈3–22 dk (yörünge konumuna göre), tipik ≈12,5 dk' },
+  { id: 'ISS', label: 'ISS', delay: '≈0 s', title: 'Low Earth orbit (via TDRS satellites): one way ≈0–2 s' },
+  { id: 'MOON', label: 'Moon', delay: '1.3 s', title: 'Moon: one way ≈1.2–1.4 s' },
+  { id: 'MARS', label: 'Mars', delay: '3–22 min', title: 'Mars: one way ≈3–22 min (depending on orbital position), typically ≈12.5 min' },
 ];

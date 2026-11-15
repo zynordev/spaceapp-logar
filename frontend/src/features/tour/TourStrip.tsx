@@ -15,19 +15,19 @@ export function TourStrip() {
   const busy = phase === 'preparing';
 
   return (
-    <div className="tour-strip" role="group" aria-label="Jüri gösterimi">
-      <span className="tour-strip__label">Senaryoyu oynat</span>
+    <div className="tour-strip" role="group" aria-label="Jury demo">
+      <span className="tour-strip__label">Play a scenario</span>
       <Button size="sm" variant="primary" icon="play" onClick={() => start('co2')} loading={busy && tour === 'co2'} disabled={busy}>
-        Senaryoyu oynat: CO₂ + baş ağrısı
+        Play: CO₂ + headache
       </Button>
       <Button size="sm" variant="secondary" icon="flag" onClick={() => start('redflag')} loading={busy && tour === 'redflag'} disabled={busy}>
-        Kırmızı bayrak
+        Red flag
       </Button>
       <ProfileSelector />
       <Button size="sm" variant="ghost" icon="question" className="tour-strip__caps" onClick={() => setCapsOpen(true)}>
-        <span className="tour-strip__long">Ne gerçek, ne simüle?</span>
+        <span className="tour-strip__long">What is real, what is simulated?</span>
         <span className="tour-strip__short" aria-hidden="true">
-          Ne gerçek?
+          Real or simulated?
         </span>
       </Button>
       <CapabilitiesDialog open={capsOpen} onClose={() => setCapsOpen(false)} />

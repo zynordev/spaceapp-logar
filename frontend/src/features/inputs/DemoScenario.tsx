@@ -31,9 +31,9 @@ export function DemoScenarioPicker() {
       () => api<DemoRunRead>('POST', `/v1/demo/scenarios/${encodeURIComponent(scenarioId)}/run`, undefined, 120000),
       (res) => ({
         kind: 'ok',
-        text: `Senaryo çalıştı: ${res.observations_posted} gözlem, ${res.check_ins_posted} öznel kayıt, ${res.lab_results_posted} lab sonucu (SENTETİK). Yeni görev seçildi: ${res.mission_id}.`,
+        text: `Scenario ran: ${res.observations_posted} observations, ${res.check_ins_posted} subjective entries, ${res.lab_results_posted} lab results (SYNTHETIC). New mission selected: ${res.mission_id}.`,
       }),
-      'senaryo çalıştırılamadı',
+      'the scenario could not run',
     );
     if (r) {
       setResult(r);
@@ -48,7 +48,7 @@ export function DemoScenarioPicker() {
     <div className="lgi lgi-demo">
       <div className="lgi-demo__bar">
         <span className="lgi-chip lgi-chip--demo">DEMO</span>
-        <label htmlFor={`${uid}-sel`} className="lgi-sr">Demo senaryosu</label>
+        <label htmlFor={`${uid}-sel`} className="lgi-sr">Demo scenario</label>
         <select
           id={`${uid}-sel`}
           className="lgi-input lgi-demo__select"
@@ -57,11 +57,11 @@ export function DemoScenarioPicker() {
           disabled={!scenarios.length || busy}
           title={current?.description}
         >
-          {!scenarios.length && <option value="">{list.error ? 'Senaryolar alınamadı' : 'Yükleniyor…'}</option>}
+          {!scenarios.length && <option value="">{list.error ? 'Scenarios could not be loaded' : 'Loading…'}</option>}
           {scenarios.map((s) => <option key={s.scenario_id} value={s.scenario_id}>{s.title || s.scenario_id}</option>)}
         </select>
         <button type="button" className="lgi-btn lgi-btn--primary lgi-btn--small" onClick={start} disabled={disabled} aria-busy={busy}>
-          <Icon name="play" size={14} />{' '}{busy ? 'Çalışıyor…' : 'Çalıştır'}
+          <Icon name="play" size={14} />{' '}{busy ? 'Running…' : 'Run'}
         </button>
         <button
           type="button"
@@ -71,7 +71,7 @@ export function DemoScenarioPicker() {
           onClick={() => setOpen((o) => !o)}
           disabled={!current}
         >
-          {open ? 'Ayrıntıyı gizle' : 'Ayrıntı'}
+          {open ? 'Hide details' : 'Details'}
         </button>
       </div>
       {current && (

@@ -1,4 +1,4 @@
-// Compact ISS / Ay / Mars segmented control (top bar + Earth console header).
+// Compact ISS / Moon / Mars segmented control (top bar + Earth console header).
 // Reads GET /v1/missions/{id}/profile; a change POSTs the new profile. The
 // server owns the delay values and the escalation owner; until the backend
 // ships the endpoint (404) the control is shown disabled with a calm note.
@@ -30,17 +30,17 @@ export function ProfileSelector({ variant = 'bar' }: { variant?: 'bar' | 'consol
     try {
       const r = await api<MissionProfileRead>('POST', `/v1/missions/${encodeURIComponent(missionId)}/profile`, { profile: p });
       q.reload();
-      toast.success(`Görev profili: ${r.label_tr} · tek yön ${fmtDelay(r.one_way_delay_seconds.typical)} · ${r.escalation_owner_label_tr}`);
+      toast.success(`Mission profile: ${r.label_tr} · one way ${fmtDelay(r.one_way_delay_seconds.typical)} · ${r.escalation_owner_label_tr}`);
     } catch (e) {
-      if (e instanceof ApiError && e.notFound) toast('Görev profili bu sunucuda henüz yok.');
-      else if (!(e instanceof ApiError && e.forbidden)) notifyError(e, 'Görev profili');
+      if (e instanceof ApiError && e.notFound) toast('The mission profile is not on this server yet.');
+      else if (!(e instanceof ApiError && e.forbidden)) notifyError(e, 'Mission profile');
     } finally {
       setBusy(null);
     }
   };
 
   const title = unsupported
-    ? 'Bu sunucuda görev profili uç noktası henüz yok (/v1/missions/{id}/profile).'
+    ? 'The mission profile endpoint is not on this server yet (/v1/missions/{id}/profile).'
     : q.data
       ? `${q.data.note_tr} ${q.data.source_note_tr}`.trim()
       : undefined;
@@ -48,7 +48,7 @@ export function ProfileSelector({ variant = 'bar' }: { variant?: 'bar' | 'consol
   return (
     <div className={`prof prof--${variant}`} title={title}>
       <span className="prof__label" id={`${uid}-l`}>
-        Görev profili
+        Mission profile
       </span>
       <div className="prof__seg" role="radiogroup" aria-labelledby={`${uid}-l`}>
         {PROFILE_OPTIONS.map((o) => {
@@ -73,16 +73,16 @@ export function ProfileSelector({ variant = 'bar' }: { variant?: 'bar' | 'consol
       </div>
       <span className="prof__meta" aria-live="polite">
         {unsupported ? (
-          <span className="prof__muted">sunucuda yok</span>
+          <span className="prof__muted">not on server</span>
         ) : q.data ? (
           <>
             <Icon name="user" size={12} />
             <span>
-              Yükseltme: <strong>{q.data.escalation_owner_label_tr}</strong>
+              Escalation: <strong>{q.data.escalation_owner_label_tr}</strong>
             </span>
           </>
         ) : q.error ? (
-          <span className="prof__muted">alınamadı</span>
+          <span className="prof__muted">unavailable</span>
         ) : missionId ? (
           <span className="prof__muted">…</span>
         ) : null}
