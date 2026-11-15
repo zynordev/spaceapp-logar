@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from spaceapp_logar.rules import DataQuality, HealthAttention
+from spaceapp_logar.schemas.activities import ActivityCurrentRead
 from spaceapp_logar.schemas.action_cards import ActionCardRead
 from spaceapp_logar.schemas.check_ins import SubjectiveCheckInRead
 
@@ -89,4 +90,5 @@ class CrewStatusRead(BaseModel):
     co2: CO2StatusRead | None
     rules: list[RuleStatusRead] = []
     latest_check_in: SubjectiveCheckInRead | None
+    current_activity: ActivityCurrentRead | None = None
     limitations: list[str]

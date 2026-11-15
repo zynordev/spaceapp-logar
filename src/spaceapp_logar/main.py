@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
+from spaceapp_logar.api.activities import router as activities_router
 from spaceapp_logar.api.alerts import router as alerts_router
 from spaceapp_logar.api.auth import router as auth_router
 from spaceapp_logar.api.check_ins import router as check_ins_router
@@ -85,6 +86,7 @@ app.include_router(auth_router)
 # (default) a request without a token runs as an anonymous demo user, so the
 # offline dashboard and demo scenarios keep working; see spaceapp_logar.auth.
 AUTHENTICATED = [Depends(current_user)]
+app.include_router(activities_router, dependencies=AUTHENTICATED)
 app.include_router(alerts_router, dependencies=AUTHENTICATED)
 app.include_router(check_ins_router, dependencies=AUTHENTICATED)
 app.include_router(coverage_router, dependencies=AUTHENTICATED)

@@ -42,6 +42,10 @@ class Observation(Base):
             "observed_at",
         ),
         Index("ix_observations_observed_at", "observed_at"),
+        CheckConstraint(
+            "activity_source IS NULL OR activity_source IN ('SENSOR', 'DECLARED')",
+            name="ck_observations_activity_source",
+        ),
     )
     id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),
@@ -60,6 +64,8 @@ class Observation(Base):
     scenario_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     reported_quality: Mapped[str] = mapped_column(String(32))
     activity_state: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # SENSOR = sent with the measurement, DECLARED = stamped from a crew declaration.
+    activity_source: Mapped[str | None] = mapped_column(String(16), nullable=True)
     ingested_at: Mapped[datetime] = mapped_column(
         UTCDateTime(),
         default=utc_now,
@@ -501,3 +507,38 @@ class BaselineProfileActivation(Base):
     activated_by: Mapped[str] = mapped_column(String(100))
     reason: Mapped[str] = mapped_column(String(500))
     activated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class ActivityDeclaration(Base):
+    """Crew-declared activity context (e.g. EXERCISE for 45 minutes)."""
+
+    __tablename__ = "activity_declarations"
+    __table_args__ = (
+        CheckConstraint(
+            "activity_state IN ('REST', 'LIGHT', 'EXERCISE', 'SLEEP')",
+            name="ck_activity_declarations_state",
+        ),
+        CheckConstraint(
+            "(source_type = 'SYNTHETIC' AND scenario_id IS NOT NULL) OR "
+            "(source_type <> 'SYNTHETIC' AND scenario_id IS NULL)",
+            name="ck_activity_declarations_synthetic_scenario",
+        ),
+        Index(
+            "ix_activity_declarations_lookup",
+            "mission_id",
+            "crew_member_id",
+            "started_at",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    crew_member_id: Mapped[str] = mapped_column(String(100))
+    activity_state: Mapped[str] = mapped_column(String(32))
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    expected_end_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    ended_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    source_type: Mapped[str] = mapped_column(String(32))
+    source_id: Mapped[str] = mapped_column(String(100))
+    scenario_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
