@@ -24,12 +24,13 @@ def payload(**overrides: object) -> dict[str, object]:
     return body
 
 
-def test_metric_catalog_lists_eleven_metrics(api_client: tuple[TestClient, Engine]) -> None:
+def test_metric_catalog_lists_twelve_metrics(api_client: tuple[TestClient, Engine]) -> None:
     client, _ = api_client
 
     metrics = client.get("/v1/metrics").json()
 
-    assert len(metrics) == 11
+    assert len(metrics) == 12
+    assert any(m["metric"] == "HRV_RMSSD" and m["unit"] == "ms" for m in metrics)
     heart = next(m for m in metrics if m["metric"] == "HEART_RATE")
     assert heart["unit"] == "bpm"
     assert heart["category"] == "vital"
