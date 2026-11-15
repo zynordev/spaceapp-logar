@@ -8,7 +8,7 @@ import { ATTENTION } from './meta';
 import { Legend, RegionChips } from './RegionChips';
 import { AttentionBadge, RegionDetail, formatWhen } from './RegionDetail';
 import { useBodyMap } from './useBodyMap';
-import type { ViewCommand } from './BodyScene';
+import type { LayerState, ModelKind, ViewCommand } from './BodyScene';
 import { isRegionKey, type RegionKey } from './types';
 
 const BodyScene = lazy(() => import('./BodyScene'));
@@ -91,6 +91,10 @@ export function BodyMapPanel() {
   });
   const [hovered, setHovered] = useState<RegionKey | null>(null);
   const [view, setView] = useState<ViewCommand>({ kind: 'front', n: 0 });
+  const [layers, setLayers] = useState<LayerState>({ skin: true, organs: true, skeleton: true, skinOpacity: 0.22 });
+  const [modelKind, setModelKind] = useState<ModelKind | null>(null);
+  const onModel = useCallback((k: ModelKind) => setModelKind(k), []);
+  const toggleLayer = (key: 'skin' | 'organs' | 'skeleton') => setLayers((l) => ({ ...l, [key]: !l[key] }));
 
   const use3d = webgl && !failed && !prefer2d;
 
@@ -173,6 +177,44 @@ export function BodyMapPanel() {
         </div>
       </header>
 
+      {use3d && (
+        <div className="b3d-layers" role="group" aria-label="Katmanlar">
+          <span className="b3d-layers-title">Katmanlar</span>
+          {(
+            [
+              ['skin', 'Deri'],
+              ['organs', 'Organlar'],
+              ['skeleton', 'İskelet'],
+            ] as const
+          ).map(([key, label]) => (
+            <button key={key} type="button" aria-pressed={layers[key]} onClick={() => toggleLayer(key)}>
+              <span className="b3d-check" aria-hidden="true">
+                {layers[key] ? '✓' : ''}
+              </span>
+              {label}
+            </button>
+          ))}
+          <label className="b3d-slider">
+            Deri saydamlığı
+            <input
+              type="range"
+              min={0.05}
+              max={0.9}
+              step={0.01}
+              value={layers.skinOpacity}
+              disabled={!layers.skin}
+              onChange={(e) => setLayers((l) => ({ ...l, skinOpacity: Number(e.target.value) }))}
+              aria-valuetext={`%${Math.round(layers.skinOpacity * 100)} opak`}
+            />
+          </label>
+          {modelKind && (
+            <span className="b3d-model-kind">
+              {modelKind === 'glb' ? 'Anatomik model (BodyParts3D)' : 'Basitleştirilmiş model'}
+            </span>
+          )}
+        </div>
+      )}
+
       {(data.note || fallbackReason) && (
         <p className={`b3d-note is-${data.mode}`} role="status">
           {[data.note, fallbackReason].filter(Boolean).join(' ')}
@@ -196,6 +238,8 @@ export function BodyMapPanel() {
                   onSelect={select}
                   view={view}
                   reducedMotion={reducedMotion}
+                  layers={layers}
+                  onModel={onModel}
                   onFail={onFail}
                 />
               </Suspense>
@@ -217,6 +261,9 @@ export function BodyMapPanel() {
         onClear={clear}
       />
       <Legend />
+      <p className="b3d-attrib">
+        3D anatomi: BodyParts3D, © The Database Center for Life Science, CC BY 4.0
+      </p>
       <span className="b3d-sr" aria-live="polite">
         {region ? `${region.label_tr} seçildi: ${ATTENTION[region.attention].label}` : ''}
       </span>

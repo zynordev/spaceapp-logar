@@ -56,6 +56,24 @@
 }
 .b3d-note.is-demo { border-color: var(--att-watch, #f2c230); color: var(--att-watch, #f2c230); background: color-mix(in srgb, var(--att-watch, #f2c230) 10%, transparent); }
 
+/* ---------- layers ---------- */
+.b3d-layers { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 13px; }
+.b3d-layers-title { color: var(--b3d-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.b3d-layers button {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  background: var(--b3d-bg2); border: 1px solid var(--b3d-line); border-radius: 8px; padding: 4px 10px 4px 6px;
+}
+.b3d-layers button[aria-pressed='true'] { border-color: var(--b3d-accent); }
+.b3d-check {
+  width: 16px; height: 16px; border-radius: 4px; display: inline-grid; place-items: center; font-size: 11px; font-weight: 800;
+  border: 1px solid var(--b3d-accent); color: #07101f;
+}
+.b3d-layers button[aria-pressed='true'] .b3d-check { background: var(--b3d-accent); }
+.b3d-slider { display: inline-flex; align-items: center; gap: 8px; color: var(--b3d-muted); }
+.b3d-slider input { width: 130px; accent-color: var(--b3d-accent); }
+.b3d-model-kind { margin-left: auto; color: var(--b3d-muted); font-size: 12px; }
+.b3d-attrib { margin: 0; font-size: 11px; color: var(--b3d-muted); opacity: 0.85; }
+
 /* ---------- stage + detail ---------- */
 .b3d-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; align-items: stretch; }
 @container (max-width: 760px) { .b3d-body { grid-template-columns: 1fr; } }

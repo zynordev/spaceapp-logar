@@ -1,16 +1,40 @@
-// 3D body map (lazy-loaded chunk). Procedurally generated stylised human —
-// no model files, textures, HDRs or fonts. Feet at y=0, figure faces +z,
-// the astronaut's left side is +x. Render loop is on demand: frames are only
-// drawn on interaction, camera easing or the gentle CRITICAL pulse.
+// 3D body map (lazy-loaded chunk). Realistic anatomy from the BodyParts3D
+// GLB when it is served; a procedural body otherwise (and while it loads).
+// Offline only: no HDR/preset downloads, no CDN decoders. Render loop is on
+// demand — frames are drawn on interaction, camera easing or CRITICAL pulse.
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { ContactShadows, OrbitControls } from '@react-three/drei';
-import { useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject } from 'react';
+import { ContactShadows, Environment, Lightformer, OrbitControls } from '@react-three/drei';
+import {
+  Component,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+  type ReactNode,
+} from 'react';
 import * as THREE from 'three';
-import { ATTENTION, CHIP_ORDER, REGION_META } from './meta';
+import { GlbBody, probeModel } from './GlbBody';
 import { RegionIcon } from './icons';
+import { proceduralLayout, type Layout } from './layout';
+import { BodyMaterials } from './materials';
+import { ATTENTION, CHIP_ORDER, REGION_META } from './meta';
+import { ProceduralBody } from './ProceduralBody';
 import type { RegionKey, RegionStates } from './types';
 
 export type ViewCommand = { kind: 'front' | 'back'; n: number };
+export type ModelKind = 'glb' | 'procedural';
+
+export interface LayerState {
+  skin: boolean;
+  organs: boolean;
+  skeleton: boolean;
+  /** 0.05 – 0.9 */
+  skinOpacity: number;
+}
 
 export interface BodySceneProps {
   states: RegionStates;
@@ -20,305 +44,77 @@ export interface BodySceneProps {
   onSelect: (r: RegionKey) => void;
   view: ViewCommand;
   reducedMotion: boolean;
+  layers: LayerState;
+  /** Which body is shown (GLB anatomy or procedural fallback). */
+  onModel?: (kind: ModelKind) => void;
   /** WebGL context lost / unusable: the panel switches to the 2D body. */
   onFail: () => void;
 }
 
-// ---------------------------------------------------------------- geometry
-// Built once per module and shared by every mount (tiny, low poly).
-
-const GEO = (() => {
-  const torsoProfile = new THREE.SplineCurve(
-    [
-      [0.001, 0.84], [0.11, 0.85], [0.155, 0.9], [0.162, 0.97], [0.145, 1.05],
-      [0.13, 1.12], [0.14, 1.2], [0.16, 1.29], [0.176, 1.36], [0.168, 1.41],
-      [0.12, 1.45], [0.05, 1.47], [0.001, 1.475],
-    ].map(([x, y]) => new THREE.Vector2(x, y)),
-  ).getPoints(48);
-  return {
-    sphere: new THREE.SphereGeometry(1, 28, 18),
-    sphereLo: new THREE.SphereGeometry(1, 12, 8),
-    torso: new THREE.LatheGeometry(torsoProfile, 36),
-    neck: new THREE.CapsuleGeometry(0.042, 0.08, 6, 16),
-    upperArm: new THREE.CapsuleGeometry(0.042, 0.24, 6, 16),
-    forearm: new THREE.CapsuleGeometry(0.035, 0.22, 6, 14),
-    thigh: new THREE.CapsuleGeometry(0.068, 0.3, 6, 18),
-    shin: new THREE.CapsuleGeometry(0.052, 0.3, 6, 16),
-    foot: new THREE.CapsuleGeometry(0.036, 0.12, 4, 12),
-    vertebra: new THREE.CylinderGeometry(0.017, 0.017, 0.019, 10),
-    longBone: new THREE.CylinderGeometry(1, 1, 1, 8),
-    pelvis: new THREE.TorusGeometry(0.085, 0.02, 8, 28),
-    rib: new THREE.TorusGeometry(1, 0.035, 5, 32),
-    cochlea: new THREE.TorusGeometry(0.013, 0.005, 6, 18),
-    heartApex: new THREE.ConeGeometry(0.03, 0.05, 14),
-    cabinRing: new THREE.TorusGeometry(0.72, 0.01, 6, 96),
-    cabinHit: new THREE.TorusGeometry(0.72, 0.06, 4, 48),
-    haloRing: new THREE.TorusGeometry(0.42, 0.008, 6, 72),
-    haloHit: new THREE.TorusGeometry(0.42, 0.05, 4, 40),
-    cabinWall: new THREE.CylinderGeometry(0.74, 0.74, 2.1, 48, 1, true),
-  };
-})();
-
-// ---------------------------------------------------------------- materials
-
-const VERT = /* glsl */ `
-  varying vec3 vN;
-  varying vec3 vV;
-  varying float vY;
-  void main() {
-    vec4 wp = modelMatrix * vec4(position, 1.0);
-    vec4 mv = viewMatrix * wp;
-    vN = normalize(normalMatrix * normal);
-    vV = normalize(-mv.xyz);
-    vY = wp.y;
-    gl_Position = projectionMatrix * mv;
-  }
-`;
-
-const FRAG = /* glsl */ `
-  uniform vec3 uColor;
-  uniform float uBase;
-  uniform float uRim;
-  uniform float uPower;
-  uniform float uBoost;
-  uniform float uScan;
-  varying vec3 vN;
-  varying vec3 vV;
-  varying float vY;
-  void main() {
-    float f = pow(1.0 - clamp(abs(dot(normalize(vN), normalize(vV))), 0.0, 1.0), uPower);
-    float scan = 1.0 - uScan * step(0.5, fract(vY * 140.0));
-    float a = clamp((uBase + f * uRim) * scan + uBoost * (0.06 + 0.35 * f), 0.0, 1.0);
-    vec3 c = uColor * (0.6 + 1.2 * f + uBoost * 0.7);
-    gl_FragColor = vec4(c, a);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
-  }
-`;
-
-function makeHolo(base: number, rim: number, power: number, scan: number): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      uColor: { value: new THREE.Color('#7fd8ff') },
-      uBase: { value: base },
-      uRim: { value: rim },
-      uPower: { value: power },
-      uBoost: { value: 0 },
-      uScan: { value: scan },
-    },
-    vertexShader: VERT,
-    fragmentShader: FRAG,
-    transparent: true,
-    depthWrite: false,
-  });
-}
-
-const HOLO_BASE = new THREE.Color('#7fd8ff');
-const tmpColor = new THREE.Color();
-
-interface Mats {
-  organ: Record<RegionKey, THREE.MeshStandardMaterial>;
-  shell: THREE.ShaderMaterial;
-  wall: THREE.ShaderMaterial;
-  ring: THREE.MeshBasicMaterial;
-  hit: THREE.MeshBasicMaterial;
-  leader: THREE.LineBasicMaterial;
-}
-
-function useMats(): Mats {
-  const mats = useMemo<Mats>(() => {
-    const organ = {} as Record<RegionKey, THREE.MeshStandardMaterial>;
-    for (const k of CHIP_ORDER) {
-      organ[k] = new THREE.MeshStandardMaterial({
-        roughness: 0.42,
-        metalness: 0.08,
-        transparent: true,
-        opacity: 1,
-      });
-    }
-    return {
-      organ,
-      shell: makeHolo(0.07, 1.0, 1.8, 0.3),
-      wall: makeHolo(0.0, 0.1, 4.0, 0.0),
-      ring: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.9, toneMapped: false }),
-      hit: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false }),
-      leader: new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false }),
-    };
-  }, []);
-  useEffect(
-    () => () => {
-      for (const m of Object.values(mats.organ)) m.dispose();
-      mats.shell.dispose();
-      mats.wall.dispose();
-      mats.ring.dispose();
-      mats.hit.dispose();
-      mats.leader.dispose();
-    },
-    [mats],
-  );
-  return mats;
-}
+const noRaycast = () => null;
 
 // ---------------------------------------------------------------- picking
 
-type Layer = 'inner' | 'shell' | 'env';
-const noRaycast = () => null;
-
-function tag(region: RegionKey, layer: Layer) {
-  return { region, layer };
+function visibleHit(obj: THREE.Object3D): boolean {
+  const mat = (obj as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+  if (mat && !(Array.isArray(mat) ? mat.some((m) => m.visible) : mat.visible)) return false;
+  for (let o: THREE.Object3D | null = obj; o; o = o.parent) if (!o.visible) return false;
+  return true;
 }
 
-/** Most specific region under the pointer: organs/bones win over the skin shell. */
+/** Most specific visible region under the pointer: organs/bones beat skin and cabin. */
 function pick(e: ThreeEvent<PointerEvent | MouseEvent>): RegionKey | null {
   let outer: RegionKey | null = null;
   for (const hit of e.intersections) {
-    const ud = hit.object.userData as { region?: RegionKey; layer?: Layer };
-    if (!ud.region) continue;
-    if (ud.layer === 'inner') return ud.region;
+    const ud = hit.object.userData as { region?: RegionKey; layer?: string };
+    if (!ud.region || !visibleHit(hit.object)) continue;
+    if (ud.layer === 'organs' || ud.layer === 'skeleton') return ud.region;
     if (!outer) outer = ud.region;
   }
   return outer;
 }
 
-// ---------------------------------------------------------------- figure parts
+// ---------------------------------------------------------------- cabin (habitat)
 
-function Limb({ side, mats }: { side: 1 | -1; mats: Mats }) {
-  const bone = mats.organ.musculoskeletal;
-  const shell = mats.shell;
-  const skinTag = tag('skin', 'shell');
-  return (
-    <>
-      {/* arm: shoulder pivot, A-pose */}
-      <group position={[0.19 * side, 1.4, 0]} rotation={[0, 0, 0.14 * side]}>
-        <mesh geometry={GEO.sphere} material={shell} scale={0.05} userData={skinTag} renderOrder={2} />
-        <mesh geometry={GEO.upperArm} material={shell} position={[0, -0.15, 0]} userData={skinTag} renderOrder={2} />
-        <mesh geometry={GEO.longBone} material={bone} position={[0, -0.15, 0]} scale={[0.009, 0.25, 0.009]} raycast={noRaycast} />
-        <group position={[0, -0.3, 0]} rotation={[-0.12, 0, 0.04 * side]}>
-          <mesh geometry={GEO.forearm} material={shell} position={[0, -0.14, 0]} userData={skinTag} renderOrder={2} />
-          <mesh geometry={GEO.longBone} material={bone} position={[0, -0.14, 0]} scale={[0.008, 0.23, 0.008]} raycast={noRaycast} />
-          <mesh geometry={GEO.sphere} material={shell} position={[0, -0.32, 0.005]} scale={[0.034, 0.068, 0.022]} userData={skinTag} renderOrder={2} />
-        </group>
-      </group>
-      {/* leg: hip pivot */}
-      <group position={[0.085 * side, 0.9, 0]} rotation={[0, 0, 0.025 * side]}>
-        <mesh geometry={GEO.thigh} material={shell} position={[0, -0.21, 0]} userData={skinTag} renderOrder={2} />
-        <mesh geometry={GEO.longBone} material={bone} position={[0, -0.21, 0]} scale={[0.012, 0.38, 0.012]} userData={tag('musculoskeletal', 'inner')} />
-        <group position={[0, -0.43, 0]}>
-          <mesh geometry={GEO.sphere} material={bone} position={[0, 0, 0.045]} scale={0.022} userData={tag('musculoskeletal', 'inner')} />
-          <mesh geometry={GEO.shin} material={shell} position={[0, -0.2, 0]} userData={skinTag} renderOrder={2} />
-          <mesh geometry={GEO.longBone} material={bone} position={[0, -0.2, 0]} scale={[0.01, 0.36, 0.01]} userData={tag('musculoskeletal', 'inner')} />
-          <mesh geometry={GEO.foot} material={shell} position={[0, -0.425, 0.045]} rotation={[Math.PI / 2, 0, 0]} userData={skinTag} renderOrder={2} />
-        </group>
-      </group>
-    </>
-  );
+const CABIN_VERT = /* glsl */ `
+  varying vec3 vN;
+  varying vec3 vV;
+  void main() {
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vN = normalize(normalMatrix * normal);
+    vV = normalize(-mv.xyz);
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+const CABIN_FRAG = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uBoost;
+  varying vec3 vN;
+  varying vec3 vV;
+  void main() {
+    float f = pow(1.0 - clamp(abs(dot(normalize(vN), normalize(vV))), 0.0, 1.0), 4.0);
+    gl_FragColor = vec4(uColor * (0.7 + f), clamp(f * (0.1 + uBoost * 0.25), 0.0, 1.0));
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }
+`;
+
+interface CabinMats {
+  ring: THREE.MeshBasicMaterial;
+  hit: THREE.MeshBasicMaterial;
+  wall: THREE.ShaderMaterial;
 }
 
-function Spine({ material }: { material: THREE.Material }) {
-  const ref = useRef<THREE.InstancedMesh>(null);
-  const count = 19;
-  useEffect(() => {
-    const mesh = ref.current;
-    if (!mesh) return;
-    const m = new THREE.Matrix4();
-    for (let i = 0; i < count; i++) {
-      const t = i / (count - 1);
-      const y = 0.97 + t * 0.55;
-      const z = -0.062 + 0.018 * Math.sin(t * Math.PI * 1.6 + 0.4);
-      const s = 1.15 - t * 0.45;
-      m.makeScale(s, 1, s).setPosition(0, y, z);
-      mesh.setMatrixAt(i, m);
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
-  }, []);
-  return (
-    <instancedMesh
-      ref={ref}
-      args={[GEO.vertebra, material, count]}
-      userData={tag('musculoskeletal', 'inner')}
-    />
-  );
-}
+const CABIN_GEO = {
+  ring: new THREE.TorusGeometry(0.72, 0.01, 6, 96),
+  ringHit: new THREE.TorusGeometry(0.72, 0.06, 4, 48),
+  halo: new THREE.TorusGeometry(0.42, 0.008, 6, 72),
+  haloHit: new THREE.TorusGeometry(0.42, 0.05, 4, 40),
+  wall: new THREE.CylinderGeometry(0.74, 0.74, 2.1, 48, 1, true),
+};
 
-function Figure({ mats }: { mats: Mats }) {
-  const o = mats.organ;
-  const shell = mats.shell;
-  const skinTag = tag('skin', 'shell');
-  const ribs = useMemo(
-    () =>
-      [0, 1, 2, 3, 4, 5].map((i) => ({
-        y: 1.39 - i * 0.042,
-        r: 0.118 + Math.sin((i / 5) * Math.PI * 0.8) * 0.032,
-      })),
-    [],
-  );
-  return (
-    <group>
-      {/* --- skin shell (holographic) --- */}
-      <mesh geometry={GEO.sphere} material={shell} position={[0, 1.635, 0]} scale={[0.095, 0.115, 0.105]} userData={skinTag} renderOrder={2} />
-      <mesh geometry={GEO.neck} material={shell} position={[0, 1.49, -0.005]} userData={skinTag} renderOrder={2} />
-      <mesh geometry={GEO.torso} material={shell} scale={[1, 1, 0.64]} userData={skinTag} renderOrder={2} />
-      <Limb side={1} mats={mats} />
-      <Limb side={-1} mats={mats} />
-
-      {/* --- head: brain hemispheres --- */}
-      <mesh geometry={GEO.sphere} material={o.head} position={[0.029, 1.665, -0.01]} scale={[0.05, 0.052, 0.07]} userData={tag('head', 'inner')} />
-      <mesh geometry={GEO.sphere} material={o.head} position={[-0.029, 1.665, -0.01]} scale={[0.05, 0.052, 0.07]} userData={tag('head', 'inner')} />
-      <mesh geometry={GEO.sphere} material={o.head} position={[0, 1.605, -0.045]} scale={[0.04, 0.026, 0.03]} userData={tag('head', 'inner')} />
-
-      {/* --- eyes (+ generous invisible hit areas) --- */}
-      {[1, -1].map((s) => (
-        <group key={`eye${s}`} position={[0.036 * s, 1.628, 0.082]}>
-          <mesh geometry={GEO.sphere} material={o.eyes} scale={0.018} userData={tag('eyes', 'inner')} />
-          <mesh geometry={GEO.sphereLo} material={mats.hit} scale={0.03} userData={tag('eyes', 'inner')} />
-        </group>
-      ))}
-
-      {/* --- inner ear: cochlea ring + vestibule, at the sides of the head --- */}
-      {[1, -1].map((s) => (
-        <group key={`ear${s}`} position={[0.078 * s, 1.618, -0.004]} rotation={[0, Math.PI / 2, 0]}>
-          <mesh geometry={GEO.cochlea} material={o.inner_ear} userData={tag('inner_ear', 'inner')} />
-          <mesh geometry={GEO.sphere} material={o.inner_ear} position={[0.012, 0.012, 0]} scale={0.008} userData={tag('inner_ear', 'inner')} />
-          <mesh geometry={GEO.sphereLo} material={mats.hit} scale={0.032} userData={tag('inner_ear', 'inner')} />
-        </group>
-      ))}
-
-      {/* --- lungs: two lobes, left one smaller to make room for the heart --- */}
-      <mesh geometry={GEO.sphere} material={o.lungs} position={[-0.078, 1.29, -0.005]} scale={[0.068, 0.125, 0.066]} userData={tag('lungs', 'inner')} />
-      <mesh geometry={GEO.sphere} material={o.lungs} position={[0.088, 1.29, -0.012]} scale={[0.058, 0.118, 0.062]} userData={tag('lungs', 'inner')} />
-
-      {/* --- heart: in the chest, slightly to the astronaut's left --- */}
-      <group position={[0.03, 1.265, 0.05]} rotation={[0.15, 0, 0.55]}>
-        <mesh geometry={GEO.sphere} material={o.heart} scale={[0.043, 0.05, 0.04]} userData={tag('heart', 'inner')} />
-        <mesh geometry={GEO.heartApex} material={o.heart} position={[0, -0.045, 0]} rotation={[Math.PI, 0, 0]} userData={tag('heart', 'inner')} />
-        <mesh geometry={GEO.sphere} material={o.heart} position={[-0.018, 0.04, -0.005]} scale={0.016} userData={tag('heart', 'inner')} />
-      </group>
-
-      {/* --- torso / abdomen core --- */}
-      <mesh geometry={GEO.sphere} material={o.torso} position={[0, 1.02, 0.012]} scale={[0.112, 0.082, 0.07]} userData={tag('torso', 'inner')} />
-      <mesh geometry={GEO.sphere} material={o.torso} position={[0.05, 1.12, 0.03]} scale={[0.05, 0.032, 0.034]} userData={tag('torso', 'inner')} />
-
-      {/* --- musculoskeletal: spine, pelvis, ribs (ribs are decorative, not pickable) --- */}
-      <Spine material={o.musculoskeletal} />
-      <mesh geometry={GEO.pelvis} material={o.musculoskeletal} position={[0, 0.925, -0.012]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.65, 1]} userData={tag('musculoskeletal', 'inner')} />
-      {ribs.map((r, i) => (
-        <mesh
-          key={`rib${i}`}
-          geometry={GEO.rib}
-          material={o.musculoskeletal}
-          position={[0, r.y, -0.004]}
-          rotation={[Math.PI / 2 + 0.25, 0, 0]}
-          scale={[r.r, r.r * 0.66, 0.09]}
-          raycast={noRaycast}
-        />
-      ))}
-    </group>
-  );
-}
-
-function Cabin({ mats }: { mats: Mats }) {
-  const envTag = tag('cabin', 'env');
+function Cabin({ mats }: { mats: CabinMats }) {
+  const envTag = { region: 'cabin', layer: 'env' };
   const grid = useMemo(() => {
     const g = new THREE.PolarGridHelper(0.7, 12, 4, 64, '#2a4a66', '#1d3550');
     const m = g.material as THREE.Material;
@@ -327,73 +123,69 @@ function Cabin({ mats }: { mats: Mats }) {
     m.depthWrite = false;
     return g;
   }, []);
-  useEffect(() => () => {
-    grid.geometry.dispose();
-    (grid.material as THREE.Material).dispose();
-  }, [grid]);
+  useEffect(
+    () => () => {
+      grid.geometry.dispose();
+      (grid.material as THREE.Material).dispose();
+    },
+    [grid],
+  );
   return (
     <group>
       <primitive object={grid} position={[0, 0.002, 0]} raycast={noRaycast} />
-      <mesh geometry={GEO.cabinRing} material={mats.ring} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} />
-      <mesh geometry={GEO.cabinHit} material={mats.hit} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} userData={envTag} />
+      <mesh geometry={CABIN_GEO.ring} material={mats.ring} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} />
+      <mesh geometry={CABIN_GEO.ringHit} material={mats.hit} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} userData={envTag} />
       <group position={[0, 2.02, 0]} rotation={[Math.PI / 2 - 0.12, 0, 0]}>
-        <mesh geometry={GEO.haloRing} material={mats.ring} />
-        <mesh geometry={GEO.haloHit} material={mats.hit} userData={envTag} />
+        <mesh geometry={CABIN_GEO.halo} material={mats.ring} />
+        <mesh geometry={CABIN_GEO.haloHit} material={mats.hit} userData={envTag} />
       </group>
-      <mesh geometry={GEO.cabinWall} material={mats.wall} position={[0, 1.05, 0]} renderOrder={3} raycast={noRaycast} />
+      <mesh geometry={CABIN_GEO.wall} material={mats.wall} position={[0, 1.05, 0]} renderOrder={3} raycast={noRaycast} />
     </group>
   );
 }
 
-// ---------------------------------------------------------------- markers + leaders
+// ---------------------------------------------------------------- leaders + markers
 
-const ANCHOR: Record<RegionKey, [number, number, number]> = {
-  head: [-0.03, 1.69, 0],
-  eyes: [0.036, 1.628, 0.095],
-  inner_ear: [0.085, 1.618, 0],
-  heart: [0.035, 1.265, 0.06],
-  lungs: [-0.09, 1.31, 0.03],
-  torso: [-0.06, 1.03, 0.05],
-  musculoskeletal: [0.09, 0.62, 0.01],
-  skin: [-0.14, 0.66, 0.05],
-  cabin: [0.41, 2.02, 0.05],
-};
-
-function Leaders({ states, material }: { states: RegionStates; material: THREE.LineBasicMaterial }) {
+function Leaders({ states, layout }: { states: RegionStates; layout: Layout }) {
+  const material = useMemo(
+    () => new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }),
+    [],
+  );
   const geom = useMemo(() => {
     const g = new THREE.BufferGeometry();
     const pos: number[] = [];
-    for (const k of CHIP_ORDER) pos.push(...REGION_META[k].marker, ...ANCHOR[k]);
+    for (const k of CHIP_ORDER) pos.push(...layout[k].marker, ...layout[k].anchor);
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     g.setAttribute('color', new THREE.Float32BufferAttribute(new Array(pos.length).fill(1), 3));
     return g;
-  }, []);
+  }, [layout]);
   useEffect(() => () => geom.dispose(), [geom]);
+  useEffect(() => () => material.dispose(), [material]);
+  const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
     const col = geom.getAttribute('color') as THREE.BufferAttribute;
+    const c = new THREE.Color();
     CHIP_ORDER.forEach((k, i) => {
-      tmpColor.set(ATTENTION[states[k].attention].hex);
-      col.setXYZ(i * 2, tmpColor.r, tmpColor.g, tmpColor.b);
-      col.setXYZ(i * 2 + 1, tmpColor.r, tmpColor.g, tmpColor.b);
+      c.set(ATTENTION[states[k].attention].hex);
+      col.setXYZ(i * 2, c.r, c.g, c.b);
+      col.setXYZ(i * 2 + 1, c.r, c.g, c.b);
     });
     col.needsUpdate = true;
-  }, [geom, states]);
+    invalidate();
+  }, [geom, states, invalidate]);
   return <lineSegments geometry={geom} material={material} raycast={noRaycast} />;
 }
 
 type MarkerEls = Partial<Record<RegionKey, HTMLDivElement | null>>;
 
-/**
- * Projects the 3D marker anchors to screen space every rendered frame and
- * moves the DOM pills directly (no React re-render, no extra React roots).
- */
-function Projector({ els }: { els: MutableRefObject<MarkerEls> }) {
+/** Projects marker anchors to screen space each rendered frame; moves DOM pills directly. */
+function Projector({ els, layout }: { els: MutableRefObject<MarkerEls>; layout: MutableRefObject<Layout> }) {
   const v = useMemo(() => new THREE.Vector3(), []);
   useFrame(({ camera, size }) => {
     for (const k of CHIP_ORDER) {
       const el = els.current[k];
       if (!el) continue;
-      v.set(...REGION_META[k].marker).project(camera);
+      v.set(...layout.current[k].marker).project(camera);
       const hidden = v.z > 1 || Math.abs(v.x) > 1.2 || Math.abs(v.y) > 1.2;
       const x = (v.x * 0.5 + 0.5) * size.width;
       const y = (-v.y * 0.5 + 0.5) * size.height;
@@ -452,59 +244,60 @@ function Markers({
 
 function StateSync({
   mats,
+  cabin,
   states,
   selected,
   hovered,
   reducedMotion,
-}: { mats: Mats } & Pick<BodySceneProps, 'states' | 'selected' | 'hovered' | 'reducedMotion'>) {
+  layers,
+  modelKey,
+}: { mats: BodyMaterials; cabin: CabinMats; modelKey: string } & Pick<
+  BodySceneProps,
+  'states' | 'selected' | 'hovered' | 'reducedMotion' | 'layers'
+>) {
   const invalidate = useThree((s) => s.invalidate);
   const critical = useRef<RegionKey[]>([]);
-  const base = useRef<Record<string, number>>({});
+  const cabinRest = useRef(0);
 
   useEffect(() => {
     const crit: RegionKey[] = [];
     for (const k of CHIP_ORDER) {
       const att = states[k].attention;
       if (att === 'CRITICAL') crit.push(k);
-      const hex = ATTENTION[att].hex;
-      const focus = selected === k || hovered === k;
-      const dim = selected !== null && selected !== k && k !== 'skin' && k !== 'cabin';
-      const m = mats.organ[k];
-      m.color.set(hex);
-      m.emissive.set(hex);
-      const e = selected === k ? 1.15 : hovered === k ? 0.85 : att === 'UNKNOWN' ? 0.18 : 0.38;
-      base.current[k] = e;
-      m.emissiveIntensity = e;
-      m.opacity = dim ? 0.28 : 1;
-      m.depthWrite = !dim;
-      if (k === 'skin') {
-        tmpColor.copy(HOLO_BASE).lerp(new THREE.Color(hex), att === 'UNKNOWN' ? 0.25 : 0.6);
-        (mats.shell.uniforms.uColor.value as THREE.Color).copy(tmpColor);
-        mats.shell.uniforms.uBoost.value = focus ? 0.6 : 0;
-        base.current.shell = focus ? 0.6 : 0;
-      }
+      const dimmed = selected !== null && selected !== k && k !== 'skin' && k !== 'cabin';
+      mats.apply(k, { attention: att, hovered: hovered === k, selected: selected === k, dimmed });
       if (k === 'cabin') {
-        mats.ring.color.set(hex);
-        mats.ring.opacity = focus ? 1 : 0.75;
-        (mats.wall.uniforms.uColor.value as THREE.Color).set(hex);
-        mats.wall.uniforms.uBoost.value = focus ? 0.35 : 0;
-        base.current.wall = focus ? 0.35 : 0;
+        const focus = selected === k || hovered === k;
+        cabin.ring.color.set(ATTENTION[att].hex);
+        cabin.ring.opacity = focus ? 1 : 0.75;
+        (cabin.wall.uniforms.uColor.value as THREE.Color).set(ATTENTION[att].hex);
+        cabinRest.current = focus ? 1 : 0;
+        cabin.wall.uniforms.uBoost.value = cabinRest.current;
       }
     }
     critical.current = crit;
     invalidate();
-  }, [mats, states, selected, hovered, invalidate]);
+    // modelKey: re-apply when the GLB replaces the procedural body
+  }, [mats, cabin, states, selected, hovered, invalidate, modelKey]);
+
+  useEffect(() => {
+    mats.setLayerVisible('skin', layers.skin);
+    mats.setLayerVisible('organs', layers.organs);
+    mats.setLayerVisible('skeleton', layers.skeleton);
+    mats.setSkinOpacity(layers.skinOpacity);
+    invalidate();
+  }, [mats, layers, invalidate, modelKey]);
 
   useFrame((state) => {
     const crit = critical.current;
     if (crit.length === 0 || reducedMotion) return;
     const s = 0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 3.0);
     for (const k of crit) {
-      mats.organ[k].emissiveIntensity = (base.current[k] ?? 0.4) + 0.9 * s;
-      if (k === 'skin') mats.shell.uniforms.uBoost.value = (base.current.shell ?? 0) + 0.45 * s;
       if (k === 'cabin') {
-        mats.wall.uniforms.uBoost.value = (base.current.wall ?? 0) + 0.5 * s;
-        mats.ring.opacity = 0.55 + 0.45 * s;
+        cabin.wall.uniforms.uBoost.value = cabinRest.current + 1.2 * s;
+        cabin.ring.opacity = 0.55 + 0.45 * s;
+      } else {
+        mats.pulse(k, s);
       }
     }
     state.invalidate();
@@ -524,24 +317,28 @@ interface ControlsLike {
   removeEventListener: (t: string, f: () => void) => void;
 }
 
-function CameraRig({ selected, view, reducedMotion }: Pick<BodySceneProps, 'selected' | 'view' | 'reducedMotion'>) {
+function CameraRig({
+  selected,
+  view,
+  reducedMotion,
+  layout,
+}: Pick<BodySceneProps, 'selected' | 'view' | 'reducedMotion'> & { layout: Layout }) {
   const controls = useThree((s) => s.controls) as unknown as ControlsLike | null;
   const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
   const goal = useRef<{ target: THREE.Vector3; sph: THREE.Spherical } | null>(null);
   const tmp = useMemo(() => ({ off: new THREE.Vector3(), sph: new THREE.Spherical() }), []);
 
-  // Focus the selected region, keeping the current viewing side.
+  // Focus the selected region (its measured box), keeping the current side.
   useEffect(() => {
     if (!controls || !selected) return;
-    const m = REGION_META[selected];
+    const l = layout[selected];
     tmp.sph.setFromVector3(tmp.off.copy(camera.position).sub(controls.target));
     const phi = THREE.MathUtils.clamp(tmp.sph.phi, 1.1, 1.75);
-    goal.current = { target: new THREE.Vector3(...m.focus), sph: new THREE.Spherical(m.distance, phi, tmp.sph.theta) };
+    goal.current = { target: new THREE.Vector3(...l.focus), sph: new THREE.Spherical(l.distance, phi, tmp.sph.theta) };
     invalidate();
-  }, [selected, controls, camera, invalidate, tmp]);
+  }, [selected, controls, camera, invalidate, tmp, layout]);
 
-  // View buttons: front / back (reset = front + deselect, handled by the panel).
   useEffect(() => {
     if (!controls || view.n === 0) return;
     goal.current = {
@@ -551,7 +348,6 @@ function CameraRig({ selected, view, reducedMotion }: Pick<BodySceneProps, 'sele
     invalidate();
   }, [view, controls, invalidate]);
 
-  // Any manual drag/zoom cancels the easing.
   useEffect(() => {
     if (!controls) return;
     const cancel = () => {
@@ -568,7 +364,7 @@ function CameraRig({ selected, view, reducedMotion }: Pick<BodySceneProps, 'sele
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 5.5);
     const cur = tmp.sph.setFromVector3(tmp.off.copy(camera.position).sub(controls.target));
     let dTheta = g.sph.theta - cur.theta;
-    dTheta = Math.atan2(Math.sin(dTheta), Math.cos(dTheta)); // shortest way round
+    dTheta = Math.atan2(Math.sin(dTheta), Math.cos(dTheta));
     cur.theta += dTheta * k;
     cur.phi += (g.sph.phi - cur.phi) * k;
     cur.radius += (g.sph.radius - cur.radius) * k;
@@ -586,12 +382,88 @@ function CameraRig({ selected, view, reducedMotion }: Pick<BodySceneProps, 'sele
   return null;
 }
 
+// ---------------------------------------------------------------- GLB error boundary
+
+class GlbBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(err: unknown) {
+    console.warn('[body3d] anatomy GLB could not be loaded, using the procedural body', err);
+    this.props.onError();
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
 // ---------------------------------------------------------------- scene root
 
-function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls> }) {
-  const { states, selected, hovered, onHover, onSelect, view, reducedMotion, els } = props;
-  const mats = useMats();
+type ModelState = 'probe' | ModelKind;
+
+function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls>; layoutRef: MutableRefObject<Layout> }) {
+  const { states, selected, hovered, onHover, onSelect, view, reducedMotion, layers, onModel, els, layoutRef } = props;
   const gl = useThree((s) => s.gl);
+  const invalidate = useThree((s) => s.invalidate);
+
+  const mats = useMemo(() => new BodyMaterials(), []);
+  useEffect(() => () => mats.dispose(), [mats]);
+  const cabin = useMemo<CabinMats>(
+    () => ({
+      ring: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8, toneMapped: false }),
+      hit: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false }),
+      wall: new THREE.ShaderMaterial({
+        uniforms: { uColor: { value: new THREE.Color('#7fd8ff') }, uBoost: { value: 0 } },
+        vertexShader: CABIN_VERT,
+        fragmentShader: CABIN_FRAG,
+        transparent: true,
+        depthWrite: false,
+      }),
+    }),
+    [],
+  );
+  useEffect(
+    () => () => {
+      cabin.ring.dispose();
+      cabin.hit.dispose();
+      cabin.wall.dispose();
+    },
+    [cabin],
+  );
+
+  const [model, setModel] = useState<ModelState>('probe');
+  const [layout, setLayout] = useState<Layout>(proceduralLayout);
+  const [modelKey, setModelKey] = useState('procedural');
+  useEffect(() => {
+    let alive = true;
+    probeModel().then((ok) => {
+      if (alive) setModel(ok ? 'glb' : 'procedural');
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (model === 'procedural') onModel?.('procedural');
+  }, [model, onModel]);
+  useEffect(() => {
+    layoutRef.current = layout;
+    invalidate();
+  }, [layout, layoutRef, invalidate]);
+
+  const onGlbReady = useCallback(
+    (l: Layout) => {
+      setLayout(l);
+      setModelKey(`glb-${Date.now()}`);
+      onModel?.('glb');
+    },
+    [onModel],
+  );
+  const onGlbError = useCallback(() => {
+    setModel('procedural');
+    setLayout(proceduralLayout());
+  }, []);
 
   useEffect(() => {
     gl.domElement.style.cursor = hovered ? 'pointer' : 'grab';
@@ -607,10 +479,17 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls> }) {
   return (
     <>
       <color attach="background" args={['#050b16']} />
-      <fog attach="fog" args={['#050b16', 4.5, 9]} />
-      <hemisphereLight args={['#bfe3ff', '#0b1a2b', 0.9]} />
-      <directionalLight position={[1.5, 3, 2.5]} intensity={1.4} />
-      <directionalLight position={[-2, 1.5, -2.5]} intensity={0.8} color="#5fb4ff" />
+      <fog attach="fog" args={['#050b16', 5, 10]} />
+      {/* Offline studio lighting: local light-formers only, rendered once. */}
+      <Environment resolution={128} frames={1} environmentIntensity={0.9}>
+        <Lightformer form="rect" intensity={2.6} color="#ffffff" position={[0, 2.6, 3]} scale={[4, 1.6, 1]} />
+        <Lightformer form="rect" intensity={1.4} color="#a8dcff" position={[-3.2, 1.4, 0.5]} scale={[2.5, 3, 1]} />
+        <Lightformer form="ring" intensity={2.2} color="#6fb6ff" position={[2.6, 1.6, -2.6]} scale={1.6} />
+        <Lightformer form="rect" intensity={0.5} color="#1c2c44" position={[0, -1.5, 0]} scale={[5, 5, 1]} />
+      </Environment>
+      <hemisphereLight args={['#cfe8ff', '#0b1a2b', 0.35]} />
+      <directionalLight position={[1.5, 3, 2.5]} intensity={1.6} />
+      <directionalLight position={[-2, 1.6, -2.8]} intensity={1.1} color="#69b8ff" />
 
       <group
         onPointerMove={(e) => {
@@ -624,29 +503,45 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls> }) {
           if (r) onSelect(r);
         }}
       >
-        <Figure mats={mats} />
-        <Cabin mats={mats} />
+        {model === 'procedural' && <ProceduralBody mats={mats} />}
+        {model === 'glb' && (
+          <GlbBoundary onError={onGlbError}>
+            <Suspense fallback={<ProceduralBody mats={mats} />}>
+              <GlbBody mats={mats} onReady={onGlbReady} />
+            </Suspense>
+          </GlbBoundary>
+        )}
+        <Cabin mats={cabin} />
       </group>
 
-      <Leaders states={states} material={mats.leader} />
-      <ContactShadows position={[0, 0.004, 0]} scale={1.6} blur={2.4} far={1.2} opacity={0.55} resolution={256} frames={1} color="#000814" />
+      <Leaders states={states} layout={layout} />
+      <ContactShadows position={[0, 0.004, 0]} scale={1.8} blur={2.6} far={1.2} opacity={0.6} resolution={256} frames={1} color="#000814" />
 
-      <StateSync mats={mats} states={states} selected={selected} hovered={hovered} reducedMotion={reducedMotion} />
+      <StateSync
+        mats={mats}
+        cabin={cabin}
+        states={states}
+        selected={selected}
+        hovered={hovered}
+        reducedMotion={reducedMotion}
+        layers={layers}
+        modelKey={modelKey}
+      />
       <OrbitControls
         makeDefault
         target={[0, 1.0, 0]}
         enablePan={false}
         enableDamping={!reducedMotion}
         dampingFactor={0.12}
-        minDistance={0.6}
+        minDistance={0.45}
         maxDistance={6}
         minPolarAngle={0.35}
         maxPolarAngle={Math.PI - 0.6}
         rotateSpeed={0.7}
         zoomSpeed={0.8}
       />
-      <CameraRig selected={selected} view={view} reducedMotion={reducedMotion} />
-      <Projector els={els} />
+      <CameraRig selected={selected} view={view} reducedMotion={reducedMotion} layout={layout} />
+      <Projector els={els} layout={layoutRef} />
     </>
   );
 }
@@ -654,6 +549,7 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls> }) {
 export default function BodyScene(props: BodySceneProps) {
   const { onFail, states, selected, hovered, onHover, onSelect } = props;
   const els = useRef<MarkerEls>({});
+  const layoutRef = useRef<Layout>(proceduralLayout());
   // R3F force-loses the context when the canvas unmounts (e.g. switching to
   // 2D); only a context loss while mounted counts as a failure.
   const mounted = useRef(true);
@@ -669,8 +565,8 @@ export default function BodyScene(props: BodySceneProps) {
         className="b3d-canvas"
         frameloop="demand"
         dpr={[1, 2]}
-        camera={{ position: [0, 1.12, HOME_DIST], fov: 34, near: 0.05, far: 30 }}
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        camera={{ position: [0, 1.12, HOME_DIST], fov: 34, near: 0.03, far: 30 }}
+        gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping }}
         onCreated={({ gl }) => {
           gl.domElement.addEventListener('webglcontextlost', (ev) => {
             ev.preventDefault();
@@ -678,7 +574,7 @@ export default function BodyScene(props: BodySceneProps) {
           });
         }}
       >
-        <Scene {...props} els={els} />
+        <Scene {...props} els={els} layoutRef={layoutRef} />
       </Canvas>
       <Markers states={states} selected={selected} hovered={hovered} onHover={onHover} onSelect={onSelect} els={els} />
     </div>
