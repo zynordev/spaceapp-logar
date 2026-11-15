@@ -17,6 +17,7 @@ import { fmtAuto, fmtClock, relTime } from '../vitals/format';
 import type { AlertRead, CrewStatus, MeasurementPoint, MetricDef, RuleStatus } from '../vitals/types';
 import { BodyMapPanel } from '../body3d';
 import { EcgStrip } from '../ecg';
+import { MissionSpaceView } from '../space';
 
 export type DetailTab = 'rules' | 'inputs' | 'ground';
 
@@ -767,6 +768,7 @@ export function MissionScreens({ scenarioId, crewIds = [], onOpen }: MissionScre
             ))}
             <RoomPanel rules={rules} onOpenMetric={openMetric} scenarioId={scenarioId} />
             <section className="dz-card dz-main" style={box(652, 364, 1246, 702)} aria-label="Ana panel" data-tour={screen === 'overview' ? 'scene' : undefined}>
+              <MissionSpaceView active={screen === 'overview'} onOpenGround={() => onOpen('ground')} />
               {scenarioId && <span className="dz-main__demo">SENTETİK VERİ · {scenarioId}</span>}
             </section>
           </div>

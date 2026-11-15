@@ -1,0 +1,116 @@
+/* Mission link view in the overview main panel. Sizes are design pixels
+ * (the panel sits in the 1920x1080 stage). Prefix: sp- */
+
+.sp {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #03201f 0%, #010c0e 72%, #020f10 100%);
+}
+.sp__view { position: absolute; inset: 0; }
+.sp__canvas, .sp__svg { position: absolute !important; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* readable over the scene without a glass card: a soft dark corner fade */
+.sp::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 620px 360px at 0 0, rgba(1, 12, 14, 0.78), rgba(1, 12, 14, 0) 70%),
+    linear-gradient(0deg, rgba(1, 12, 14, 0.7), rgba(1, 12, 14, 0) 90px);
+}
+
+.sp__info {
+  position: absolute;
+  z-index: 2;
+  left: 30px;
+  top: 24px;
+  width: 600px;
+  color: var(--dz-text, #f3fbfa);
+}
+.sp__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 40px;
+  letter-spacing: 0.05em;
+}
+.sp__route {
+  margin: 2px 0 14px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  color: #a5cbc6;
+}
+.sp__rows { margin: 0; display: grid; gap: 8px; }
+.sp__rows > div { display: grid; grid-template-columns: 230px 1fr; align-items: baseline; gap: 12px; }
+.sp__rows dt { font-family: var(--font-mono); font-size: 16px; color: #cfe6e3; }
+.sp__rows dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 32px;
+  font-variant-numeric: tabular-nums;
+}
+.sp__rows small { font-family: var(--font-mono); font-size: 14px; font-weight: 400; color: #a5cbc6; }
+.sp__muted { color: #a5cbc6; }
+.sp__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent, #b9f3ea);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+  cursor: pointer;
+}
+.sp__link:focus-visible { outline: 3px solid var(--focus, #fff); outline-offset: 3px; }
+.sp__flag {
+  display: inline-block;
+  padding: 0 10px;
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: 0.04em;
+  vertical-align: 2px;
+}
+.sp__flag--alert { background: var(--att-alert); color: var(--att-alert-ink); }
+.sp__flag--critical { background: var(--att-critical-bg); color: var(--att-critical-ink); }
+
+.sp__note {
+  position: absolute;
+  z-index: 2;
+  left: 30px;
+  bottom: 14px;
+  max-width: 780px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  color: #a5cbc6;
+}
+
+/* labels next to the beam ends, placed by SpaceCanvas (design pixels) */
+.sp-label {
+  position: absolute;
+  z-index: 1;
+  left: -999px;
+  top: 0;
+  pointer-events: none;
+  display: block;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: #e4ecea;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.sp-label--left { transform: translate(calc(-100% - 14px), 10px); }
+.sp-label--right { transform: translate(18px, 12px); }
+.sp-label--below { transform: translate(-50%, 0); }
+.sp__svgtext { font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.08em; fill: #e4ecea; }
