@@ -210,12 +210,13 @@
 .hud__top {
   grid-area: top;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: flex-start;
   gap: var(--sp-3);
 }
-.hud__top > .hud-card { flex: 0 1 168px; min-width: 148px; }
+.hud__top > .hud-card { flex: 0 1 152px; min-width: 128px; }
+.hud__top > .hud-metric--feature { flex: 0 1 216px; min-width: 176px; }
 .hud__right {
   grid-area: right;
   display: flex;
@@ -228,7 +229,8 @@
 @media (max-width: 1280px) {
   .hud { --hud-pad: var(--sp-4); --hud-gap: var(--sp-3); --hud-left: 288px; --hud-right: 272px; }
   .hud__top { flex-wrap: nowrap; }
-  .hud__top > .hud-card { flex: 1 1 0; min-width: 132px; max-width: 168px; }
+  .hud__top > .hud-card { flex: 1 1 0; min-width: 128px; max-width: 160px; }
+  .hud__top > .hud-metric--feature { flex-grow: 1.5; max-width: 220px; }
 }
 /* Narrow screens: the scene becomes a band and the cards flow below it. */
 @media (max-width: 1100px), (max-height: 640px) {
@@ -244,7 +246,7 @@
   }
   .hud__left { max-height: none; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
   .hud__left > .hud-metric--hero { grid-column: 1 / -1; }
-  .hud__top { display: flex; justify-content: stretch; align-content: flex-start; }
+  .hud__top { display: flex; flex-wrap: wrap; justify-content: stretch; align-content: flex-start; }
   .hud__top > .hud-card { flex: 1 1 160px; }
   .hud__right > .hud-clock { margin-top: 0; }
 }

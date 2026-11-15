@@ -6,6 +6,7 @@ import { fmtAuto, isNum, toMs } from './format';
 import { Skeleton } from './Badges';
 import { type ChartMarker, type ChartThreshold, TimeChart } from './TimeChart';
 import type { AlertRead, MeasurementTrend, MetricDef, RuleStatus } from './types';
+import { Icon } from '../../ui';
 
 type Range = 'raw' | '7d' | '30d';
 const RANGES: { key: Range; label: string }[] = [
@@ -22,10 +23,10 @@ function Legend({ trend, threshold, markers, suspect, fault }: { trend: boolean;
       <li><svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" className="vt-lg-line" /></svg>{trend ? 'Ortalama' : 'Ölçüm'}</li>
       {trend && <li><svg width="22" height="10" aria-hidden="true"><rect width="22" height="10" className="vt-lg-band" /></svg>En düşük–en yüksek</li>}
       {!trend && suspect && <li><svg width="22" height="10" aria-hidden="true"><rect x="7" y="1" width="7" height="7" transform="rotate(45 10.5 4.5)" className="vt-lg-suspect" /></svg>Şüpheli veri</li>}
-      {!trend && fault && <li><span aria-hidden="true" className="vt-lg-fault">✖</span>Sensör arızası</li>}
+      {!trend && fault && <li><span aria-hidden="true" className="vt-lg-fault"><Icon name="x" size={14} /></span>Sensör arızası</li>}
       <li><svg width="22" height="10" aria-hidden="true"><rect width="22" height="10" className="vt-lg-gap" /></svg>Veri boşluğu</li>
       {threshold && <li><svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" className="vt-lg-thr" /></svg>Kural eşiği</li>}
-      {markers && <li><span aria-hidden="true" className="vt-lg-open">▲</span>Alarm açıldı <span aria-hidden="true" className="vt-lg-res">✓</span>kapandı</li>}
+      {markers && <li><span aria-hidden="true" className="vt-lg-open"><Icon name="alert" size={14} /></span>Alarm açıldı <span aria-hidden="true" className="vt-lg-res"><Icon name="check" size={14} /></span>kapandı</li>}
     </ul>
   );
 }
@@ -136,14 +137,14 @@ export function ChartSection({
       </header>
       {trendUnavailable && (
         <p className="vt-note" role="status">
-          <span aria-hidden="true">ℹ</span>
+          <span aria-hidden="true"><Icon name="info" size={14} /></span>
           {trend.error?.notFound
             ? 'Uzun dönem eğilim servisi bu sunucuda henüz yok; son ölçümler gösteriliyor.'
             : 'Uzun dönem eğilim şu an alınamadı; son ölçümler gösteriliyor.'}
         </p>
       )}
       {useTrend && trend.data!.buckets.every((b) => !b.count) && (
-        <p className="vt-note" role="status"><span aria-hidden="true">∅</span>Bu aralıkta özetlenecek ölçüm yok.</p>
+        <p className="vt-note" role="status"><span aria-hidden="true"><Icon name="question" size={14} /></span>Bu aralıkta özetlenecek ölçüm yok.</p>
       )}
       <Legend trend={useTrend} threshold={!!threshold} markers={markers.length > 0} suspect={hasSuspect} fault={hasFault} />
       {body}

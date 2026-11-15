@@ -29,7 +29,25 @@ export type IconName =
   | 'radiation'
   | 'moon'
   | 'signal'
-  | 'arrow-down';
+  | 'arrow-down'
+  | 'arrow-up'
+  | 'play'
+  | 'stop'
+  | 'download'
+  | 'wrench'
+  | 'flask'
+  | 'flame'
+  | 'swap'
+  | 'grid'
+  | 'plus'
+  | 'hourglass'
+  | 'circle'
+  | 'dot'
+  | 'flag'
+  | 'smile'
+  | 'run'
+  | 'chair'
+  | 'bell';
 
 const paths: Record<IconName, ReactElement> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
@@ -153,6 +171,43 @@ const paths: Record<IconName, ReactElement> = {
     </>
   ),
   'arrow-down': <path d="M12 4.5v15M6 13.5l6 6 6-6" />,
+  'arrow-up': <path d="M12 19.5v-15M6 10.5l6-6 6 6" />,
+  play: <path d="M7.5 5v14l11-7z" />,
+  stop: <rect x="6.5" y="6.5" width="11" height="11" rx="1.5" />,
+  download: <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14" />,
+  wrench: <path d="M14.5 4.5a4.5 4.5 0 0 0-4.3 5.8L4 16.5 7.5 20l6.2-6.2a4.5 4.5 0 0 0 5.8-4.3l-2.7 2.7-3-3 2.7-2.7z" />,
+  flask: <path d="M9.5 3.5h5M10.5 3.5v5.5L5 18.5a1.4 1.4 0 0 0 1.2 2h11.6a1.4 1.4 0 0 0 1.2-2L13.5 9V3.5M7.6 14h8.8" />,
+  flame: <path d="M12 20.5a6 6 0 0 0 6-6c0-4.5-4-6.5-4.5-11-2.5 2-3.6 4.4-3.5 6.8-1-.6-1.6-1.6-1.8-2.8C6.6 9.2 6 11.6 6 14.5a6 6 0 0 0 6 6z" />,
+  swap: <path d="M4 8.5h15M15.5 5l3.5 3.5-3.5 3.5M20 15.5H5M8.5 12L5 15.5 8.5 19" />,
+  grid: (
+    <>
+      <rect x="4" y="4" width="6.5" height="6.5" rx="1" />
+      <rect x="13.5" y="4" width="6.5" height="6.5" rx="1" />
+      <rect x="4" y="13.5" width="6.5" height="6.5" rx="1" />
+      <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  hourglass: <path d="M7 3.5h10M7 20.5h10M8 3.5c0 4.5 4 5.5 4 8.5s-4 4-4 8.5M16 3.5c0 4.5-4 5.5-4 8.5s4 4 4 8.5" />,
+  circle: <circle cx="12" cy="12" r="7" />,
+  dot: <circle cx="12" cy="12" r="4" fill="currentColor" />,
+  flag: <path d="M5.5 21V4M5.5 4.5h11l-2.5 4 2.5 4h-11" />,
+  smile: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M8.5 14.5c1 1.3 2.1 2 3.5 2s2.5-.7 3.5-2" />
+      <circle cx="9.3" cy="10" r=".7" fill="currentColor" />
+      <circle cx="14.7" cy="10" r=".7" fill="currentColor" />
+    </>
+  ),
+  run: (
+    <>
+      <circle cx="14.5" cy="4.8" r="1.8" />
+      <path d="M6 20l3.5-5 3 2V21M8 10.5l3-2.5 3 1.5 2 3h3M11 8l-1.5 6" />
+    </>
+  ),
+  chair: <path d="M7 3.5v10h10M7 13.5V20M17 13.5V20M7 9.5h8.5a1.5 1.5 0 0 1 1.5 1.5v2.5" />,
+  bell: <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" />,
 };
 
 export function Icon({ name, size = 18, className }: { name: IconName; size?: number; className?: string }) {

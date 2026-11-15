@@ -387,3 +387,8 @@
   .vt-badge, .vt-tile, .vt-rule, .vt-alert, .vt-ac { border: 1px solid CanvasText; }
   .vt-line { stroke: CanvasText; }
 }
+
+/* SVG icons (ui/icons) inline with text; base.css makes svg display:block. */
+.vt-panel .ui-icon, .vt-dialog .ui-icon { display: inline-block; vertical-align: -0.15em; flex: none; }
+.vt-empty-icon .ui-icon { display: block; }
+.vt-fault-x { stroke: var(--vt-critical); stroke-width: 2; stroke-linecap: round; fill: none; }

@@ -8,6 +8,7 @@ import { rank, useAlerts, useCrewStatus, useMetrics, useNow, useSelection, useVi
 import { fmtClock, fmtDateTime, relTime, toMs } from './format';
 import type { AlertRead, RuleStatus } from './types';
 import { Freshness } from './VitalsPanel';
+import { Icon } from '../../ui';
 
 const NO_PERMISSION = 'Bu işlem için yetkiniz yok — ekip sağlık sorumlusu kapatabilir';
 
@@ -39,7 +40,7 @@ function ResolveDialog({
   }, [alert]);
   return (
     <dialog ref={ref} className="vt-dialog" aria-labelledby="vt-resolve-title" onCancel={(e) => { e.preventDefault(); onCancel(); }}>
-      <h3 id="vt-resolve-title"><span aria-hidden="true">⚠</span> Kırmızı bayrağı kapat</h3>
+      <h3 id="vt-resolve-title"><span aria-hidden="true"><Icon name="warning" size={14} /></span> Kırmızı bayrağı kapat</h3>
       <p><b>{title}</b></p>
       <p>Bu kırmızı bayrak olayı ekip sağlık sorumlusu tarafından değerlendirildi mi? Alarm kapatılacak ve kimin kapattığı kaydedilecek.</p>
       <p className="vt-muted vt-small">Kırmızı bayraklar ölçümlerle kendiliğinden kapanmaz. Görev prosedürü önceliklidir.</p>
@@ -134,7 +135,7 @@ export function AlertsPanel() {
     return (
       <section className="vt-panel" aria-label="Alarmlar ve eylem kartı">
         <h2 className="vt-h2">Alarmlar ve eylem kartı</h2>
-        <div className="vt-empty-state"><span aria-hidden="true" className="vt-empty-icon">◎</span><p>Alarmları görmek için bir görev seçin.</p></div>
+        <div className="vt-empty-state"><span aria-hidden="true" className="vt-empty-icon"><Icon name="info" size={22} /></span><p>Alarmları görmek için bir görev seçin.</p></div>
       </section>
     );
   }
@@ -212,18 +213,18 @@ export function AlertsPanel() {
       </header>
 
       {!crewId && (
-        <p className="vt-note" role="status"><span aria-hidden="true">ℹ</span>İşlem yapmak için bir ekip üyesi seçin.</p>
+        <p className="vt-note" role="status"><span aria-hidden="true"><Icon name="info" size={14} /></span>İşlem yapmak için bir ekip üyesi seçin.</p>
       )}
 
       <div className="vt-alerts-layout">
         <div className="vt-alerts-col">
           {!alerts.data ? (
             alerts.error ? (
-              <p className="vt-note vt-note-warn" role="alert"><span aria-hidden="true">⚠</span>Alarmlar alınamadı ({alerts.error.network ? 'bağlantı yok' : alerts.error.message}).</p>
+              <p className="vt-note vt-note-warn" role="alert"><span aria-hidden="true"><Icon name="warning" size={14} /></span>Alarmlar alınamadı ({alerts.error.network ? 'bağlantı yok' : alerts.error.message}).</p>
             ) : <Skeleton lines={3} height={64} />
           ) : activeList.length === 0 ? (
             <div className="vt-empty-state vt-empty-small">
-              <span aria-hidden="true" className="vt-empty-icon vt-ok">✓</span>
+              <span aria-hidden="true" className="vt-empty-icon vt-ok"><Icon name="check" size={22} /></span>
               <p>Açık alarm yok.</p>
               <p className="vt-muted vt-small">Alarm olmaması tüm verilerin geçerli olduğu anlamına gelmez; kural listesindeki veri kalitesine bakın.</p>
             </div>
@@ -259,7 +260,7 @@ export function AlertsPanel() {
             />
           ) : alerts.data ? (
             <div className="vt-empty-state vt-empty-small">
-              <span aria-hidden="true" className="vt-empty-icon">▢</span>
+              <span aria-hidden="true" className="vt-empty-icon"><Icon name="info" size={22} /></span>
               <p>Şu an etkin bir eylem kartı yok.</p>
               <p className="vt-muted vt-small">Kartlar yalnızca bir kural dikkat gerektirdiğinde, önceden yazılmış metinlerle gösterilir.</p>
             </div>

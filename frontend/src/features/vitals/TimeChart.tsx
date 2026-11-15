@@ -9,6 +9,7 @@ import {
 } from './chartUtils';
 import { fmtAuto, fmtClock, fmtDateTime, fmtDay } from './format';
 import type { MeasurementPoint, TrendBucket } from './types';
+import { Icon } from '../../ui';
 
 export interface ChartMarker {
   t: number;
@@ -82,7 +83,7 @@ export function TimeChart(props: Props) {
   if (!items.length) {
     return (
       <div ref={boxRef} className="vt-chart-box"><div className="vt-chart-empty" role="note">
-        <span aria-hidden="true" className="vt-empty-icon">∅</span>
+        <span aria-hidden="true" className="vt-empty-icon"><Icon name="question" size={22} /></span>
         <p>Bu aralıkta çizilecek geçerli veri yok. Eksik veri “normal” anlamına gelmez.</p>
         {faults.length > 0 && <p className="vt-muted">{faults.length} ölçüm sensör arızası olarak işaretli.</p>}
       </div></div>
@@ -250,7 +251,7 @@ export function TimeChart(props: Props) {
           />
         ))}
         {faults.map((t) => (
-          <text key={`f${t}`} className="vt-fault" x={X(t)} y={H - m.b - 4} textAnchor="middle">✖</text>
+          <path key={`f${t}`} className="vt-fault-x" d={`M${X(t) - 4} ${H - m.b - 12}l8 8m0 -8l-8 8`} />
         ))}
 
         {visibleMarkers.map((mk, i) => {
@@ -260,7 +261,7 @@ export function TimeChart(props: Props) {
             <g key={`m${i}`} className={mk.kind === 'open' ? 'vt-mk-open' : 'vt-mk-res'}>
               <line x1={x} x2={x} y1={m.t - 8} y2={H - m.b} />
               <text x={x + (right ? -4 : 4)} y={m.t - 12} textAnchor={right ? 'end' : 'start'}>
-                {mk.kind === 'open' ? '▲ ' : '✓ '}{mk.label}
+                {mk.label}
               </text>
             </g>
           );
@@ -295,7 +296,7 @@ export function TimeChart(props: Props) {
               <div className="vt-tip-time">{fmtDateTime(active.t, true)}</div>
               <div className="vt-tip-val">{fmtAuto(active.v)} <small>{unit}</small></div>
               <div className="vt-tip-sub">
-                <span aria-hidden="true">{QUALITY[active.quality]?.icon ?? '?'}</span> Veri: {QUALITY[active.quality]?.label ?? active.quality}
+                <Icon name={QUALITY[active.quality]?.icon ?? 'question'} size={12} /> Veri: {QUALITY[active.quality]?.label ?? active.quality}
               </div>
               {active.activity && <div className="vt-tip-sub">Aktivite: {ACTIVITY[active.activity] ?? active.activity}</div>}
             </>

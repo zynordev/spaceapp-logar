@@ -7,6 +7,7 @@ import { targetFor, useAlerts, useCrewStatus, useMetrics, useSelection, useVital
 import { fmtClock, relTime } from './format';
 import { MetricTile } from './MetricTiles';
 import { RuleList } from './RuleList';
+import { Icon } from '../../ui';
 
 export function Freshness({ at, error }: { at: string | null | undefined; error: boolean }) {
   const offline = useApp((s) => s.offline);
@@ -14,7 +15,7 @@ export function Freshness({ at, error }: { at: string | null | undefined; error:
   const stale = offline || error;
   return (
     <span className={`vt-fresh${stale ? ' is-stale' : ''}`} role="status">
-      <span aria-hidden="true">{stale ? '⚠' : '●'}</span>
+      <Icon name={stale ? 'warning' : 'dot'} size={12} />
       {stale ? `Son bilinen veri · ${fmtClock(at)} (${relTime(at)})` : `Güncel · ${fmtClock(at)}`}
     </span>
   );
@@ -42,7 +43,7 @@ export function VitalsPanel() {
       <section className="vt-panel" aria-label="Ölçümler ve kurallar">
         <h2 className="vt-h2">Ölçümler ve kurallar</h2>
         <div className="vt-empty-state">
-          <span aria-hidden="true" className="vt-empty-icon">◎</span>
+          <span aria-hidden="true" className="vt-empty-icon"><Icon name="info" size={22} /></span>
           <p>Ölçümleri görmek için bir görev ve ekip üyesi seçin.</p>
         </div>
       </section>
@@ -76,7 +77,7 @@ export function VitalsPanel() {
 
       {status.error && !status.data && (
         <p className="vt-note vt-note-warn" role="alert">
-          <span aria-hidden="true">⚠</span>
+          <span aria-hidden="true"><Icon name="warning" size={14} /></span>
           {status.error.network ? 'Sunucuya ulaşılamıyor; bağlantı gelince veriler yüklenecek.' : `Durum alınamadı (${status.error.message}).`}
         </p>
       )}
@@ -107,7 +108,7 @@ export function VitalsPanel() {
           status.error ? <p className="vt-muted">Kurallar şu an alınamadı.</p> : <Skeleton lines={4} height={44} />
         ) : rules.length === 0 ? (
           <div className="vt-empty-state vt-empty-small">
-            <span aria-hidden="true" className="vt-empty-icon">∅</span>
+            <span aria-hidden="true" className="vt-empty-icon"><Icon name="question" size={22} /></span>
             <p>Bu görev için henüz değerlendirilmiş kural yok. Veri yoksa durum “bilinmiyor”dur, “normal” değil.</p>
           </div>
         ) : (

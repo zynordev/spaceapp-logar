@@ -87,10 +87,12 @@ interface MetricCardProps {
   pair?: MetricDef | null;
   rules: RuleStatus[];
   hero?: boolean;
+  /** Larger number, same layout (one featured card per group). */
+  feature?: boolean;
   onOpen: (metric: string) => void;
 }
 
-function MetricCard({ def, pair = null, rules, hero = false, onOpen }: MetricCardProps) {
+function MetricCard({ def, pair = null, rules, hero = false, feature = false, onOpen }: MetricCardProps) {
   const crewId = useApp((s) => s.crewId);
   const envId = useApp((s) => s.environmentTargetId);
   const now = useNow(30_000);
@@ -124,7 +126,7 @@ function MetricCard({ def, pair = null, rules, hero = false, onOpen }: MetricCar
   return (
     <button
       type="button"
-      className={`hud-card hud-metric${hero ? ' hud-metric--hero' : ''} ${levelCls}${
+      className={`hud-card hud-metric${hero ? ' hud-metric--hero' : ''}${feature ? ' hud-metric--feature' : ''} ${levelCls}${
         level && level !== 'NORMAL' && level !== 'UNKNOWN' ? ' is-flagged' : ''
       }${!last ? ' is-empty' : ''}`}
       onClick={() => onOpen(def.metric)}
@@ -438,7 +440,13 @@ export function HudOverlay({ scenarioId, onOpen }: HudOverlayProps) {
       </div>
       <div className="hud__top" role="group" aria-label="Kabin ortamı" ref={topRef}>
         {env.map((m) => (
-          <MetricCard key={m.metric} def={m} rules={rules} onOpen={openMetric} />
+          <MetricCard
+            key={m.metric}
+            def={m}
+            rules={rules}
+            feature={m.metric === 'CABIN_CO2_PARTIAL_PRESSURE'}
+            onOpen={openMetric}
+          />
         ))}
       </div>
       <div className="hud__right">
