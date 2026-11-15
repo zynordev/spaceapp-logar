@@ -24,6 +24,10 @@ export interface HudOverlayProps {
   crewIds: string[];
   /** Scroll to the detail section and open the given tab. */
   onOpen: (tab: DetailTab) => void;
+  /** Whether the big panel shows the 3D body + vitals. */
+  bodyOpen: boolean;
+  /** Crew card clicked: select it and open (or close) its 3D model. */
+  onOpenCrew: (crewId: string) => void;
 }
 
 const STALE_MS = 10 * 60_000;
@@ -228,10 +232,22 @@ function RuleRing({ normal, total, level }: { normal: number; total: number; lev
   );
 }
 
-function CrewCard({ crewId, envId, alerts, onOpen }: { crewId: string; envId: string | null; alerts: AlertRead[]; onOpen: (tab: DetailTab) => void }) {
+function CrewCard({
+  crewId,
+  envId,
+  alerts,
+  onOpen,
+  open,
+  onToggle,
+}: {
+  crewId: string;
+  envId: string | null;
+  alerts: AlertRead[];
+  onOpen: (tab: DetailTab) => void;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const missionId = useApp((s) => s.missionId);
-  const setSelection = useApp((s) => s.setSelection);
-  const selectedCrew = useApp((s) => s.crewId);
   const now = useNow(30_000);
   const base = missionId ? `/v1/crew/${encodeURIComponent(crewId)}` : null;
   const status = usePolling<CrewStatus & { latest_check_in?: CheckInLite | null }>(
@@ -267,25 +283,29 @@ function CrewCard({ crewId, envId, alerts, onOpen }: { crewId: string; envId: st
   const labRes = labs.data?.results ?? [];
   const outRef = labRes.filter((r) => r.position_vs_reference !== 'WITHIN').length;
   const blood = labs.data ? (labRes.length ? `${labRes.length} sonuç · ${outRef} referans dışı` : 'Lab sonucu yok') : labs.error ? 'Alınamadı' : '…';
-  const isSelected = selectedCrew === crewId;
 
   return (
     <Panel
-      title={upperTr(crewId)}
-      id={`hud-crew-${crewId}`}
-      className={`hud-crewcard att-${overall.level.toLowerCase()}${isSelected ? ' is-selected' : ''}`}
-      aside={
-        !isSelected ? (
-          <button type="button" className="hud-link" onClick={() => setSelection({ crewId })}>
-            Seç
-          </button>
-        ) : undefined
+      title={
+        <button type="button" className="hud-crewcard__name" aria-pressed={open} onClick={onToggle}>
+          {upperTr(crewId)}
+        </button>
       }
+      id={`hud-crew-${crewId}`}
+      className={`hud-crewcard att-${overall.level.toLowerCase()}${open ? ' is-open' : ''}`}
+      aside={<span className="hud-tag">{open ? '3D AÇIK' : '3D İÇİN TIKLAYIN'}</span>}
     >
       <div className="hud-crew">
-        <div className="hud-crew__photo" aria-hidden="true">
-          <span>{initials(crewId)}</span>
-        </div>
+        <button
+          type="button"
+          className="hud-crew__photo"
+          aria-pressed={open}
+          aria-label={open ? `${crewId}: 3D vücut modelini kapat` : `${crewId}: 3D vücut modelini aç`}
+          onClick={onToggle}
+        >
+          <span aria-hidden="true">{initials(crewId)}</span>
+          <small aria-hidden="true">{open ? 'KAPAT' : '3D MODEL'}</small>
+        </button>
         <div className="hud-crew__info">
           <div className="hud-crew__row">
             <span className="hud-crew__label">
@@ -406,12 +426,13 @@ function MissionCard({ scenarioId, onOpen }: { scenarioId: string | null; onOpen
 
 /* ------------------------------------------------------------------ export */
 
-export function HudOverlay({ scenarioId, crewIds, onOpen }: HudOverlayProps) {
+export function HudOverlay({ scenarioId, crewIds = [], onOpen, bodyOpen = false, onOpenCrew }: HudOverlayProps) {
   const status = useCrewStatus();
   const metrics = useMetrics();
   const alerts = useAlerts();
   const select = useVitalsUi((s) => s.select);
   const envId = useApp((s) => s.environmentTargetId);
+  const crewId = useApp((s) => s.crewId);
   const rules = status.data?.rules ?? [];
   const dia = metrics.find((d) => d.metric === 'DIASTOLIC_BP') ?? null;
   const openMetric = (metric: string) => {
@@ -423,7 +444,15 @@ export function HudOverlay({ scenarioId, crewIds, onOpen }: HudOverlayProps) {
     <>
       <div className="hud__left">
         {crewIds.map((c) => (
-          <CrewCard key={c} crewId={c} envId={envId} alerts={alerts.data ?? []} onOpen={onOpen} />
+          <CrewCard
+            key={c}
+            crewId={c}
+            envId={envId}
+            alerts={alerts.data ?? []}
+            onOpen={onOpen}
+            open={bodyOpen && crewId === c}
+            onToggle={() => onOpenCrew(c)}
+          />
         ))}
         <MissionCard scenarioId={scenarioId} onOpen={onOpen} />
       </div>
@@ -439,7 +468,8 @@ export function HudOverlay({ scenarioId, crewIds, onOpen }: HudOverlayProps) {
       </div>
 
       <div className="hud__vitals">
-        <section className="hud-vitals" aria-label="Vital bulgular">
+        {bodyOpen && (
+        <section className="hud-vitals" aria-label={`Vital bulgular · ${crewId ?? ''}`}>
           <ul className="hud-cols hud-cols--grid">
             {pick(metrics, VITAL_ORDER).map((m) => (
               <MetricColumn key={m.metric} def={m} pair={m.metric === 'SYSTOLIC_BP' ? dia : null} rules={rules} onOpen={openMetric} compact />
@@ -450,6 +480,7 @@ export function HudOverlay({ scenarioId, crewIds, onOpen }: HudOverlayProps) {
             <EcgStrip compact height={48} />
           </div>
         </section>
+        )}
       </div>
     </>
   );

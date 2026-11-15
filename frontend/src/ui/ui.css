@@ -378,3 +378,16 @@ h3.ui-panel__title { font-size: var(--fs-md); }
   text-align: center;
 }
 .ui-tabs__panel { padding-top: var(--sp-4); min-width: 0; }
+
+/* ===== Reference design language (teal, Oswald, square controls) ===== */
+.ui-btn { font-family: var(--font-display); font-weight: 400; letter-spacing: 0.03em; text-transform: uppercase; background: var(--surface-2); border-color: var(--line-strong); }
+.ui-btn--sm { font-size: 0.9375rem; }
+.ui-btn--primary { background: var(--att-normal); border-color: var(--att-normal); color: var(--att-normal-ink); }
+.ui-btn--primary:hover:not(:disabled) { background: #5be06a; border-color: #5be06a; }
+.ui-input { background: var(--bg-2); border-color: var(--line-strong); }
+.ui-tabs__list { border-bottom: 3px solid var(--rule); gap: var(--sp-1); }
+.ui-tabs__tab { font-family: var(--font-display); font-size: 1.25rem; font-weight: 400; letter-spacing: 0.02em; text-transform: uppercase; padding: 6px var(--sp-4); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.ui-tabs__tab[aria-selected='true'] { background: var(--strip); color: var(--text); border-bottom-color: transparent; }
+.ui-dialog { border-radius: var(--radius-lg); overflow: hidden; background: var(--surface); }
+.ui-panel { border-radius: var(--radius-lg); overflow: hidden; border: 0; }
+.ui-panel__head { background: var(--strip); }

@@ -158,7 +158,6 @@
 .hud-col--compact .hud-bar { height: 26px; font-size: 1.125rem; }
 
 /* ------------------------------------------------------------ crew card */
-.hud-crewcard.is-selected .hud-panel__head { box-shadow: inset 4px 0 0 var(--text); }
 .hud-crew { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3); }
 .hud-crew__photo {
   display: grid;
@@ -248,3 +247,21 @@
 .hud-ecg { padding: var(--sp-2) var(--sp-3) var(--sp-3); border-top: 2px solid var(--rule); }
 .hud-col__unit-inline { margin-left: 4px; font-size: 1rem; font-weight: 400; color: var(--text-muted); }
 .hud-col--compact .hud-col__value { margin-bottom: 4px; }
+
+/* crew card: click to open the 3D model */
+.hud-crewcard__name {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.hud-crewcard__name:hover { text-decoration: underline; text-underline-offset: 4px; }
+.hud-crew__photo { width: 100%; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.hud-crew__photo small { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; color: var(--text-faint); }
+.hud-crew__photo:hover { border-color: var(--strip); }
+.hud-crew__photo:hover small { color: var(--text); }
+.hud-crewcard.is-open .hud-crew__photo { border-color: var(--text); }
+.hud-crewcard.is-open .hud-panel__head { box-shadow: inset 0 -3px 0 var(--text); }
