@@ -49,6 +49,8 @@ export interface BodySceneProps {
   onModel?: (kind: ModelKind) => void;
   /** WebGL context lost / unusable: the panel switches to the 2D body. */
   onFail: () => void;
+  /** The floating detail card covers the right side: shift the view left. */
+  detailOpen?: boolean;
 }
 
 const noRaycast = () => null;
@@ -382,6 +384,20 @@ function CameraRig({
   return null;
 }
 
+/** Off-centre projection so the focused organ stays clear of the detail card. */
+function ViewShift({ open }: { open: boolean }) {
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const size = useThree((s) => s.size);
+  const invalidate = useThree((s) => s.invalidate);
+  const shift = open && size.width > 760 ? Math.min(190, size.width * 0.16) : 0;
+  useEffect(() => {
+    if (shift) camera.setViewOffset(size.width, size.height, shift, 0, size.width, size.height);
+    else camera.clearViewOffset();
+    invalidate();
+  }, [camera, size.width, size.height, shift, invalidate]);
+  return null;
+}
+
 // ---------------------------------------------------------------- GLB error boundary
 
 class GlbBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
@@ -478,8 +494,6 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls>; layou
 
   return (
     <>
-      <color attach="background" args={['#050b16']} />
-      <fog attach="fog" args={['#050b16', 5, 10]} />
       {/* Offline studio lighting: local light-formers only, rendered once. */}
       <Environment resolution={128} frames={1} environmentIntensity={0.9}>
         <Lightformer form="rect" intensity={2.6} color="#ffffff" position={[0, 2.6, 3]} scale={[4, 1.6, 1]} />
@@ -541,6 +555,7 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls>; layou
         zoomSpeed={0.8}
       />
       <CameraRig selected={selected} view={view} reducedMotion={reducedMotion} layout={layout} />
+      <ViewShift open={!!props.detailOpen} />
       <Projector els={els} layout={layoutRef} />
     </>
   );
@@ -566,7 +581,7 @@ export default function BodyScene(props: BodySceneProps) {
         frameloop="demand"
         dpr={[1, 2]}
         camera={{ position: [0, 1.12, HOME_DIST], fov: 34, near: 0.03, far: 30 }}
-        gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping }}
+        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping }}
         onCreated={({ gl }) => {
           gl.domElement.addEventListener('webglcontextlost', (ev) => {
             ev.preventDefault();

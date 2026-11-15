@@ -87,12 +87,12 @@ export function Legend() {
       {order.map((a) => {
         const m = ATTENTION[a];
         return (
-          <li key={a} style={{ ['--c' as string]: m.cssVar }}>
+          <li key={a} style={{ ['--c' as string]: m.cssVar }} title={m.hint}>
             <span className="b3d-legend-sw" aria-hidden="true">
               {m.glyph}
             </span>
             <strong>{m.label}</strong>
-            <span className="b3d-legend-hint">{m.hint}</span>
+            <span className="b3d-sr">: {m.hint}</span>
           </li>
         );
       })}

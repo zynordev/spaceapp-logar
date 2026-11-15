@@ -135,24 +135,62 @@ export function BodyMapPanel() {
 
   return (
     <section
-      className="b3d-panel"
+      className={`b3d-panel b3d-hud${region ? ' has-detail' : ''}`}
       aria-labelledby="b3d-title"
       onKeyDown={(e) => {
         if (e.key === 'Escape' && selected) clear();
       }}
     >
-      <header className="b3d-head">
-        <div className="b3d-title-row">
-          <h2 id="b3d-title">Vücut haritası</h2>
-          <span className={`b3d-mode ${tag.cls}`}>{tag.text}</span>
-          <span className="b3d-overall">
-            Genel durum: <AttentionBadge attention={data.overall} />
-          </span>
-          {data.generatedAt && (
-            <span className={`b3d-updated${data.stale ? ' is-stale' : ''}`}>Güncelleme: {formatWhen(data.generatedAt)}</span>
+      {/* full-bleed scene */}
+      <div
+        className={`b3d-stage${use3d ? ' is-3d' : ' is-2d'}`}
+        role="img"
+        aria-label={`Vücut modeli, genel durum ${ATTENTION[data.overall].label}. Bölgeler aşağıdaki listede.`}
+      >
+        {use3d ? (
+          <SceneBoundary onError={onFail}>
+            <Suspense fallback={svg('3B model yükleniyor…')}>
+              <BodyScene
+                states={data.states}
+                selected={selected}
+                hovered={hovered}
+                onHover={hover}
+                onSelect={select}
+                view={view}
+                reducedMotion={reducedMotion}
+                layers={layers}
+                onModel={onModel}
+                onFail={onFail}
+                detailOpen={!!region}
+              />
+            </Suspense>
+          </SceneBoundary>
+        ) : (
+          svg()
+        )}
+      </div>
+
+      {/* top: title + status (left), view controls (right) */}
+      <header className="b3d-hud-top">
+        <div className="b3d-glass b3d-hud-title">
+          <div className="b3d-title-row">
+            <h2 id="b3d-title">Vücut haritası</h2>
+            <span className={`b3d-mode ${tag.cls}`}>{tag.text}</span>
+            <AttentionBadge attention={data.overall} size="sm" />
+          </div>
+          <p className="b3d-sub">
+            {data.generatedAt && (
+              <span className={data.stale ? 'is-stale' : undefined}>Güncelleme: {formatWhen(data.generatedAt)} · </span>
+            )}
+            {use3d ? 'Bir bölgeye tıklayın · sürükle: döndür · tekerlek: yakınlaştır' : 'Bir bölgeye tıklayın'}
+          </p>
+          {(data.note || fallbackReason) && (
+            <p className={`b3d-note is-${data.mode}`} role="status">
+              {[data.note, fallbackReason].filter(Boolean).join(' ')}
+            </p>
           )}
         </div>
-        <div className="b3d-toolbar" role="group" aria-label="Görünüm">
+        <div className="b3d-glass b3d-toolbar" role="group" aria-label="Görünüm">
           <button type="button" onClick={() => setView((v) => ({ kind: 'front', n: v.n + 1 }))} disabled={!use3d}>
             Önden
           </button>
@@ -168,102 +206,76 @@ export function BodyMapPanel() {
           >
             Sıfırla
           </button>
+          <span className="b3d-sep" aria-hidden="true" />
           <button type="button" aria-pressed={!use3d} onClick={toggle2d} disabled={!webgl || failed}>
-            2B görünüm
+            2B
           </button>
           <button type="button" aria-pressed={data.demoForced} onClick={() => data.setDemoForced(!data.demoForced)}>
-            Demo verisi
+            Demo
           </button>
         </div>
       </header>
 
-      {use3d && (
-        <div className="b3d-layers" role="group" aria-label="Katmanlar">
-          <span className="b3d-layers-title">Katmanlar</span>
-          {(
-            [
-              ['skin', 'Deri'],
-              ['organs', 'Organlar'],
-              ['skeleton', 'İskelet'],
-            ] as const
-          ).map(([key, label]) => (
-            <button key={key} type="button" aria-pressed={layers[key]} onClick={() => toggleLayer(key)}>
-              <span className="b3d-check" aria-hidden="true">
-                {layers[key] ? '✓' : ''}
-              </span>
-              {label}
-            </button>
-          ))}
-          <label className="b3d-slider">
-            Deri saydamlığı
-            <input
-              type="range"
-              min={0.05}
-              max={0.9}
-              step={0.01}
-              value={layers.skinOpacity}
-              disabled={!layers.skin}
-              onChange={(e) => setLayers((l) => ({ ...l, skinOpacity: Number(e.target.value) }))}
-              aria-valuetext={`%${Math.round(layers.skinOpacity * 100)} opak`}
-            />
-          </label>
-          {modelKind && (
-            <span className="b3d-model-kind">
-              {modelKind === 'glb' ? 'Anatomik model (BodyParts3D)' : 'Basitleştirilmiş model'}
-            </span>
-          )}
+
+      {/* right: region detail (only when a region is selected) */}
+      {region && (
+        <div className="b3d-hud-detail">
+          <RegionDetail region={region} onClose={clear} />
         </div>
       )}
 
-      {(data.note || fallbackReason) && (
-        <p className={`b3d-note is-${data.mode}`} role="status">
-          {[data.note, fallbackReason].filter(Boolean).join(' ')}
-        </p>
-      )}
-
-      <div className="b3d-body">
-        <div
-          className={`b3d-stage${use3d ? ' is-3d' : ' is-2d'}`}
-          role="img"
-          aria-label={`Vücut modeli, genel durum ${ATTENTION[data.overall].label}. Bölgeler aşağıdaki listede.`}
-        >
-          {use3d ? (
-            <SceneBoundary onError={onFail}>
-              <Suspense fallback={svg('3B model yükleniyor…')}>
-                <BodyScene
-                  states={data.states}
-                  selected={selected}
-                  hovered={hovered}
-                  onHover={hover}
-                  onSelect={select}
-                  view={view}
-                  reducedMotion={reducedMotion}
-                  layers={layers}
-                  onModel={onModel}
-                  onFail={onFail}
-                />
-              </Suspense>
-            </SceneBoundary>
-          ) : (
-            svg()
-          )}
-          {use3d && <p className="b3d-stage-hint" aria-hidden="true">Sürükle: döndür · Tekerlek: yakınlaştır · Tıkla: seç</p>}
+      {/* bottom: layers, region chips (keyboard path), legend, attribution */}
+      <div className="b3d-hud-bottom">
+        {use3d && (
+          <div className="b3d-glass b3d-layers" role="group" aria-label="Katmanlar">
+            {(
+              [
+                ['skin', 'Deri'],
+                ['organs', 'Organlar'],
+                ['skeleton', 'İskelet'],
+              ] as const
+            ).map(([key, label]) => (
+              <button key={key} type="button" aria-pressed={layers[key]} onClick={() => toggleLayer(key)}>
+                <span className="b3d-check" aria-hidden="true">
+                  {layers[key] ? '✓' : ''}
+                </span>
+                {label}
+              </button>
+            ))}
+            <label className="b3d-slider">
+              <span>Deri saydamlığı</span>
+              <input
+                type="range"
+                min={0.05}
+                max={0.9}
+                step={0.01}
+                value={layers.skinOpacity}
+                disabled={!layers.skin}
+                onChange={(e) => setLayers((l) => ({ ...l, skinOpacity: Number(e.target.value) }))}
+                aria-valuetext={`%${Math.round(layers.skinOpacity * 100)} opak`}
+              />
+            </label>
+          </div>
+        )}
+        <div className="b3d-glass b3d-chips-wrap">
+          <RegionChips
+            regions={data.regions}
+            selected={selected}
+            hovered={hovered}
+            onSelect={select}
+            onHover={hover}
+            onClear={clear}
+          />
         </div>
-        <RegionDetail region={region} onClose={clear} />
+        <div className="b3d-hud-foot">
+          <Legend />
+          <p className="b3d-attrib">
+            {modelKind === 'procedural' && use3d ? 'Basitleştirilmiş model · ' : ''}
+            3D anatomi: BodyParts3D, © The Database Center for Life Science, CC BY 4.0
+          </p>
+        </div>
       </div>
 
-      <RegionChips
-        regions={data.regions}
-        selected={selected}
-        hovered={hovered}
-        onSelect={select}
-        onHover={hover}
-        onClear={clear}
-      />
-      <Legend />
-      <p className="b3d-attrib">
-        3D anatomi: BodyParts3D, © The Database Center for Life Science, CC BY 4.0
-      </p>
       <span className="b3d-sr" aria-live="polite">
         {region ? `${region.label_tr} seçildi: ${ATTENTION[region.attention].label}` : ''}
       </span>
