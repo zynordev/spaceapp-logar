@@ -56,21 +56,10 @@ export function LinkHeader(props: {
         focusable="false"
         style={{ ['--gp-pulse' as string]: `${pulse}s` }}
       >
-        <defs>
-          <radialGradient id="gp-earth" cx="35%" cy="35%" r="70%">
-            <stop offset="0%" stopColor="#7cc4ff" />
-            <stop offset="60%" stopColor="#2a6fd6" />
-            <stop offset="100%" stopColor="#0d2c63" />
-          </radialGradient>
-          <radialGradient id="gp-mars" cx="35%" cy="35%" r="70%">
-            <stop offset="0%" stopColor="#ffb38a" />
-            <stop offset="60%" stopColor="#c8512a" />
-            <stop offset="100%" stopColor="#5a1f0e" />
-          </radialGradient>
-        </defs>
-        <circle cx="26" cy="32" r="18" fill="url(#gp-earth)" />
-        <path d="M14 26 q8 -6 14 0 t12 2" stroke="#9fe3b0" strokeWidth="2.4" fill="none" opacity=".7" />
-        <circle cx="214" cy="32" r="16" fill="url(#gp-mars)" />
+        {/* Flat outlines: Earth (left) and habitat (right); no gradients. */}
+        <circle cx="26" cy="32" r="18" className="gp-signal-body" />
+        <path d="M10 28h32M10 36h32M26 14c-6 6-6 30 0 36M26 14c6 6 6 30 0 36" className="gp-signal-grid" />
+        <circle cx="214" cy="32" r="16" className="gp-signal-body" />
         <rect x="204" y="10" width="20" height="8" rx="2" className="gp-signal-hab" />
         <line x1="44" y1="32" x2="198" y2="32" className="gp-signal-path" />
         {state === 'UP' || state === 'LOCAL' ? (

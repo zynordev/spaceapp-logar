@@ -16,7 +16,6 @@
   color: var(--text);
   text-align: left;
   font: inherit;
-  box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.8);
 }
 button.hud-card {
   cursor: pointer;
@@ -55,11 +54,11 @@ button.hud-card:hover {
   align-items: baseline;
   gap: 6px;
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: var(--fs-hud-sm);
-  font-weight: 650;
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums lining-nums;
   color: var(--text);
   white-space: nowrap;
@@ -90,10 +89,11 @@ button.hud-card:hover {
   height: 18px;
   padding: 0 6px;
   border: 1px solid var(--hud-line);
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -126,7 +126,7 @@ button.hud-card:hover {
   display: block;
   height: 30px;
   width: 60%;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2));
   background-size: 200% 100%;
   animation: hud-shimmer 1.4s linear infinite;
@@ -201,7 +201,7 @@ button.hud-card:hover {
   line-height: 1.1;
 }
 .hud-crew__level .ui-icon { color: var(--c); flex: none; }
-.att-critical .hud-crew__level { color: #ffb3bd; }
+.att-critical .hud-crew__level { color: var(--danger-fg); }
 /* The level is carried by icon + word; the card edge gets the level colour. */
 .hud-crew { border-color: color-mix(in srgb, var(--c) 55%, transparent); }
 .hud-crew.att-normal, .hud-crew.att-unknown { border-color: var(--hud-line); }
@@ -247,9 +247,16 @@ button.hud-card:hover {
 
 /* ------------------------------------------------------------ clock card */
 .hud-clock__time { font-size: var(--fs-hud); }
-.hud-clock__time small { font-family: var(--font-display); font-size: var(--fs-lg); color: var(--text-faint); }
+.hud-clock__time small { font-family: var(--font-mono); font-size: var(--fs-lg); color: var(--text-faint); }
 .hud-rows { display: flex; flex-direction: column; gap: 4px; margin: 0; }
 .hud-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-sm); }
 .hud-row dt { color: var(--text-faint); }
 .hud-row dd { margin: 0; color: var(--text); font-variant-numeric: tabular-nums; text-align: right; }
 .hud-row .hud-link { font-size: var(--fs-sm); }
+
+/* Cabin row stays short so the 3D scene below it can be tall: only the
+ * featured CO2 card keeps a trace (inline, next to the number). */
+.hud__top .hud-metric:not(.hud-metric--feature) .hud-metric__trace { display: none; }
+.hud__top .hud-metric--feature .hud-metric__body { flex-wrap: nowrap; }
+.hud__top .hud-metric--feature .hud-metric__trace { min-width: 48px; height: 28px; }
+.hud__top .hud-card { gap: 6px; padding: var(--sp-2) var(--sp-3); }

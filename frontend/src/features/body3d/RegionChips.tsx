@@ -1,5 +1,6 @@
 // Region chips under the canvas: mirror the 3D state and are the keyboard /
 // screen-reader path (roving tabindex, arrows move, Enter/Space select).
+import { Icon } from '../../ui';
 import { useRef, type KeyboardEvent } from 'react';
 import { ATTENTION, CHIP_ORDER } from './meta';
 import { RegionIcon } from './icons';
@@ -65,7 +66,7 @@ export function RegionChips({ regions, selected, hovered, onSelect, onHover, onC
             <RegionIcon region={k} size={16} />
             <span className="b3d-chip-label">{r.label_tr}</span>
             <span className="b3d-chip-att" aria-hidden="true">
-              <span className="b3d-chip-glyph">{att.glyph}</span>
+              <span className="b3d-chip-glyph"><Icon name={att.icon} size={11} /></span>
               {att.label}
             </span>
             {alerts > 0 && (
@@ -89,7 +90,7 @@ export function Legend() {
         return (
           <li key={a} style={{ ['--c' as string]: m.cssVar }} title={m.hint}>
             <span className="b3d-legend-sw" aria-hidden="true">
-              {m.glyph}
+              <Icon name={m.icon} size={11} />
             </span>
             <strong>{m.label}</strong>
             <span className="b3d-sr">: {m.hint}</span>

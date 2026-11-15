@@ -1,105 +1,131 @@
 /* SpaceApp Logar design tokens (owned by UI-shell).
- * Dark mission-control theme. Every colour pair used for text meets WCAG AA
- * (>= 4.5:1) on --bg / --surface. Features: use these variables, never raw hex.
- * Attention colours are ALWAYS paired with an icon and a text label. */
+ * Dark adaptation of the "Verdana Health" system: slate navy surfaces, one
+ * sage accent for interaction, neutral data ink, minimal 2–4px corners, flat
+ * cards with 1px hairlines and no glow. Every text colour meets WCAG AA
+ * (>= 4.5:1) on --bg and --surface. Features: use these variables, never raw
+ * hex. Attention colours are ALWAYS paired with an icon and a text label. */
 :root {
   color-scheme: dark;
 
-  /* Surfaces (deep space -> raised panels) */
-  --bg: #06101d;
-  --bg-2: #091627;
-  --surface: #0c1a2d;
-  --surface-2: #10223a;
-  --surface-3: #172d4b;
-  --line: #1e3352;
-  --line-strong: #2f4a70;
+  /* Surfaces (Verdana navy -> raised slate) */
+  --bg: #0f172a;            /* Verdana primary navy */
+  --bg-2: #0c1322;
+  --surface: #111827;       /* cards */
+  --surface-2: #162032;     /* inset rows, inputs */
+  --surface-3: #1e293b;     /* hover, selected */
+  --line: #1e293b;          /* hairline */
+  --line-strong: #334155;
 
-  /* Text */
-  --text: #e9eefb;          /* 16.5:1 on --surface */
-  --text-muted: #a6b7cf;    /* 8.3:1 */
-  --text-faint: #8396b2;    /* 5.4:1 — smallest text allowed */
-  --text-inverse: #06101d;
+  /* Text (slate scale) */
+  --text: #f8fafc;          /* 17.0:1 on --surface */
+  --text-muted: #cbd5e1;    /* 12.0:1 */
+  --text-faint: #94a3b8;    /* 6.9:1 — smallest text allowed */
+  --text-inverse: #0f172a;
 
-  /* Brand / interaction */
-  --accent: #8cc8f5;        /* ice blue: interaction only, 9.9:1 */
-  --accent-strong: #b8dcf8;
-  --accent-bg: rgba(140, 200, 245, 0.12);
-  --accent-line: rgba(140, 200, 245, 0.45);
-  --focus: #e6f2ff;         /* focus ring: near-white, distinct from every attention hue */
+  /* Interaction: Verdana sage, reserved for links, selection and CTAs */
+  --accent: #10b981;        /* 6.3:1 on --surface */
+  --accent-strong: #34d399;
+  --accent-bg: rgba(16, 185, 129, 0.1);
+  --accent-line: rgba(16, 185, 129, 0.45);
+  --focus: #e2e8f0;         /* focus ring: neutral, distinct from every attention hue */
 
   /* Attention levels: --att-*: line/icon, -bg: fill, -fg: text on fill */
-  --att-normal: #34d399;
-  --att-normal-bg: rgba(52, 211, 153, 0.14);
-  --att-normal-fg: #8af0c6;
+  --att-normal: #22c55e;    /* Verdana success */
+  --att-normal-bg: rgba(34, 197, 94, 0.1);
+  --att-normal-fg: #86efac;
 
   /* UNKNOWN is deliberately neutral slate + dashed border: never green. */
-  --att-unknown: #9aa6c2;
-  --att-unknown-bg: rgba(154, 166, 194, 0.14);
-  --att-unknown-fg: #d3daea;
+  --att-unknown: #94a3b8;
+  --att-unknown-bg: rgba(148, 163, 184, 0.1);
+  --att-unknown-fg: #e2e8f0;
 
-  --att-watch: #ffd84d;     /* pale yellow: kept apart from the amber data hue */
-  --att-watch-bg: rgba(255, 216, 77, 0.14);
-  --att-watch-fg: #ffe58a;
+  --att-watch: #eab308;     /* Verdana warning */
+  --att-watch-bg: rgba(234, 179, 8, 0.1);
+  --att-watch-fg: #fde047;
 
-  --att-alert: #fb7a3c;
-  --att-alert-bg: rgba(251, 122, 60, 0.18);
-  --att-alert-fg: #ffb48c;
+  --att-alert: #f97316;
+  --att-alert-bg: rgba(249, 115, 22, 0.12);
+  --att-alert-fg: #fdba74;
 
-  --att-critical: #ff4d63;
-  --att-critical-bg: #9b1430;   /* solid fill: CRITICAL must shout */
+  --att-critical: #ef4444;  /* Verdana error */
+  --att-critical-bg: #991b1b;   /* solid fill: CRITICAL must shout */
   --att-critical-fg: #ffffff;
 
   /* Generic tones (chips, toasts, notes) */
   --ok: var(--att-normal);
   --warn: var(--att-watch);
   --danger: var(--att-critical);
-  --danger-bg: rgba(255, 77, 99, 0.14);
-  --danger-fg: #ffa3ae;
-  --demo: #c9a2ff;           /* 'DEMO' threshold marker: violet, not an attention hue */
-  --demo-bg: rgba(201, 162, 255, 0.13);
+  --danger-bg: rgba(239, 68, 68, 0.1);
+  --danger-fg: #fca5a5;
+  --info: #0ea5e9;          /* Verdana info */
+  --demo: #38bdf8;          /* 'DEMO' threshold marker: info blue, not an attention hue */
+  --demo-bg: rgba(14, 165, 233, 0.1);
 
-  /* HUD layer: flat semi-opaque navy cards over the 3D scene (no heavy blur). */
-  --hud-card: rgba(11, 26, 45, 0.84);
-  --hud-card-hover: rgba(16, 36, 61, 0.92);
-  --hud-line: rgba(132, 172, 222, 0.24);
-  --hud-line-strong: rgba(150, 192, 242, 0.5);
-  --scene-top: #0d2036;
-  --scene-bottom: #040a13;
+  /* Primary action: Verdana's navy button, inverted for dark (light fill,
+   * navy text). Sage stays for links and selection only. */
+  --primary: #f1f5f9;
+  --primary-hover: #ffffff;
+  --primary-fg: #0f172a;
 
-  /* Data ink: the single warm accent. Only for data lines and value highlights,
-   * never for attention (attention = badge with icon + text). */
-  --data: #f2a03d;
-  --data-soft: rgba(242, 160, 61, 0.16);
+  /* Aliases for token names used by the feature tracks. */
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+  --surface-0: var(--bg);
+  --surface-1: var(--surface);
+  --attention-normal: var(--att-normal);
+  --attention-watch: var(--att-watch);
+  --attention-alert: var(--att-alert);
+  --attention-critical: var(--att-critical);
+  --critical: var(--att-critical);
+  --critical-bg: var(--danger-bg);
+  --warn-bg: var(--att-watch-bg);
+  --accent-contrast: var(--primary-fg);
+  --focus-ring: var(--focus);
 
-  /* Type */
-  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-  --fs-xs: 0.75rem;
-  --fs-sm: 0.8125rem;
-  --fs-md: 0.9375rem;
-  --fs-lg: 1.125rem;
-  --fs-xl: 1.5rem;
-  --fs-2xl: 2rem;
-  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, Roboto, "Noto Sans", Arial, sans-serif;
-  --fs-hud: 2.5rem;   /* hero numbers */
-  --fs-hud-sm: 1.875rem;
+  /* HUD layer: flat opaque slate cards over the 3D scene, no blur. */
+  --hud-card: rgba(17, 24, 39, 0.94);
+  --hud-card-hover: #162032;
+  --hud-line: #1e293b;
+  --hud-line-strong: #334155;
+  --scene-top: #131d33;
+  --scene-bottom: #0f172a;
 
-  /* Space / shape */
+  /* Data ink: neutral, so a line never reads as an attention level. */
+  --data: #e2e8f0;
+  --data-soft: rgba(226, 232, 240, 0.12);
+
+  /* Type: Plus Jakarta Sans (headings), DM Sans (body), Fira Code (vitals) */
+  --font-sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'DM Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'Fira Code', ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --fs-xs: 0.75rem;     /* 12 caption */
+  --fs-sm: 0.875rem;    /* 14 body sm */
+  --fs-md: 1rem;        /* 16 body */
+  --fs-lg: 1.25rem;     /* 20 h3 */
+  --fs-xl: 1.5rem;      /* 24 h2 */
+  --fs-2xl: 2rem;       /* 32 h1 */
+  --fs-hud: 2.5rem;     /* 40 display: hero numbers */
+  --fs-hud-sm: 1.75rem;
+
+  /* Space (8px base) */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
   --sp-4: 16px;
   --sp-5: 24px;
   --sp-6: 32px;
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 12px;
-  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px -12px rgba(0, 0, 0, 0.6);
-  --shadow-pop: 0 18px 50px -10px rgba(0, 0, 0, 0.75);
+
+  /* Shape: minimal corners */
+  --radius-sm: 2px;     /* badges, tags, chips */
+  --radius: 4px;        /* buttons, cards, inputs */
+  --radius-lg: 4px;     /* panels, dialogs */
+  --radius-full: 9999px; /* status dots only */
+  --shadow: none;
+  --shadow-pop: 0 8px 32px rgba(2, 6, 23, 0.5);
 
   /* Motion (zeroed under prefers-reduced-motion) */
-  --dur-fast: 120ms;
-  --dur: 200ms;
+  --dur-fast: 100ms;
+  --dur: 150ms;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   --topbar-h: 56px;
@@ -117,8 +143,9 @@
 
 @media (prefers-contrast: more) {
   :root {
-    --line: #4a5f8f;
-    --text-muted: #c7d1e8;
-    --text-faint: #aab6d2;
+    --line: #475569;
+    --hud-line: #475569;
+    --text-muted: #e2e8f0;
+    --text-faint: #cbd5e1;
   }
 }

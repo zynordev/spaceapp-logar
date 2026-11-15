@@ -1,5 +1,6 @@
 // 2D fallback body (no WebGL, user choice, or while the 3D chunk loads).
 // Same regions, colours, glyphs and click behaviour as the 3D model.
+import { Icon } from '../../ui';
 import type { CSSProperties, ReactNode } from 'react';
 import { ATTENTION, CHIP_ORDER, REGION_META } from './meta';
 import type { RegionKey, RegionStates } from './types';
@@ -129,9 +130,9 @@ export function BodySvg({ states, selected, hovered, onHover, onSelect, loadingN
             >
               <line x1={bx} y1={by} x2={ax} y2={ay} />
               <circle cx={bx} cy={by} r="10" />
-              <text x={bx} y={by + 0.5} textAnchor="middle" dominantBaseline="middle">
-                {att.glyph}
-              </text>
+              <g transform={`translate(${bx - 6} ${by - 6})`} className="b3d-svg-icon">
+                <Icon name={att.icon} size={12} />
+              </g>
               <title>{`${REGION_META[k].label}: ${att.label}`}</title>
             </g>
           );

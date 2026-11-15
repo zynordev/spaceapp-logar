@@ -6,18 +6,11 @@ import { DemoScenarioControl } from './lazyFeatures';
 import { selectMission, type AuthInfo, type MissionsInfo } from './useBootstrap';
 
 function Logo() {
+  // Flat mark: orbit ring + pulse line. Single colour (currentColor), no gradient.
   return (
-    <svg className="shell-logo" width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-      <defs>
-        <radialGradient id="shell-logo-g" cx="40%" cy="35%" r="65%">
-          <stop offset="0%" stopColor="#8ad8ff" />
-          <stop offset="100%" stopColor="#1f6fb5" />
-        </radialGradient>
-      </defs>
-      <circle cx="20" cy="20" r="9" fill="url(#shell-logo-g)" />
-      <ellipse cx="20" cy="20" rx="17" ry="7" fill="none" stroke="#5cc8ff" strokeOpacity=".7" strokeWidth="1.6" transform="rotate(-25 20 20)" />
-      <circle cx="34.5" cy="13" r="2.4" fill="#ffd65c" />
-      <path d="M14 20h3l1.6-3.5 2.6 7 1.6-3.5H26" fill="none" stroke="#060a14" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <svg className="shell-logo" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true" focusable="false">
+      <rect x="1" y="1" width="26" height="26" rx="3" fill="none" stroke="currentColor" strokeWidth="1.5" opacity=".5" />
+      <path d="M5 15h4l2-5 3.5 9 2.5-6 1.5 2H23" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

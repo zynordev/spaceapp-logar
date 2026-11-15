@@ -1,5 +1,6 @@
 // Side panel: everything about the selected region in plain Turkish.
 // All server text is rendered as React text (never as HTML).
+import { Icon } from '../../ui';
 import { ATTENTION, COVERAGE_TEXT, QUALITY_TEXT } from './meta';
 import { RegionIcon } from './icons';
 import type { Attention, BodyLatestValue, BodyRegionRead, RegionKey } from './types';
@@ -33,7 +34,7 @@ export function AttentionBadge({ attention, size = 'md' }: { attention: Attentio
   return (
     <span className={`b3d-badge b3d-badge-${size} att-${attention.toLowerCase()}`} style={{ ['--c' as string]: a.cssVar }}>
       <span className="b3d-badge-glyph" aria-hidden="true">
-        {a.glyph}
+        <Icon name={a.icon} size={12} />
       </span>
       {a.label}
     </span>

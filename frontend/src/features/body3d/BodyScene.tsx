@@ -2,6 +2,7 @@
 // GLB when it is served; a procedural body otherwise (and while it loads).
 // Offline only: no HDR/preset downloads, no CDN decoders. Render loop is on
 // demand — frames are drawn on interaction, camera easing or CRITICAL pulse.
+import { Icon } from '../../ui';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Environment, Lightformer, OrbitControls } from '@react-three/drei';
 import {
@@ -21,7 +22,7 @@ import { GlbBody, probeModel } from './GlbBody';
 import { RegionIcon } from './icons';
 import { proceduralLayout, type Layout } from './layout';
 import { BodyMaterials } from './materials';
-import { ATTENTION, CHIP_ORDER, REGION_META } from './meta';
+import { ATTENTION, ATTENTION_RANK, CHIP_ORDER, REGION_META } from './meta';
 import { ProceduralBody } from './ProceduralBody';
 import type { RegionKey, RegionStates } from './types';
 
@@ -118,7 +119,7 @@ const CABIN_GEO = {
 function Cabin({ mats }: { mats: CabinMats }) {
   const envTag = { region: 'cabin', layer: 'env' };
   const grid = useMemo(() => {
-    const g = new THREE.PolarGridHelper(0.7, 12, 4, 64, '#2a4a66', '#1d3550');
+    const g = new THREE.PolarGridHelper(0.7, 12, 4, 64, '#334155', '#1e293b');
     const m = g.material as THREE.Material;
     m.transparent = true;
     m.opacity = 0.5;
@@ -146,53 +147,105 @@ function Cabin({ mats }: { mats: CabinMats }) {
   );
 }
 
-// ---------------------------------------------------------------- leaders + markers
-
-function Leaders({ states, layout }: { states: RegionStates; layout: Layout }) {
-  const material = useMemo(
-    () => new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }),
-    [],
-  );
-  const geom = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    const pos: number[] = [];
-    for (const k of CHIP_ORDER) pos.push(...layout[k].marker, ...layout[k].anchor);
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    g.setAttribute('color', new THREE.Float32BufferAttribute(new Array(pos.length).fill(1), 3));
-    return g;
-  }, [layout]);
-  useEffect(() => () => geom.dispose(), [geom]);
-  useEffect(() => () => material.dispose(), [material]);
-  const invalidate = useThree((s) => s.invalidate);
-  useEffect(() => {
-    const col = geom.getAttribute('color') as THREE.BufferAttribute;
-    const c = new THREE.Color();
-    CHIP_ORDER.forEach((k, i) => {
-      c.set(ATTENTION[states[k].attention].hex);
-      col.setXYZ(i * 2, c.r, c.g, c.b);
-      col.setXYZ(i * 2 + 1, c.r, c.g, c.b);
-    });
-    col.needsUpdate = true;
-    invalidate();
-  }, [geom, states, invalidate]);
-  return <lineSegments geometry={geom} material={material} raycast={noRaycast} />;
-}
+// ---------------------------------------------------------------- edge labels
+// Labels sit in two columns beside the figure (left / right of its centre)
+// and point at their organ with a thin 2D leader line. Within a column the
+// most urgent regions claim their ideal height first; the rest move to the
+// nearest free slot, so pills never stack on the chest.
 
 type MarkerEls = Partial<Record<RegionKey, HTMLDivElement | null>>;
+type LineEls = Partial<Record<RegionKey, { line: SVGLineElement | null; dot: SVGCircleElement | null }>>;
 
-/** Projects marker anchors to screen space each rendered frame; moves DOM pills directly. */
-function Projector({ els, layout }: { els: MutableRefObject<MarkerEls>; layout: MutableRefObject<Layout> }) {
+const LABEL_GAP = 30; // px between label centres in one column
+const EDGE_PAD = 18; // px kept clear at the canvas top
+const BOTTOM_PAD = 64; // the panel toolbar sits over the canvas bottom
+
+interface LabelItem {
+  k: RegionKey;
+  ax: number;
+  ay: number;
+  rank: number;
+  ok: boolean;
+  inFrame: boolean;
+  y: number;
+}
+
+function Projector({
+  els,
+  lines,
+  layout,
+  states,
+}: {
+  els: MutableRefObject<MarkerEls>;
+  lines: MutableRefObject<LineEls>;
+  layout: MutableRefObject<Layout>;
+  states: MutableRefObject<RegionStates>;
+}) {
   const v = useMemo(() => new THREE.Vector3(), []);
   useFrame(({ camera, size }) => {
+    const W = size.width;
+    const H = size.height;
+    v.set(0, 1.0, 0).project(camera);
+    const cx = (v.x * 0.5 + 0.5) * W;
+    const gutter = THREE.MathUtils.clamp(W * 0.17, 96, 210);
+    const cols: Record<'left' | 'right', LabelItem[]> = { left: [], right: [] };
     for (const k of CHIP_ORDER) {
-      const el = els.current[k];
-      if (!el) continue;
-      v.set(...layout.current[k].marker).project(camera);
-      const hidden = v.z > 1 || Math.abs(v.x) > 1.2 || Math.abs(v.y) > 1.2;
-      const x = (v.x * 0.5 + 0.5) * size.width;
-      const y = (-v.y * 0.5 + 0.5) * size.height;
-      el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -50%)`;
-      el.style.visibility = hidden ? 'hidden' : 'visible';
+      v.set(...layout.current[k].anchor).project(camera);
+      // Behind the camera: hide. Outside the frame (e.g. the cabin halo above
+      // the head when zoomed in): keep the label, drop its leader line.
+      const ok = v.z <= 1;
+      const inFrame = Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
+      const ax = (v.x * 0.5 + 0.5) * W;
+      const ay = (-v.y * 0.5 + 0.5) * H;
+      const side = k === 'cabin' ? 'right' : REGION_META[k].marker[0] < 0 ? 'left' : 'right';
+      cols[side].push({ k, ax, ay, rank: ATTENTION_RANK[states.current[k].attention], ok, inFrame, y: ay });
+    }
+    const lo = EDGE_PAD;
+    const hi = Math.max(lo, H - BOTTOM_PAD);
+    for (const side of ['left', 'right'] as const) {
+      const placed: number[] = [];
+      // most urgent first; ties keep the natural top-to-bottom order
+      cols[side]
+        .filter((i) => i.ok)
+        .sort((a, b) => b.rank - a.rank || a.ay - b.ay)
+        .forEach((it) => {
+          const ideal = THREE.MathUtils.clamp(it.ay, lo, hi);
+          let best = ideal;
+          for (let step = 0; step < 60; step++) {
+            const cands = step === 0 ? [ideal] : [ideal - step * 6, ideal + step * 6];
+            const free = cands.find((y) => y >= lo && y <= hi && placed.every((p) => Math.abs(p - y) >= LABEL_GAP));
+            if (free !== undefined) {
+              best = free;
+              break;
+            }
+          }
+          placed.push(best);
+          it.y = best;
+        });
+      const x = side === 'left' ? cx - gutter : cx + gutter;
+      for (const it of cols[side]) {
+        const el = els.current[it.k];
+        const ln = lines.current[it.k];
+        if (!el) continue;
+        const vis = it.ok ? 'visible' : 'hidden';
+        const lineVis = it.ok && it.inFrame ? 'visible' : 'hidden';
+        el.style.visibility = vis;
+        ln?.line?.setAttribute('visibility', lineVis);
+        ln?.dot?.setAttribute('visibility', lineVis);
+        if (!it.ok) continue;
+        el.style.transform =
+          side === 'left'
+            ? `translate(${x.toFixed(1)}px, ${it.y.toFixed(1)}px) translate(-100%, -50%)`
+            : `translate(${x.toFixed(1)}px, ${it.y.toFixed(1)}px) translate(0, -50%)`;
+        if (ln?.line && ln.dot) {
+          ln.line.setAttribute('x1', x.toFixed(1));
+          ln.line.setAttribute('y1', it.y.toFixed(1));
+          ln.line.setAttribute('x2', it.ax.toFixed(1));
+          ln.line.setAttribute('y2', it.ay.toFixed(1));
+          ln.dot.setAttribute('cx', it.ax.toFixed(1));
+          ln.dot.setAttribute('cy', it.ay.toFixed(1));
+        }
+      }
     }
   });
   return null;
@@ -205,12 +258,39 @@ function Markers({
   onHover,
   onSelect,
   els,
+  lines,
 }: Pick<BodySceneProps, 'states' | 'selected' | 'hovered' | 'onHover' | 'onSelect'> & {
   els: MutableRefObject<MarkerEls>;
+  lines: MutableRefObject<LineEls>;
 }) {
+  // Most urgent last in the DOM so they paint on top.
+  const order = [...CHIP_ORDER].sort((a, b) => ATTENTION_RANK[states[a].attention] - ATTENTION_RANK[states[b].attention]);
   return (
     <div className="b3d-markers" aria-hidden="true">
-      {CHIP_ORDER.map((k) => {
+      <svg className="b3d-leaders">
+        {order.map((k) => {
+          const att = ATTENTION[states[k].attention];
+          const active = selected === k || hovered === k;
+          return (
+            <g key={k} style={{ ['--c' as string]: att.cssVar }} className={active ? 'is-active' : undefined}>
+              <line
+                ref={(el) => {
+                  lines.current[k] = { dot: lines.current[k]?.dot ?? null, line: el };
+                }}
+                visibility="hidden"
+              />
+              <circle
+                r={2.5}
+                ref={(el) => {
+                  lines.current[k] = { line: lines.current[k]?.line ?? null, dot: el };
+                }}
+                visibility="hidden"
+              />
+            </g>
+          );
+        })}
+      </svg>
+      {order.map((k) => {
         const st = states[k];
         const att = ATTENTION[st.attention];
         const active = hovered === k || selected === k;
@@ -228,13 +308,11 @@ function Markers({
           >
             <RegionIcon region={k} size={14} />
             <span className="b3d-marker-label">{REGION_META[k].short}</span>
-            <span className="b3d-marker-glyph">{att.glyph}</span>
-            {active && (
-              <span className="b3d-marker-extra">
-                {att.label}
-                {st.alerts > 0 ? ` · ${st.alerts} açık uyarı` : ''}
-              </span>
-            )}
+            <span className="b3d-marker-att">
+              <Icon name={att.icon} size={11} />
+              {att.label}
+              {st.alerts > 0 ? ` · ${st.alerts}` : ''}
+            </span>
           </div>
         );
       })}
@@ -309,8 +387,19 @@ function StateSync({
 
 // ---------------------------------------------------------------- camera
 
-const HOME_TARGET = new THREE.Vector3(0, 1.0, 0);
-const HOME_DIST = 4.1;
+const HOME_TARGET = new THREE.Vector3(0, 0.85, 0);
+const FOV = 34;
+/** World height / width kept in view at home: figure (~1.75 m) fills ~85% of the height,
+ * feet kept just above the panel toolbar. */
+const VIEW_H = 2.05;
+const VIEW_W = 1.7;
+const HOME_DIST_DEFAULT = 3.7;
+
+function homeDistance(width: number, height: number): number {
+  const t = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
+  const aspect = height > 0 ? width / height : 1;
+  return Math.max(VIEW_H / (2 * t), VIEW_W / (2 * t * aspect));
+}
 
 interface ControlsLike {
   target: THREE.Vector3;
@@ -328,6 +417,20 @@ function CameraRig({
   const controls = useThree((s) => s.controls) as unknown as ControlsLike | null;
   const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
+  const size = useThree((s) => s.size);
+  const homeDist = homeDistance(size.width, size.height);
+  const homeRef = useRef(homeDist);
+  homeRef.current = homeDist;
+  const touched = useRef(false);
+
+  // Frame the figure for the current canvas size until the user moves the camera.
+  useEffect(() => {
+    if (!controls || touched.current || selected) return;
+    controls.target.copy(HOME_TARGET);
+    camera.position.set(0, HOME_TARGET.y + 0.08, homeDist);
+    controls.update();
+    invalidate();
+  }, [controls, camera, homeDist, selected, invalidate]);
   const goal = useRef<{ target: THREE.Vector3; sph: THREE.Spherical } | null>(null);
   const tmp = useMemo(() => ({ off: new THREE.Vector3(), sph: new THREE.Spherical() }), []);
 
@@ -345,8 +448,9 @@ function CameraRig({
     if (!controls || view.n === 0) return;
     goal.current = {
       target: HOME_TARGET.clone(),
-      sph: new THREE.Spherical(HOME_DIST, 1.52, view.kind === 'back' ? Math.PI : 0),
+      sph: new THREE.Spherical(homeRef.current, 1.55, view.kind === 'back' ? Math.PI : 0),
     };
+    touched.current = false;
     invalidate();
   }, [view, controls, invalidate]);
 
@@ -354,6 +458,7 @@ function CameraRig({
     if (!controls) return;
     const cancel = () => {
       goal.current = null;
+      touched.current = true;
     };
     controls.addEventListener('start', cancel);
     return () => controls.removeEventListener('start', cancel);
@@ -418,8 +523,15 @@ class GlbBoundary extends Component<{ onError: () => void; children: ReactNode }
 
 type ModelState = 'probe' | ModelKind;
 
-function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls>; layoutRef: MutableRefObject<Layout> }) {
-  const { states, selected, hovered, onHover, onSelect, view, reducedMotion, layers, onModel, els, layoutRef } = props;
+function Scene(
+  props: BodySceneProps & {
+    els: MutableRefObject<MarkerEls>;
+    lines: MutableRefObject<LineEls>;
+    layoutRef: MutableRefObject<Layout>;
+    statesRef: MutableRefObject<RegionStates>;
+  },
+) {
+  const { states, selected, hovered, onHover, onSelect, view, reducedMotion, layers, onModel, els, lines, layoutRef, statesRef } = props;
   const gl = useThree((s) => s.gl);
   const invalidate = useThree((s) => s.invalidate);
 
@@ -430,7 +542,7 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls>; layou
       ring: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8, toneMapped: false }),
       hit: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false }),
       wall: new THREE.ShaderMaterial({
-        uniforms: { uColor: { value: new THREE.Color('#7fd8ff') }, uBoost: { value: 0 } },
+        uniforms: { uColor: { value: new THREE.Color('#94a3b8') }, uBoost: { value: 0 } },
         vertexShader: CABIN_VERT,
         fragmentShader: CABIN_FRAG,
         transparent: true,
@@ -528,7 +640,6 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls>; layou
         <Cabin mats={cabin} />
       </group>
 
-      <Leaders states={states} layout={layout} />
       <ContactShadows position={[0, 0.004, 0]} scale={1.8} blur={2.6} far={1.2} opacity={0.6} resolution={256} frames={1} color="#000814" />
 
       <StateSync
@@ -543,7 +654,7 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls>; layou
       />
       <OrbitControls
         makeDefault
-        target={[0, 1.0, 0]}
+        target={[0, 0.85, 0]}
         enablePan={false}
         enableDamping={!reducedMotion}
         dampingFactor={0.12}
@@ -556,7 +667,7 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls>; layou
       />
       <CameraRig selected={selected} view={view} reducedMotion={reducedMotion} layout={layout} />
       <ViewShift open={!!props.detailOpen} />
-      <Projector els={els} layout={layoutRef} />
+      <Projector els={els} lines={lines} layout={layoutRef} states={statesRef} />
     </>
   );
 }
@@ -564,7 +675,10 @@ function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls>; layou
 export default function BodyScene(props: BodySceneProps) {
   const { onFail, states, selected, hovered, onHover, onSelect } = props;
   const els = useRef<MarkerEls>({});
+  const lines = useRef<LineEls>({});
   const layoutRef = useRef<Layout>(proceduralLayout());
+  const statesRef = useRef<RegionStates>(states);
+  statesRef.current = states;
   // R3F force-loses the context when the canvas unmounts (e.g. switching to
   // 2D); only a context loss while mounted counts as a failure.
   const mounted = useRef(true);
@@ -580,7 +694,7 @@ export default function BodyScene(props: BodySceneProps) {
         className="b3d-canvas"
         frameloop="demand"
         dpr={[1, 2]}
-        camera={{ position: [0, 1.12, HOME_DIST], fov: 34, near: 0.03, far: 30 }}
+        camera={{ position: [0, 0.98, HOME_DIST_DEFAULT], fov: FOV, near: 0.03, far: 30 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping }}
         onCreated={({ gl }) => {
           gl.domElement.addEventListener('webglcontextlost', (ev) => {
@@ -589,9 +703,9 @@ export default function BodyScene(props: BodySceneProps) {
           });
         }}
       >
-        <Scene {...props} els={els} layoutRef={layoutRef} />
+        <Scene {...props} els={els} lines={lines} layoutRef={layoutRef} statesRef={statesRef} />
       </Canvas>
-      <Markers states={states} selected={selected} hovered={hovered} onHover={onHover} onSelect={onSelect} els={els} />
+      <Markers states={states} selected={selected} hovered={hovered} onHover={onHover} onSelect={onSelect} els={els} lines={lines} />
     </div>
   );
 }

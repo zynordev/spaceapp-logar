@@ -4,8 +4,8 @@
    fallbacks so the panel also works stand-alone. */
 
 .b3d-panel {
-  --b3d-glass: color-mix(in srgb, var(--surface, #0f1729) 70%, transparent);
-  --b3d-glass-2: color-mix(in srgb, var(--surface-2, #152038) 78%, transparent);
+  --b3d-glass: var(--hud-card, rgba(17, 24, 39, 0.94));
+  --b3d-glass-2: var(--surface-2, #162032);
   --b3d-line: var(--line, #263556);
   --b3d-text: var(--text, #e9eefb);
   --b3d-muted: var(--text-muted, #a9b6d3);
@@ -33,9 +33,7 @@
   background: var(--b3d-glass);
   border: 1px solid color-mix(in srgb, var(--b3d-line) 85%, transparent);
   border-radius: var(--b3d-radius);
-  -webkit-backdrop-filter: blur(10px) saturate(1.2);
-  backdrop-filter: blur(10px) saturate(1.2);
-  box-shadow: 0 8px 24px -14px rgba(0, 0, 0, 0.7);
+
 }
 
 /* ---------- stage (full bleed) ---------- */
@@ -60,7 +58,7 @@
 .b3d-sub { margin: 3px 0 0; color: var(--b3d-faint); font-size: var(--fs-xs, 0.75rem); }
 .b3d-sub .is-stale { color: var(--att-watch, #fbbf24); }
 .b3d-mode {
-  font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; padding: 1px 7px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; padding: 1px 7px; border-radius: var(--radius-sm);
   border: 1px solid currentColor;
 }
 .b3d-mode.is-live { color: var(--att-normal, #34d399); }
@@ -69,7 +67,7 @@
 
 .b3d-toolbar { display: flex; align-items: center; gap: 2px; padding: 3px; flex-wrap: wrap; justify-content: flex-end; }
 .b3d-toolbar button {
-  background: transparent; border: 1px solid transparent; border-radius: 7px;
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius);
   padding: 5px 10px; cursor: pointer; font-size: var(--fs-xs, 0.75rem); font-weight: 600; color: var(--b3d-muted);
 }
 .b3d-toolbar button:hover:not(:disabled) { color: var(--b3d-text); background: var(--b3d-glass-2); }
@@ -78,7 +76,7 @@
 .b3d-sep { width: 1px; align-self: stretch; margin: 4px 3px; background: var(--b3d-line); }
 
 .b3d-note {
-  margin: 6px 0 0; padding: 5px 8px; border-radius: 7px; font-size: var(--fs-xs, 0.75rem); color: var(--b3d-muted);
+  margin: 6px 0 0; padding: 5px 8px; border-radius: var(--radius); font-size: var(--fs-xs, 0.75rem); color: var(--b3d-muted);
   border: 1px solid var(--b3d-line); background: var(--b3d-glass-2);
 }
 .b3d-note.is-demo { color: var(--demo, #c9a2ff); border-color: color-mix(in srgb, var(--demo, #c9a2ff) 55%, transparent); background: var(--demo-bg, rgba(201, 162, 255, 0.13)); }
@@ -111,12 +109,12 @@
 .b3d-layers { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; padding: 3px 8px 3px 3px; font-size: var(--fs-xs, 0.75rem); }
 .b3d-layers button {
   display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600;
-  background: transparent; border: 1px solid transparent; border-radius: 7px; padding: 4px 9px 4px 6px; color: var(--b3d-muted);
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius); padding: 4px 9px 4px 6px; color: var(--b3d-muted);
 }
 .b3d-layers button:hover { background: var(--b3d-glass-2); color: var(--b3d-text); }
 .b3d-layers button[aria-pressed='true'] { color: var(--b3d-text); }
 .b3d-check {
-  width: 14px; height: 14px; border-radius: 4px; display: inline-grid; place-items: center; font-size: 10px; font-weight: 800;
+  width: 14px; height: 14px; border-radius: var(--radius); display: inline-grid; place-items: center; font-size: 10px; font-weight: 800;
   border: 1px solid var(--b3d-accent); color: var(--text-inverse, #060a14);
 }
 .b3d-layers button[aria-pressed='true'] .b3d-check { background: var(--b3d-accent); }
@@ -126,34 +124,35 @@
 
 /* ---------- 3D markers (DOM overlay positioned by the scene's projector) ---------- */
 .b3d-markers { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
+.b3d-leaders { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.b3d-leaders line { stroke: var(--line-strong, #334155); stroke-width: 1; }
+.b3d-leaders circle { fill: var(--c); }
+.b3d-leaders .is-active line { stroke: var(--c); }
 .b3d-marker {
-  --c: #9aa6c2;
+  --c: var(--att-unknown, #94a3b8);
   position: absolute; left: 0; top: 0; pointer-events: auto; will-change: transform;
-  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer; user-select: none;
-  padding: 2px 7px 2px 5px; border-radius: 999px; font-size: 11.5px; font-weight: 600; line-height: 1.3;
-  color: #eef4ff; background: rgba(6, 12, 24, 0.78);
-  border: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 12px color-mix(in srgb, var(--c) 30%, transparent);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  transition: background var(--dur-fast, 120ms) ease, border-color var(--dur-fast, 120ms) ease;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; user-select: none;
+  height: 24px; padding: 0 8px 0 6px; border-radius: var(--radius-sm, 2px);
+  font-size: 12px; font-weight: 500; line-height: 1;
+  color: var(--text, #f8fafc); background: var(--surface, #111827);
+  border: 1px solid var(--line-strong, #334155); border-left: 2px solid var(--c);
+  transition: border-color var(--dur-fast, 100ms) ease, background var(--dur-fast, 100ms) ease;
 }
-.b3d-marker .b3d-icon { color: var(--c); flex: none; }
-.b3d-marker-glyph {
-  min-width: 16px; text-align: center; padding: 0 3px; border-radius: 6px; font-weight: 800; font-size: 10.5px;
-  background: var(--c); color: #07101f;
+.b3d-marker .b3d-icon { color: var(--text-faint, #94a3b8); flex: none; }
+.b3d-marker-label { font-weight: 600; }
+.b3d-marker-att {
+  display: inline-flex; align-items: center; gap: 3px; color: var(--c);
+  font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase;
 }
-.b3d-marker-extra { color: var(--c); font-weight: 600; padding-left: 2px; }
-.b3d-marker.is-active { z-index: 3; background: rgba(10, 20, 40, 0.95); border-color: var(--c); }
-.b3d-marker.is-selected { box-shadow: 0 0 0 2px var(--c), 0 0 18px color-mix(in srgb, var(--c) 55%, transparent); }
-.b3d-marker.att-critical { animation: b3d-pulse 1.6s ease-in-out infinite; }
-@keyframes b3d-pulse {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 6px color-mix(in srgb, var(--c) 35%, transparent); }
-  50% { box-shadow: 0 0 0 2px var(--c), 0 0 20px color-mix(in srgb, var(--c) 70%, transparent); }
-}
+.b3d-marker.att-normal .b3d-marker-att { color: var(--att-normal-fg, #86efac); }
+.b3d-marker.att-unknown { border-left-style: dashed; }
+.b3d-marker.att-critical { background: var(--att-critical-bg, #991b1b); border-color: var(--att-critical, #ef4444); }
+.b3d-marker.att-critical .b3d-marker-att, .b3d-marker.att-critical .b3d-icon { color: #fff; }
+.b3d-marker.is-active { z-index: 3; background: var(--surface-3, #1e293b); border-color: var(--c); }
+.b3d-marker.is-selected { outline: 1px solid var(--c); outline-offset: 1px; }
 
 /* ---------- 2D fallback ---------- */
-.b3d-svg-wrap { position: absolute; inset: 70px 0 130px; display: flex; align-items: center; justify-content: center; padding: 10px; }
+.b3d-svg-wrap { position: absolute; inset: 24px 0 64px; display: flex; align-items: center; justify-content: center; padding: 10px; }
 .b3d-svg { height: 100%; max-width: 100%; overflow: visible; }
 .b3d-svg-region { cursor: pointer; --c: #9aa6c2; }
 .b3d-svg-region .b3d-svg-organ { fill: var(--c); fill-opacity: 0.75; stroke: var(--c); stroke-width: 1.5; transition: fill-opacity 0.15s; }
@@ -181,12 +180,10 @@
 
 /* ---------- detail card ---------- */
 .b3d-detail {
-  background: color-mix(in srgb, var(--surface, #0f1729) 84%, transparent);
+  background: var(--surface, #111827);
   border: 1px solid color-mix(in srgb, var(--b3d-line) 85%, transparent);
   border-radius: var(--radius-lg, 14px);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
-  backdrop-filter: blur(12px) saturate(1.2);
-  box-shadow: var(--shadow-pop, 0 18px 50px -10px rgba(0, 0, 0, 0.75));
+
   padding: 12px 14px; overflow: auto; max-height: 100%; display: flex; flex-direction: column; gap: 10px;
 }
 .b3d-detail h3 { margin: 0 0 4px; font-size: var(--fs-lg, 1.125rem); }
@@ -196,24 +193,24 @@
 .b3d-howto { margin: 0; padding-left: 18px; color: var(--b3d-muted); font-size: 13px; display: grid; gap: 3px; }
 .b3d-detail-head { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; }
 .b3d-detail-icon {
-  width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: var(--c);
+  width: 40px; height: 40px; border-radius: var(--radius); display: grid; place-items: center; color: var(--c);
   background: color-mix(in srgb, var(--c) 16%, transparent); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
 }
-.b3d-close { background: none; border: 1px solid var(--b3d-line); border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 18px; line-height: 1; }
+.b3d-close { background: none; border: 1px solid var(--b3d-line); border-radius: var(--radius); width: 30px; height: 30px; cursor: pointer; font-size: 18px; line-height: 1; }
 .b3d-close:hover { border-color: var(--b3d-accent); }
 .b3d-hint { font-weight: 600; }
 .b3d-desc { color: var(--b3d-muted); }
 .b3d-muted { color: var(--b3d-muted); font-size: 13px; }
 .b3d-alerts {
-  padding: 7px 10px; border-radius: 8px; border: 1px solid var(--att-alert, #fb7a3c);
+  padding: 7px 10px; border-radius: var(--radius); border: 1px solid var(--att-alert, #fb7a3c);
   background: var(--att-alert-bg, rgba(251, 122, 60, 0.18));
 }
-.b3d-cov { padding: 8px 10px; border-radius: 8px; border-left: 3px solid var(--b3d-accent); background: var(--accent-bg, rgba(92, 200, 255, 0.08)); }
+.b3d-cov { padding: 8px 10px; border-radius: var(--radius); border-left: 3px solid var(--b3d-accent); background: var(--accent-bg, rgba(92, 200, 255, 0.08)); }
 .b3d-cov.cov-data_only { border-left-color: var(--att-watch, #fbbf24); }
 .b3d-cov.cov-gap { border-left-color: var(--att-unknown, #9aa6c2); }
 .b3d-cov p { font-size: 13px; }
 .b3d-rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.b3d-rules li { border: 1px solid var(--b3d-line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 4px; background: color-mix(in srgb, var(--surface-2, #152038) 50%, transparent); }
+.b3d-rules li { border: 1px solid var(--b3d-line); border-radius: var(--radius); padding: 8px 10px; display: grid; gap: 4px; background: color-mix(in srgb, var(--surface-2, #152038) 50%, transparent); }
 .b3d-rule-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
 .b3d-rule-title { font-weight: 600; }
 .b3d-rules p { font-size: 13px; }
@@ -228,7 +225,7 @@
 /* ---------- badges ---------- */
 .b3d-badge {
   --c: #9aa6c2;
-  display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 5px; border-radius: var(--radius-sm); font-weight: 700;
   color: var(--c); border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 14%, transparent);
 }
 .b3d-badge.att-unknown { border-style: dashed; }
@@ -236,7 +233,7 @@
 .b3d-badge-md { padding: 2px 9px 2px 3px; font-size: 12.5px; }
 .b3d-badge-sm { padding: 1px 7px 1px 2px; font-size: 11px; }
 .b3d-badge-glyph {
-  display: inline-block; min-width: 18px; text-align: center; border-radius: 999px; padding: 0 4px;
+  display: inline-block; min-width: 18px; text-align: center; border-radius: var(--radius-sm); padding: 0 4px;
   background: var(--c); color: #07101f; font-weight: 800; font-size: 0.85em;
 }
 
@@ -245,22 +242,20 @@
 .b3d-chip {
   --c: #9aa6c2;
   display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px 4px 7px; cursor: pointer;
-  border-radius: 8px; border: 1px solid transparent; background: color-mix(in srgb, var(--surface-2, #152038) 70%, transparent);
+  border-radius: var(--radius); border: 1px solid transparent; background: color-mix(in srgb, var(--surface-2, #152038) 70%, transparent);
   box-shadow: inset 3px 0 0 var(--c); font-size: var(--fs-xs, 0.75rem); position: relative;
 }
 .b3d-chip .b3d-icon { color: var(--c); }
 .b3d-chip-label { font-weight: 600; }
 .b3d-chip-att { display: inline-flex; align-items: center; gap: 3px; color: var(--c); font-size: 11px; font-weight: 600; }
-.b3d-chip-glyph { background: var(--c); color: #07101f; border-radius: 4px; padding: 0 3px; font-weight: 800; font-size: 10px; }
+.b3d-chip-glyph { background: var(--c); color: #07101f; border-radius: var(--radius); padding: 0 3px; font-weight: 800; font-size: 10px; }
 .b3d-chip.att-unknown { border-style: dashed; border-color: color-mix(in srgb, var(--c) 45%, transparent); }
 .b3d-chip-count {
-  min-width: 17px; height: 17px; border-radius: 999px; display: inline-grid; place-items: center;
+  min-width: 17px; height: 17px; border-radius: var(--radius-sm); display: inline-grid; place-items: center;
   background: var(--att-alert, #fb7a3c); color: #07101f; font-size: 10.5px; font-weight: 800; padding: 0 4px;
 }
 .b3d-chip:hover, .b3d-chip.is-hover { border-color: var(--c); }
 .b3d-chip.is-selected { background: color-mix(in srgb, var(--c) 22%, var(--surface-2, #152038)); border-color: var(--c); border-style: solid; }
-.b3d-chip.att-critical { animation: b3d-chip-pulse 1.6s ease-in-out infinite; }
-@keyframes b3d-chip-pulse { 50% { box-shadow: inset 3px 0 0 var(--c), 0 0 0 2px color-mix(in srgb, var(--c) 60%, transparent); } }
 @container (max-width: 720px) { .b3d-chip-att { display: none; } }
 
 /* ---------- legend ---------- */
@@ -268,7 +263,7 @@
 .b3d-legend li { display: inline-flex; align-items: center; gap: 5px; }
 .b3d-legend strong { color: var(--c); font-weight: 600; }
 .b3d-legend-sw {
-  display: inline-grid; place-items: center; min-width: 18px; height: 14px; border-radius: 4px; padding: 0 3px;
+  display: inline-grid; place-items: center; min-width: 18px; height: 14px; border-radius: var(--radius); padding: 0 3px;
   background: var(--c); color: #07101f; font-weight: 800; font-size: 9.5px;
 }
 
@@ -277,3 +272,70 @@
 @media (prefers-reduced-motion: reduce) {
   .b3d-marker, .b3d-chip, .b3d-svg-region * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- HUD v2: one compact toolbar, regions popover, note, attribution ---------- */
+.b3d-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.b3d-note {
+  position: absolute; z-index: 4; top: var(--b3d-gap); left: 50%; transform: translateX(-50%);
+  max-width: min(520px, 90%); margin: 0; padding: 6px 10px; text-align: center;
+  font-size: var(--fs-xs, 0.75rem); border-radius: var(--radius, 4px);
+  color: var(--text-muted, #cbd5e1); background: var(--surface, #111827); border: 1px solid var(--line-strong, #334155);
+}
+.b3d-note.is-demo { color: var(--demo, #38bdf8); border-color: color-mix(in srgb, var(--demo, #38bdf8) 45%, transparent); background: var(--surface, #111827); }
+.b3d-hud-bottom { bottom: var(--b3d-gap); left: var(--b3d-gap); right: var(--b3d-gap); align-items: center; gap: 8px; }
+.b3d-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  max-width: 100%; padding: 4px; gap: 4px;
+  background: var(--surface, #111827); border: 1px solid var(--line-strong, #334155); border-radius: var(--radius, 4px);
+}
+.b3d-bar__group { display: flex; align-items: center; gap: 2px; }
+.b3d-bar__group + .b3d-bar__group { padding-left: 4px; margin-left: 2px; border-left: 1px solid var(--line, #1e293b); }
+.b3d-bar button {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px;
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm, 2px);
+  color: var(--text-muted, #cbd5e1); font-size: 12px; font-weight: 500; cursor: pointer;
+}
+.b3d-bar button:hover:not(:disabled) { background: var(--surface-2, #162032); color: var(--text, #f8fafc); }
+.b3d-bar button[aria-pressed='true'], .b3d-bar button[aria-expanded='true'] { color: var(--text, #f8fafc); background: var(--surface-3, #1e293b); }
+.b3d-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+.b3d-bar__count {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: var(--radius-sm, 2px); background: var(--att-watch-bg, rgba(234, 179, 8, 0.1)); color: var(--att-watch-fg, #fde047);
+  font-family: var(--font-mono); font-size: 11px;
+}
+.b3d-check {
+  width: 14px; height: 14px; border-radius: var(--radius-sm, 2px); display: inline-grid; place-items: center;
+  border: 1px solid var(--line-strong, #334155); color: var(--primary-fg, #0f172a); background: transparent;
+}
+.b3d-bar button[aria-pressed='true'] .b3d-check { background: var(--accent, #10b981); border-color: var(--accent, #10b981); }
+.b3d-slider { display: inline-flex; align-items: center; margin: 0 6px; }
+.b3d-slider input { width: 72px; accent-color: var(--accent, #10b981); }
+.b3d-mode {
+  margin-left: 4px; padding: 2px 6px; border: 1px solid currentColor; border-radius: var(--radius-sm, 2px);
+  font-size: 11px; font-weight: 500; letter-spacing: 0.05em;
+}
+.b3d-mode.is-live { color: var(--att-normal-fg, #86efac); }
+.b3d-mode.is-demo { color: var(--demo, #38bdf8); }
+.b3d-mode.is-neutral { color: var(--att-unknown, #94a3b8); }
+.b3d-regions {
+  display: flex; flex-direction: column; gap: 8px; max-width: min(640px, 100%); padding: 8px;
+  background: var(--surface, #111827); border: 1px solid var(--line-strong, #334155); border-radius: var(--radius, 4px);
+}
+.b3d-regions .b3d-chips { justify-content: flex-start; }
+.b3d-regions .b3d-legend { text-shadow: none; }
+.b3d-attrib {
+  position: absolute; z-index: 4; right: var(--b3d-gap); bottom: 2px; margin: 0;
+  font-size: 10px; color: var(--text-faint, #94a3b8); text-shadow: none;
+}
+.b3d-hud-detail { top: var(--b3d-gap); bottom: 64px; }
+@container (max-width: 720px) {
+  .b3d-bar__group + .b3d-bar__group { border-left: 0; padding-left: 0; margin-left: 0; }
+  .b3d-attrib { left: var(--b3d-gap); right: auto; }
+}
+.b3d-regions__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.b3d-regions__demo {
+  height: 26px; padding: 0 10px; border: 1px solid var(--line-strong, #334155); border-radius: var(--radius-sm, 2px);
+  background: transparent; color: var(--text-muted, #cbd5e1); font-size: 12px; cursor: pointer;
+}
+.b3d-regions__demo[aria-pressed='true'] { color: var(--demo, #38bdf8); border-color: var(--demo, #38bdf8); }
+.b3d-bar button { padding: 0 8px; }

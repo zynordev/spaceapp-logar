@@ -1,6 +1,7 @@
 // Static presentation data for the body map: colours, Turkish labels, glyphs,
 // plain-language explanations. Server text (label_tr, description_tr) wins
 // when present; these are fallbacks for the neutral / offline state.
+import type { IconName } from '../../ui';
 import type { Attention, Coverage, RegionKey } from './types';
 
 export const ATTENTION_RANK: Record<Attention, number> = {
@@ -14,8 +15,10 @@ export const ATTENTION_RANK: Record<Attention, number> = {
 export interface AttentionMeta {
   /** Turkish label shown next to the colour (colour is never the only signal). */
   label: string;
-  /** Short, font-safe glyph. */
+  /** Short, font-safe glyph (text fallback only; UI renders `icon`). */
   glyph: string;
+  /** Shared SVG icon for the level. */
+  icon: IconName;
   /** One-line meaning for a non-doctor. */
   hint: string;
   /** Hex used by three.js (CSS uses the matching variable). */
@@ -27,37 +30,42 @@ export const ATTENTION: Record<Attention, AttentionMeta> = {
   NORMAL: {
     label: 'Normal',
     glyph: '✓',
+    icon: 'check',
     hint: 'Kurallar sorun görmüyor.',
-    hex: '#34d399',
-    cssVar: 'var(--att-normal, #34d399)',
+    hex: '#22c55e',
+    cssVar: 'var(--att-normal, #22c55e)',
   },
   UNKNOWN: {
     label: 'Bilinmiyor',
     glyph: '?',
+    icon: 'question',
     hint: 'Yeterli veri ya da kural yok — "normal" sanmayın.',
-    hex: '#9aa6c2',
-    cssVar: 'var(--att-unknown, #9aa6c2)',
+    hex: '#94a3b8',
+    cssVar: 'var(--att-unknown, #94a3b8)',
   },
   WATCH: {
     label: 'İzlemede',
     glyph: '!',
+    icon: 'eye',
     hint: 'Dikkat edin, gelişmeyi takip edin.',
-    hex: '#fbbf24',
-    cssVar: 'var(--att-watch, #fbbf24)',
+    hex: '#eab308',
+    cssVar: 'var(--att-watch, #eab308)',
   },
   ALERT: {
     label: 'Uyarı',
     glyph: '!!',
+    icon: 'alert',
     hint: 'Eylem kartını açın, adımları uygulayın.',
-    hex: '#fb7a3c',
-    cssVar: 'var(--att-alert, #fb7a3c)',
+    hex: '#f97316',
+    cssVar: 'var(--att-alert, #f97316)',
   },
   CRITICAL: {
     label: 'Kritik',
     glyph: '!!!',
+    icon: 'critical',
     hint: 'Hemen müdahale edin, sağlık sorumlusunu çağırın.',
-    hex: '#ff4d63',
-    cssVar: 'var(--att-critical, #ff4d63)',
+    hex: '#ef4444',
+    cssVar: 'var(--att-critical, #ef4444)',
   },
 };
 
