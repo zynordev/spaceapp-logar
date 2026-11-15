@@ -18,9 +18,16 @@ from spaceapp_logar.schemas.sync import (
     SyncPacketRead,
     SyncStatusRead,
 )
-from spaceapp_logar.services import ground_sync
+from spaceapp_logar.services import ground_sync, mission_profiles
 
 router = APIRouter(prefix="/v1/sync", tags=["ground-sync"])
+
+
+def _link_delay(session: Session, mission_id: str) -> int | None:
+    override = ground_sync.link_delay_seconds()
+    if override is not None:
+        return override
+    return round(mission_profiles.typical_one_way_seconds(session, mission_id))
 
 
 @router.get("/status", response_model=SyncStatusRead)
@@ -51,7 +58,8 @@ def get_sync_status(
     return SyncStatusRead(
         mission_id=mission_id,
         generated_at=datetime.now(timezone.utc),
-        link_delay_seconds=ground_sync.link_delay_seconds(),
+        link_delay_seconds=_link_delay(session, mission_id),
+        profile=mission_profiles.get_profile_name(session, mission_id),
         recipients=recipients,
         pending_escalations=len(pending),
     )

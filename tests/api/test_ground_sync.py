@@ -239,7 +239,7 @@ def test_link_delay_from_environment(
     api_client: tuple[TestClient, Engine], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     client, _ = api_client
-    assert client.get("/v1/sync/status", params={"mission_id": MISSION}).json()["link_delay_seconds"] is None
+    assert client.get("/v1/sync/status", params={"mission_id": MISSION}).json()["link_delay_seconds"] == 1
     monkeypatch.setenv("SPACEAPP_LINK_DELAY_SECONDS", "720")
     assert client.get("/v1/sync/status", params={"mission_id": MISSION}).json()["link_delay_seconds"] == 720
 

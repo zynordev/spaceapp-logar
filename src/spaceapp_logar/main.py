@@ -16,6 +16,7 @@ from spaceapp_logar.api.demo import router as demo_router
 from spaceapp_logar.api.environment import router as environment_router
 from spaceapp_logar.api.lab_results import router as lab_results_router
 from spaceapp_logar.api.measurements import router as measurements_router
+from spaceapp_logar.api.mission_profiles import router as mission_profiles_router
 from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.red_flags import router as red_flags_router
 from spaceapp_logar.api.routines import router as routines_router
@@ -96,6 +97,7 @@ app.include_router(demo_router, dependencies=AUTHENTICATED)
 app.include_router(environment_router, dependencies=AUTHENTICATED)
 app.include_router(lab_results_router, dependencies=AUTHENTICATED)
 app.include_router(measurements_router, dependencies=AUTHENTICATED)
+app.include_router(mission_profiles_router, dependencies=AUTHENTICATED)
 app.include_router(observations_router, dependencies=AUTHENTICATED)
 app.include_router(red_flags_router, dependencies=AUTHENTICATED)
 app.include_router(routines_router, dependencies=AUTHENTICATED)

@@ -661,3 +661,20 @@ class GroundEscalation(Base):
     packet_sha256: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
     acked_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class MissionProfile(Base):
+    """Communication context of a mission (ISS, MOON or MARS)."""
+
+    __tablename__ = "mission_profiles"
+    __table_args__ = (
+        CheckConstraint(
+            "profile IN ('ISS', 'MOON', 'MARS')",
+            name="ck_mission_profiles_profile",
+        ),
+    )
+
+    mission_id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    profile: Mapped[str] = mapped_column(String(16))
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+    updated_by: Mapped[str] = mapped_column(String(100))

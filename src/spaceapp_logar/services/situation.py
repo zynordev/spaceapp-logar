@@ -20,6 +20,7 @@ from spaceapp_logar.rules import get_action_card
 from spaceapp_logar.rules.co2 import CO2_NOMINAL_LIMIT_MMHG
 from spaceapp_logar.rules.co2 import RULE_ID as CO2_RULE_ID
 from spaceapp_logar.rules.red_flags import RED_FLAG_RULE_ID
+from spaceapp_logar.services.mission_profiles import earth_response
 from spaceapp_logar.schemas.status import CompletedStepRead, SituationRead
 
 ACTIVE = ("OPEN", "ACKNOWLEDGED")
@@ -210,6 +211,11 @@ def situation_for(session: Session, record: RuleEvaluationRecord) -> SituationRe
         alert_id=alert.id if alert else None,
         level_since=alert.opened_at if alert else None,
         reassess_at=reassess_at,
+        earth_response=(
+            earth_response(session, record.mission_id, card.reassess_minutes)
+            if card is not None and card.reassess_minutes
+            else None
+        ),
         completed_steps=[
             CompletedStepRead(
                 step_key=log.step_key,

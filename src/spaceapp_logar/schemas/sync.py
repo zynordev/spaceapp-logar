@@ -59,6 +59,7 @@ class SyncStatusRead(BaseModel):
     mission_id: str
     generated_at: datetime
     link_delay_seconds: int | None
+    profile: str
     recipients: list[RecipientStatus]
     pending_escalations: int
 

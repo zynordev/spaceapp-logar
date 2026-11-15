@@ -7,6 +7,7 @@ from spaceapp_logar.rules import DataQuality, HealthAttention
 from spaceapp_logar.schemas.activities import ActivityCurrentRead
 from spaceapp_logar.schemas.action_cards import ActionCardRead
 from spaceapp_logar.schemas.check_ins import SubjectiveCheckInRead
+from spaceapp_logar.schemas.mission_profiles import EarthResponseRead
 
 
 class CO2StatusRead(BaseModel):
@@ -41,6 +42,7 @@ class SituationRead(BaseModel):
     level_since: datetime | None = None
     reassess_at: datetime | None = None
     completed_steps: list[CompletedStepRead] = []
+    earth_response: EarthResponseRead | None = None
 
 
 class BaselineUsedRead(BaseModel):
