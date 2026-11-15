@@ -44,7 +44,7 @@ function useNow(ms: number) {
   return now;
 }
 
-const upperTr = (s: string) => s.toLocaleUpperCase('tr-TR');
+const upperTr = (s: string) => s.toUpperCase();
 
 function lastPoint(pts: MeasurementPoint[] | undefined): MeasurementPoint | null {
   if (!pts) return null;
@@ -150,16 +150,16 @@ function useCrewData(crewId: string | null) {
 
 const SYMPTOM_TR: Record<string, string> = {
   fatigue: 'Yorgunluk',
-  dizziness: 'Baş dönmesi',
-  nausea: 'Bulantı',
-  headache: 'Baş ağrısı',
-  pain: 'Ağrı',
-  mood_distress: 'Ruh hali sıkıntısı',
-  vision_change: 'Görme değişikliği',
-  back_pain: 'Sırt ağrısı',
-  congestion: 'Burun tıkanıklığı',
+  dizziness: 'Dizziness',
+  nausea: 'Nausea',
+  headache: 'Headache',
+  pain: 'Pain',
+  mood_distress: 'Mood distress',
+  vision_change: 'Vision change',
+  back_pain: 'Back pain',
+  congestion: 'Nasal congestion',
 };
-const SEVERITY = ['Yok', 'Hafif', 'Orta', 'Şiddetli', 'Çok şiddetli'];
+const SEVERITY = ['None', 'Mild', 'Moderate', 'Severe', 'Very severe'];
 
 /* ============================================================ crew card */
 
@@ -175,7 +175,7 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
     .filter((a) => a.target_id === crewId && a.status !== 'RESOLVED' && (a.health_attention === 'ALERT' || a.health_attention === 'CRITICAL'))
     .sort((a, b) => attentionMeta(b.health_attention).rank - attentionMeta(a.health_attention).rank);
   const pct = pctOf(normal, d.crewRules.length);
-  const blood = d.labs.data ? (d.labRes.length ? `${d.inRange}/${d.labRes.length} referans içi` : 'lab sonucu yok') : '…';
+  const blood = d.labs.data ? (d.labRes.length ? `${d.inRange}/${d.labRes.length} in range` : 'no lab results') : '…';
 
   return (
     <button
@@ -183,7 +183,7 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
       className={`dz-card dz-crew att-${overall.level.toLowerCase()}`}
       style={box(17, top, 615, 255)}
       onClick={onClick}
-      aria-label={`${crewId}: ayrıntıyı aç`}
+      aria-label={`${crewId}: open details`}
       data-tour="crew-card"
       data-open={open ? 'true' : undefined}
     >
@@ -192,18 +192,18 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
         {initials(crewId)}
       </span>
       <span className="dz-crew__label" style={box(183, 60, 132, 64)}>
-        ACİL
+        EMERGENCY
         <br />
-        DURUM:
+        CONDITIONS:
       </span>
       <span className={`dz-crew__emergency${urgent.length ? ' is-active' : ''}`} style={box(330, 62, 265, 60)}>
-        {urgent.length ? upperTr(urgent[0].action_card?.title_tr ?? urgent[0].rule_id) : 'AÇIK ACİL DURUM YOK.'}
+        {urgent.length ? upperTr(urgent[0].action_card?.title_tr ?? urgent[0].rule_id) : 'NO OPEN EMERGENCY.'}
       </span>
       <span className="dz-rule" style={box(183, 130, 420, 4)} />
       <span className="dz-crew__label" style={box(183, 137, 150, 64)}>
-        GENEL
+        OVERALL
         <br />
-        SAĞLIK:
+        HEALTH:
       </span>
       <span className="dz-abs" style={box(380, 139, 58, 58)}>
         <Ring
@@ -211,7 +211,7 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
           level={overall.level}
           size={58}
           stroke={7}
-          label={d.crewRules.length ? `${d.crewRules.length} kuralın ${normal} tanesi normal. Genel durum: ${overall.label}` : 'Değerlendirilmiş kural yok'}
+          label={d.crewRules.length ? `${normal} of ${d.crewRules.length} rules normal. Overall: ${overall.label}` : 'No evaluated rules'}
         />
       </span>
       <span className="dz-crew__list" style={box(448, 147, 150, 44)}>
@@ -223,7 +223,7 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
         </span>
       </span>
       <span className="dz-crew__resume" style={box(183, 201, 412, 36)}>
-        Sağlık özeti: <b className={`t-${overall.level.toLowerCase()}`}>{data ? upperTr(overall.label) : '…'}</b>
+        Health summary: <b className={`t-${overall.level.toLowerCase()}`}>{data ? upperTr(overall.label) : '…'}</b>
         {data ? ` — ${overall.description}` : ''}
       </span>
       <span className="dz-rule" style={box(183, 239, 420, 4)} />
@@ -257,9 +257,9 @@ const ROOM_COLS: { key: string; metric: string | null; label: ReactNode; unit: s
 
 function sourceLine(top: RuleStatus | null, own: boolean): { text: string; demo: boolean } | null {
   if (!top) return null;
-  const thr = own && Number.isFinite(top.threshold) ? `${cmpSymbol(top.comparison)}${fmtAuto(top.threshold)}` : 'ilişkili kural';
+  const thr = own && Number.isFinite(top.threshold) ? `${cmpSymbol(top.comparison)}${fmtAuto(top.threshold)}` : 'related rule';
   if (top.validation_status === 'APPROVED') return { text: `${(top.source || 'KAYNAKLI').split(/[ ,(]/)[0]} // ${thr} ${own ? 'OK' : ''}`.trim(), demo: false };
-  if (top.validation_status?.startsWith('DEMO')) return { text: `DEMO EŞİK // ${thr}`, demo: true };
+  if (top.validation_status?.startsWith('DEMO')) return { text: `DEMO THRESHOLD // ${thr}`, demo: true };
   return { text: thr, demo: false };
 }
 
@@ -295,15 +295,15 @@ function RoomCol({
       <span className="dz-room__label">{col.label}</span>
       <span className={`dz-room__value${!last ? ' is-empty' : ''}`}>{last ? fmtAuto(last.value) : '—'}</span>
       <span className="dz-room__unit">{unit}</span>
-      <Bar level={measured ? top?.health_attention ?? null : null} text={measured ? undefined : 'ÖLÇÜM YOK'} className="dz-room__bar" />
+      <Bar level={measured ? top?.health_attention ?? null : null} text={measured ? undefined : 'NOT MEASURED'} className="dz-room__bar" />
       {/* line 1: threshold (as in the design's NASA line); line 2: provenance badges around the icon */}
-      <span className={`dz-room__src${src?.demo ? ' is-demo' : ''}`}>{src ? (src.demo ? src.text.replace('DEMO EŞİK // ', 'EŞİK // ') : src.text) : '\u00a0'}</span>
+      <span className={`dz-room__src${src?.demo ? ' is-demo' : ''}`}>{src ? (src.demo ? src.text.replace('DEMO THRESHOLD // ', 'THRESHOLD // ') : src.text) : '\u00a0'}</span>
       <span className="dz-room__prov">
         {thrSrc && (
           <SourceBadge
             kind={thrSrc.kind}
             size="xs"
-            title={thrSrc.detail ? `${thrSrc.kind === 'DEMO' ? 'DEMO eşik' : 'Kaynaklı eşik'} · ${thrSrc.detail}` : undefined}
+            title={thrSrc.detail ? `${thrSrc.kind === 'DEMO' ? 'DEMO threshold' : 'Sourced threshold'} · ${thrSrc.detail}` : undefined}
           />
         )}
         <Icon name={col.icon} size={thrSrc || valueSrc ? 28 : 40} className="dz-room__icon" />
@@ -324,7 +324,7 @@ function RoomCol({
       {body}
     </button>
   ) : (
-    <div className="dz-room__col is-unmeasured" style={style} title="Bu değer sistemde ölçülmüyor">
+    <div className="dz-room__col is-unmeasured" style={style} title="This value is not measured by the system">
       {body}
     </div>
   );
@@ -334,7 +334,7 @@ function RoomPanel({ rules, onOpenMetric, scenarioId }: { rules: RuleStatus[]; o
   const metrics = useMetrics();
   let x = 0;
   return (
-    <section className="dz-card" style={box(652, 13, 1246, 337)} aria-label="Kabin ortamı" data-tour="cabin">
+    <section className="dz-card" style={box(652, 13, 1246, 337)} aria-label="Cabin environment" data-tour="cabin">
       <h2 className="dz-strip dz-strip--lg">ROOM CONDITIONS</h2>
       {ROOM_COLS.map((col, i) => {
         const cx = x;
@@ -371,60 +371,60 @@ function CrewWindow({ crewId, onPerson }: { crewId: string; onPerson: () => void
     {
       title: (
         <>
-          BİREYİN
+          INDIVIDUAL
           <br />
-          GENEL
+          OVERALL
           <br />
-          DURUMU
+          STATUS
         </>
       ),
       pct: pctOf(normal, d.crewRules.length),
       level: overall,
       ringLevel: overall as string | null,
-      caption: d.crewRules.length ? `${normal}/${d.crewRules.length} kural normal · ${attentionMeta(overall).label}` : 'değerlendirilmiş kural yok',
+      caption: d.crewRules.length ? `${normal}/${d.crewRules.length} rules normal · ${attentionMeta(overall).label}` : 'no evaluated rules',
     },
     {
       title: (
         <>
-          BİREYİN KAN
+          INDIVIDUAL BLOOD
           <br />
-          DEĞERLERİ
+          VALUES
           <br />
-          GENEL
+          OVERALL
           <br />
-          DURUMU
+          STATUS
         </>
       ),
       pct: pctOf(d.inRange, d.labRes.length),
       level: labLevel,
       // Labs are informational (no rule): the share alone colours the ring.
       ringLevel: null as string | null,
-      caption: d.labRes.length ? `${d.inRange}/${d.labRes.length} lab sonucu referans aralığında (bilgi amaçlı)` : 'lab sonucu yok',
+      caption: d.labRes.length ? `${d.inRange}/${d.labRes.length} lab results in range (for information only)` : 'no lab results',
     },
     {
       title: (
         <>
-          ORTAM
+          ENVIRONMENT
           <br />
-          DEĞERLERİ
+          VALUES
           <br />
-          GENEL
+          OVERALL
           <br />
-          DURUMU
+          STATUS
         </>
       ),
       pct: pctOf(envNormal, d.envRules.length),
       level: envWorst,
       ringLevel: envWorst as string | null,
-      caption: d.envRules.length ? `${envNormal}/${d.envRules.length} ortam kuralı normal · ${attentionMeta(envWorst).label}` : 'ortam kuralı yok',
+      caption: d.envRules.length ? `${envNormal}/${d.envRules.length} environment rules normal · ${attentionMeta(envWorst).label}` : 'no environment rules',
     },
   ];
   const tops = [0, 260, 519];
   const heights = [259, 258, 261];
   return (
-    <div className="dz-window" style={box(823, 18, 744, 780)} role="dialog" aria-modal="true" aria-label={`${crewId} özeti`}>
+    <div className="dz-window" style={box(823, 18, 744, 780)} role="dialog" aria-modal="true" aria-label={`${crewId} summary`}>
       {/* body slot is drawn outside the scaled stage (see MissionScreens) */}
-      <button type="button" className="dz-window__body" style={box(0, 0, 380, 780)} onClick={onPerson} aria-label={`${crewId}: kişi detayını aç`} />
+      <button type="button" className="dz-window__body" style={box(0, 0, 380, 780)} onClick={onPerson} aria-label={`${crewId}: open person details`} />
       {rows.map((r, i) => (
         <span key={i}>
           <button type="button" className="dz-window__label" style={box(380, tops[i], 147, heights[i])} onClick={onPerson}>
@@ -451,7 +451,7 @@ const PERSON_COLS: { metric: string; title: string; w: number; icon: IconName }[
   { metric: 'SLEEP_DURATION', title: 'SLEEP DURATION', w: 155, icon: 'moon' },
 ];
 
-const ACTIVITY_TR: Record<string, string> = { REST: 'DİNLENME', LIGHT: 'HAFİF', EXERCISE: 'EGZERSİZ', SLEEP: 'UYKU' };
+const ACTIVITY_TR: Record<string, string> = { REST: 'REST', LIGHT: 'LIGHT', EXERCISE: 'EXERCISE', SLEEP: 'SLEEP' };
 
 function PersonCol({
   col,
@@ -479,14 +479,14 @@ function PersonCol({
   const unit = def ? (col.metric === 'RESPIRATION_RATE' ? 'nefes/dk' : col.metric === 'SLEEP_DURATION' ? 'saat' : displayUnit(def.unit)) : '';
   const demo = !!top?.validation_status?.startsWith('DEMO');
   let caption = '';
-  if (col.metric === 'HEART_RATE') caption = `SENSÖR K: ${last ? (last.reported_quality === 'VALID' ? 'OK' : last.reported_quality) : '—'}`;
-  else if (col.metric === 'SPO2') caption = `KALİTE: ${top ? (top.data_quality === 'VALID' ? 'OK' : top.data_quality) : '—'}`;
-  else if (col.metric === 'RESPIRATION_RATE') caption = `AKTİVİTE: ${last?.activity_state ? ACTIVITY_TR[last.activity_state] ?? last.activity_state : '—'}`;
+  if (col.metric === 'HEART_RATE') caption = `SENSOR Q: ${last ? (last.reported_quality === 'VALID' ? 'OK' : last.reported_quality) : '—'}`;
+  else if (col.metric === 'SPO2') caption = `QUALITY: ${top ? (top.data_quality === 'VALID' ? 'OK' : top.data_quality) : '—'}`;
+  else if (col.metric === 'RESPIRATION_RATE') caption = `ACTIVITY: ${last?.activity_state ? ACTIVITY_TR[last.activity_state] ?? last.activity_state : '—'}`;
   else if (col.metric === 'BODY_TEMPERATURE') {
     const trend = rules.find((r) => r.rule_id === 'VITAL_TEMP_TREND_V1');
-    caption = `EĞİLİM: ${trend ? upperTr(attentionMeta(trend.health_attention).label) : '—'}`;
-  } else if (col.metric === 'SYSTOLIC_BP') caption = last ? `SİS ${fmtAuto(last.value)} / DİA ${last2 ? fmtAuto(last2.value) : '—'}` : 'VERİ YOK';
-  else if (col.metric === 'SLEEP_DURATION') caption = last ? 'GÜNLÜK KAYIT' : 'KAYIT YOK';
+    caption = `TREND: ${trend ? upperTr(attentionMeta(trend.health_attention).label) : '—'}`;
+  } else if (col.metric === 'SYSTOLIC_BP') caption = last ? `SYS ${fmtAuto(last.value)} / DIA ${last2 ? fmtAuto(last2.value) : '—'}` : 'NO DATA';
+  else if (col.metric === 'SLEEP_DURATION') caption = last ? 'DAILY RECORD' : 'NO RECORD';
 
   return (
     <button
@@ -494,7 +494,7 @@ function PersonCol({
       className="dz-pcol"
       style={box(x, 50, col.w, 204)}
       onClick={() => def && onOpenMetric(def.metric)}
-      title={last ? `${def?.label} · ${fmtClock(last.observed_at)} (${relTime(last.observed_at)})${demo ? ' · DEMO eşik' : ''}` : def?.label}
+      title={last ? `${def?.label} · ${fmtClock(last.observed_at)} (${relTime(last.observed_at)})${demo ? ' · DEMO threshold' : ''}` : def?.label}
     >
       <span className="dz-pcol__title">{col.title}</span>
       <span className={`dz-pcol__value${!last ? ' is-empty' : ''}`} style={value.length > 6 ? { fontSize: 46 } : undefined}>
@@ -515,14 +515,14 @@ function PersonCol({
 }
 
 const BODY_ROWS: { region: string; fallback: string }[] = [
-  { region: 'eyes', fallback: 'Gözler' },
-  { region: 'inner_ear', fallback: 'Denge' },
-  { region: 'head', fallback: 'Baş/Uyku' },
+  { region: 'eyes', fallback: 'Eyes' },
+  { region: 'inner_ear', fallback: 'Balance' },
+  { region: 'head', fallback: 'Head/Sleep' },
   { region: 'heart', fallback: 'Kalp' },
-  { region: 'lungs', fallback: 'Akciğerler' },
-  { region: 'torso', fallback: 'Gövde/Mide' },
-  { region: 'musculoskeletal', fallback: 'Kas/Kemik' },
-  { region: 'skin', fallback: 'Deri ve vücut sıcaklığı' },
+  { region: 'lungs', fallback: 'Lungs' },
+  { region: 'torso', fallback: 'Torso/Stomach' },
+  { region: 'musculoskeletal', fallback: 'Muscle/Bones' },
+  { region: 'skin', fallback: 'Skin and body temperature' },
 ];
 
 interface BodyMapLite {
@@ -574,10 +574,10 @@ function PersonScreen({
   return (
     <>
       {/* warnings: red only when an ALERT/CRITICAL alert is open */}
-      <section className={`dz-card dz-warn${urgent.length ? ' is-red' : ''}`} style={box(16, 20, 692, 513)} aria-label="Uyarılar">
+      <section className={`dz-card dz-warn${urgent.length ? ' is-red' : ''}`} style={box(16, 20, 692, 513)} aria-label="Warnings">
         <h2 className="dz-strip">WARNINGS FOR PERSON</h2>
         <ul className="dz-warn__list">
-          {warnList.length === 0 && <li className="dz-warn__none">›BU ASTRONOT İÇİN AÇIK UYARI YOK.</li>}
+          {warnList.length === 0 && <li className="dz-warn__none">›NO OPEN WARNING FOR THIS CREW MEMBER.</li>}
           {warnList.slice(0, 2).map((a, i) => (
             <li key={a.id}>
               <button
@@ -594,10 +594,10 @@ function PersonScreen({
             </li>
           ))}
         </ul>
-        {warnList.length > 2 && <p className="dz-warn__more">+{warnList.length - 2} UYARI DAHA · AYRINTI İÇİN TIKLAYIN</p>}
+        {warnList.length > 2 && <p className="dz-warn__more">+{warnList.length - 2} MORE WARNINGS · CLICK FOR DETAILS</p>}
       </section>
 
-      <section className="dz-card" style={box(16, 549, 692, 517)} aria-label="Vücut parametreleri">
+      <section className="dz-card" style={box(16, 549, 692, 517)} aria-label="Body parameters">
         <h2 className="dz-strip">BODY PARAMETERS</h2>
         <ul className="dz-params">
           {BODY_ROWS.map((row) => {
@@ -611,14 +611,14 @@ function PersonScreen({
                   <span className="dz-params__dots" aria-hidden="true" />
                   <b className={`t-${level.toLowerCase()}`}>{upperTr(attentionMeta(level).label)}</b>
                 </span>
-                <span className="dz-params__sub">{firstRule ? firstRule.title : reg ? 'Bu bölge için kural yok' : '…'}</span>
+                <span className="dz-params__sub">{firstRule ? firstRule.title : reg ? 'No rule for this region' : '…'}</span>
               </li>
             );
           })}
         </ul>
       </section>
 
-      <section className="dz-card" style={box(736, 20, 1154, 262)} aria-label="Kişinin genel verileri" data-tour="vitals">
+      <section className="dz-card" style={box(736, 20, 1154, 262)} aria-label="Person general data" data-tour="vitals">
         <h2 className="dz-strip">GENERAL DATAS OF PERSON</h2>
         {PERSON_COLS.map((col, i) => {
           const cx = x;
@@ -638,31 +638,31 @@ function PersonScreen({
               pct={pctOf(d.inRange, d.labRes.length)}
               size={82}
               stroke={9}
-              label={d.labRes.length ? `${d.inRange}/${d.labRes.length} lab sonucu referans aralığında` : 'Lab sonucu yok'}
+              label={d.labRes.length ? `${d.inRange}/${d.labRes.length} lab results in range` : 'No lab results'}
             />
           </span>
           <Bar
             level={labLevel}
-            text={!d.labRes.length ? 'LAB YOK' : d.inRange === d.labRes.length ? 'REFERANS İÇİ' : `${d.labRes.length - d.inRange} REF. DIŞI`}
+            text={!d.labRes.length ? 'NO LAB' : d.inRange === d.labRes.length ? 'IN RANGE' : `${d.labRes.length - d.inRange} OUT OF RANGE`}
             className="dz-pcol__bar"
           />
-          <span className="dz-pcol__fine">AYRINTI İÇİN ÜSTTEKİ ÇUBUĞA TIKLAYIN</span>
+          <span className="dz-pcol__fine">CLICK THE BAR ABOVE FOR DETAILS</span>
         </button>
       </section>
 
       {/* forced exception: the recorded ECG sits in the free band between the data and the body */}
-      <section className="dz-ecg" style={box(736, 290, 1154, 124)} aria-label="Kayıtlı örnek EKG" data-tour="ecg">
+      <section className="dz-ecg" style={box(736, 290, 1154, 124)} aria-label="Recorded sample ECG" data-tour="ecg">
         <EcgStrip compact height={48} />
       </section>
 
-      <section className="dz-card dz-bodypanel" style={box(736, 420, 404, 646)} aria-label="Vücut modeli" />
+      <section className="dz-card dz-bodypanel" style={box(736, 420, 404, 646)} aria-label="Body model" />
 
-      <section className="dz-card" style={box(1168, 420, 722, 646)} aria-label="Kişinin öznel verileri">
+      <section className="dz-card" style={box(1168, 420, 722, 646)} aria-label="Person subjective data">
         <h2 className="dz-strip">SUBJECTIVE DATAS OF PERSON</h2>
         <ul className="dz-subj">
           {redFlags.map((a) => (
             <li key={a.id} className="t-critical">
-              ›Kırmızı bayrak: {a.explanation ?? a.action_card?.title_tr ?? a.rule_id}
+              ›Red flag: {a.explanation ?? a.action_card?.title_tr ?? a.rule_id}
             </li>
           ))}
           {ci ? (
@@ -673,15 +673,15 @@ function PersonScreen({
                 </li>
               ))
             ) : (
-              <li>›Son öznel kayıtta belirti yok.</li>
+              <li>›No symptoms in the last subjective entry.</li>
             )
           ) : (
-            <li>›Öznel kayıt yok.</li>
+            <li>›No subjective entry.</li>
           )}
-          {ci && <li className="dz-subj__time">›Son kayıt {fmtClock(ci.observed_at)} · {relTime(ci.observed_at, now)}</li>}
+          {ci && <li className="dz-subj__time">›Last entry {fmtClock(ci.observed_at)} · {relTime(ci.observed_at, now)}</li>}
         </ul>
         <button type="button" className="dz-subj__msg" style={box(16, 583, 690, 47)} onClick={() => onOpen('inputs')}>
-          <span>Öznel kayıt girin…</span>
+          <span>Enter a subjective entry…</span>
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
             <path d="M21 3 3 10.5l7 2.5 2.5 7L21 3z" />
             <path d="m10 13 4.5-4.5" />
@@ -759,10 +759,10 @@ export function MissionScreens({ scenarioId, crewIds = [], onOpen }: MissionScre
       {screen === 'person' && crewId && (
         <nav className="dz-nav" aria-label="Ekran">
           <button type="button" onClick={() => setScreen('overview')}>
-            ‹ GENEL BAKIŞ
+            ‹ OVERVIEW
           </button>
-          <span>{upperTr(crewId)} · KİŞİ DETAYI</span>
-          {scenarioId && <span className="dz-nav__demo">SENTETİK VERİ · {scenarioId}</span>}
+          <span>{upperTr(crewId)} · PERSON DETAIL</span>
+          {scenarioId && <span className="dz-nav__demo">SYNTHETIC DATA · {scenarioId}</span>}
         </nav>
       )}
       <div className="dz-stage" style={{ transform: `translate(${ox}px, ${navH}px) scale(${s})` }} aria-hidden={screen === 'crew' ? true : undefined}>
@@ -776,7 +776,7 @@ export function MissionScreens({ scenarioId, crewIds = [], onOpen }: MissionScre
             <RoomPanel rules={rules} onOpenMetric={openMetric} scenarioId={scenarioId} />
             <section className="dz-card dz-main" style={box(652, 364, 1246, 702)} aria-label="Ana panel" data-tour={screen === 'overview' ? 'scene' : undefined}>
               <MissionSpaceView active={screen === 'overview'} onOpenGround={() => onOpen('ground')} />
-              {scenarioId && <span className="dz-main__demo">SENTETİK VERİ · {scenarioId}</span>}
+              {scenarioId && <span className="dz-main__demo">SYNTHETIC DATA · {scenarioId}</span>}
             </section>
           </div>
         )}
