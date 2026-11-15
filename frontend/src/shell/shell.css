@@ -149,110 +149,60 @@
 .shell-main > .shell-skeleton { margin: var(--sp-5); }
 
 /* ------------------------------------------------------------- HUD stage
- * Full-viewport 3D scene with cards floating over it. The overlay ignores
- * pointer events so the body can be dragged between the cards. */
+ * Three columns, nothing overlaps: vitals + cabin | 3D body | status,
+ * alerts, clock. Fills the viewport below the top bar. */
 .hud {
-  position: relative;
-  /* --chrome-h = measured top bar + bands (App.tsx) */
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr) 320px;
+  grid-template-areas: 'left scene right';
+  gap: var(--sp-3);
   height: calc(100vh - var(--chrome-h, 96px));
   height: calc(100dvh - var(--chrome-h, 96px));
-  min-height: 600px;
-  overflow: hidden;
+  min-height: 640px;
+  padding: var(--sp-3);
   border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.hud__overlay { display: contents; }
+.hud__overlay > .shell-crash { grid-column: 1 / -1; }
+.hud__scene {
+  grid-area: scene;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--line-strong);
   background:
-    radial-gradient(ellipse 40% 55% at 50% 50%, var(--scene-top) 0%, transparent 100%),
+    radial-gradient(ellipse 45% 55% at 50% 50%, var(--scene-top) 0%, transparent 100%),
     var(--scene-bottom);
 }
-.hud__scene { position: absolute; inset: 0; z-index: 0; }
-.hud {
-  --hud-pad: var(--sp-5);
-  --hud-gap: var(--sp-5);
-  --hud-left: 320px;
-  --hud-right: 300px;
-}
-/* The body fills the centre channel between the card columns and below the
- * cabin row (--hud-top-h is measured in HudOverlay), so its own floating
- * controls (b3d-*) never sit under a HUD card. */
-.hud__scene > .shell-slot {
-  position: absolute;
-  top: calc(var(--hud-pad) + var(--hud-top-h, 104px) + var(--sp-2));
-  bottom: 0;
-  left: calc(var(--hud-pad) + var(--hud-left) + var(--hud-gap) - var(--sp-3));
-  right: calc(var(--hud-pad) + var(--hud-right) + var(--hud-gap) - var(--sp-3));
-}
+.hud__scene > .shell-slot { position: absolute; inset: 0; }
 .hud__scene > .shell-slot > * { flex: 1; min-height: 0; height: 100%; }
 .hud__scene .shell-skeleton { background: transparent; border: 0; }
-.hud__overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: var(--hud-left) minmax(0, 1fr) var(--hud-right);
-  grid-template-rows: auto minmax(0, 1fr);
-  grid-template-areas:
-    'left top right'
-    'left .   right';
-  gap: var(--sp-4) var(--hud-gap);
-  padding: var(--hud-pad);
-  pointer-events: none;
-}
-.hud__overlay > .shell-crash { grid-column: 1 / -1; align-self: start; pointer-events: auto; }
-.hud__left {
-  grid-area: left;
-  align-self: start;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--sp-3);
-  max-height: 100%;
-  overflow: auto;
-  scrollbar-width: none;
-}
-.hud__top {
-  grid-area: top;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
-  align-items: flex-start;
-  gap: var(--sp-3);
-}
-.hud__top > .hud-card { flex: 0 1 152px; min-width: 128px; }
-.hud__top > .hud-metric--feature { flex: 0 1 216px; min-width: 176px; }
-.hud__right {
-  grid-area: right;
+.hud__left, .hud__right {
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
   min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
 }
-.hud__right > .hud-clock { margin-top: auto; }
+.hud__left { grid-area: left; }
+.hud__right { grid-area: right; }
 
 @media (max-width: 1280px) {
-  .hud { --hud-pad: var(--sp-4); --hud-gap: var(--sp-3); --hud-left: 288px; --hud-right: 272px; }
-  .hud__top { flex-wrap: nowrap; }
-  .hud__top > .hud-card { flex: 1 1 0; min-width: 128px; max-width: 160px; }
-  .hud__top > .hud-metric--feature { flex-grow: 1.5; max-width: 220px; }
+  .hud { grid-template-columns: 288px minmax(0, 1fr) 288px; }
 }
-/* Narrow screens: the scene becomes a band and the cards flow below it. */
 @media (max-width: 1100px), (max-height: 640px) {
-  .hud { height: auto; min-height: 0; overflow: visible; background: var(--scene-bottom); }
-  .hud__scene { position: relative; height: 58vh; min-height: 460px; }
-  .hud__scene > .shell-slot { inset: 0; }
-  .hud__overlay {
-    position: static;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: auto;
-    grid-template-areas: 'right top' 'left left';
-    pointer-events: auto;
+  .hud {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: 'scene scene' 'left right';
   }
-  .hud__left { max-height: none; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
-  .hud__left > .hud-metric--hero { grid-column: 1 / -1; }
-  .hud__top { display: flex; flex-wrap: wrap; justify-content: stretch; align-content: flex-start; }
-  .hud__top > .hud-card { flex: 1 1 160px; }
-  .hud__right > .hud-clock { margin-top: 0; }
+  .hud__scene { height: 60vh; min-height: 460px; }
+  .hud__left, .hud__right { overflow: visible; }
 }
 @media (max-width: 720px) {
-  .hud__overlay { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'right' 'left' 'top'; padding: var(--sp-3); }
-  .hud__scene { height: 48vh; }
+  .hud { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'scene' 'right' 'left'; padding: var(--sp-2); }
 }
 
 /* ------------------------------------------------------------- Details */

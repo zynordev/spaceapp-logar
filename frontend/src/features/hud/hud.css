@@ -1,238 +1,190 @@
-/* HUD cards floating over the 3D scene. Prefix: hud-
- * Flat semi-opaque navy, 1px hairline border, big tabular numbers, amber
- * (--data) only for data ink. Attention = badge (icon + text) + border tint. */
+/* Mission screen side columns. Prefix: hud-
+ * Square panels, a header strip, table rows. One line of data per row:
+ * name | value | status, with a small muted meta line. No floating, no
+ * glass, no glow. Attention = badge (icon + word) + a left rule on flagged rows. */
 
-.hud-card {
-  pointer-events: auto;
-  position: relative;
+.hud-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
   min-width: 0;
-  padding: var(--sp-3) var(--sp-4);
-  background: var(--hud-card);
-  border: 1px solid var(--hud-line);
-  border-radius: var(--radius-lg);
-  color: var(--text);
-  text-align: left;
-  font: inherit;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
 }
-button.hud-card {
-  cursor: pointer;
-  transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
-}
-button.hud-card:hover {
-  background: var(--hud-card-hover);
-  border-color: var(--hud-line-strong);
-}
-.hud-card.is-flagged { border-color: color-mix(in srgb, var(--c) 70%, transparent); }
-.hud-card.is-flagged:hover { border-color: var(--c); }
-
-.hud-card__head {
+.hud-panel__head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--sp-2);
-  min-height: 22px;
+  min-height: 40px;
+  padding: 0 var(--sp-4);
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--bg-2);
 }
-.hud-card__icon { flex: none; color: var(--text-muted); }
-.hud-card__label {
-  flex: 1;
-  min-width: 0;
+.hud-panel__title {
   margin: 0;
-  font-size: var(--fs-sm);
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
   font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-.hud-card__badge { flex: none; }
+.hud-panel__count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-md);
+  color: var(--text);
+}
 
-.hud-value {
+/* ------------------------------------------------------------------ rows */
+.hud-rows { margin: 0; padding: 0; list-style: none; }
+.hud-rows > li + li { border-top: 1px solid var(--line); }
+
+.hud-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name value'
+    'meta state';
+  align-items: center;
+  gap: 4px var(--sp-3);
+  width: 100%;
+  padding: 10px var(--sp-4);
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.hud-row:hover { background: var(--surface-2); }
+.hud-row.is-flagged { border-left-color: var(--c); }
+.hud-row__name {
+  grid-area: name;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.hud-row__name .ui-icon { color: var(--text-faint); }
+.hud-row__value {
+  grid-area: value;
   display: flex;
   align-items: baseline;
   gap: 6px;
-  margin: 0;
+  justify-self: end;
   font-family: var(--font-mono);
-  font-size: var(--fs-hud-sm);
+  font-size: var(--fs-lg);
   font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums lining-nums;
-  color: var(--text);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.hud-value small {
+.hud-row__value small {
   font-family: var(--font-sans);
   font-size: var(--fs-sm);
-  font-weight: 600;
   letter-spacing: 0;
-  color: var(--text-muted);
-}
-.hud-value--sm { font-size: var(--fs-hud-sm); }
-.is-empty .hud-value { color: var(--text-faint); }
-
-.hud-card__foot {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px var(--sp-2);
-  font-size: var(--fs-xs);
   color: var(--text-faint);
 }
-.hud-card__time { margin-left: auto; white-space: nowrap; color: var(--text-faint); }
+.hud-row.is-empty .hud-row__value { color: var(--text-faint); }
+.hud-row__state { grid-area: state; justify-self: end; }
+.hud-row__meta { grid-area: meta; font-size: var(--fs-xs); color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud-row__demo { color: var(--demo); }
+.hud-row__src { color: var(--text-muted); }
 
 .hud-tag {
   display: inline-flex;
   align-items: center;
-  height: 18px;
+  height: 20px;
   padding: 0 6px;
-  border: 1px solid var(--hud-line);
-  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-faint);
   white-space: nowrap;
 }
-.hud-tag--demo { color: var(--demo); border-color: color-mix(in srgb, var(--demo) 45%, transparent); background: var(--demo-bg); }
-.hud-tag--ok { color: var(--accent-strong); border-color: var(--accent-line); }
-.hud-tag--warn { color: var(--att-watch-fg); border-color: color-mix(in srgb, var(--att-watch) 50%, transparent); }
+.hud-tag--demo { color: var(--demo); border-color: color-mix(in srgb, var(--demo) 50%, transparent); }
 
-.hud-muted { color: var(--text-faint); }
+.hud-muted, .hud-empty { color: var(--text-faint); }
+.hud-empty { margin: 0; padding: var(--sp-3) var(--sp-4); font-size: var(--fs-sm); }
 .hud-warn-text { color: var(--att-alert-fg); font-weight: 600; }
 
 .hud-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 0;
+  padding: 0;
   border: 0;
   background: none;
   color: var(--accent);
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-color: var(--accent-line);
   text-underline-offset: 3px;
 }
-.hud-link:hover { color: var(--accent-strong); text-decoration-color: currentColor; }
+.hud-link:hover { color: var(--accent-strong); }
 
-.hud-skel {
-  display: block;
-  height: 30px;
-  width: 60%;
-  border-radius: var(--radius);
-  background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2));
-  background-size: 200% 100%;
-  animation: hud-shimmer 1.4s linear infinite;
-}
-.hud-skel--block { width: 100%; height: 64px; }
-@keyframes hud-shimmer { to { background-position: -200% 0; } }
-@media (prefers-reduced-motion: reduce) { .hud-skel { animation: none; } }
-
-/* ---------------------------------------------------------- metric cards */
-.hud-metric { container-type: inline-size; }
-.hud-metric__body { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); min-height: 34px; }
-.hud-metric__trace { flex: 1 1 96px; min-width: 96px; height: 30px; }
-.hud-metric .vt-spark { width: 100%; height: 100%; overflow: visible; }
-.hud-metric .vt-spark path {
-  fill: none;
-  stroke: var(--data);
-  stroke-width: 1.6;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-.hud-metric .vt-spark circle { fill: var(--data); stroke: none; }
-.hud-card__time.is-stale { display: inline-flex; align-items: center; gap: 3px; color: var(--text-muted); }
-@container (max-width: 200px) {
-  .hud-card__rel { display: none; }
-}
-@container (max-width: 150px) {
-  .hud-card__icon { display: none; }
-}
-
-.hud-metric--hero .hud-value { font-size: var(--fs-hud); }
-.hud-metric--hero .hud-metric__body { min-height: 64px; flex-wrap: nowrap; }
-.hud-metric--hero .hud-metric__trace {
-  align-self: stretch;
-  height: auto;
-  min-height: 60px;
-  padding: 4px 0 4px var(--sp-3);
-  border-left: 1px solid var(--hud-line);
-}
-/* Featured cabin card: CO2 is the only NASA-STD-3001 sourced rule. */
-.hud-metric--feature .hud-value { font-size: var(--fs-hud); }
-
-/* ------------------------------------------------------------- crew card */
-.hud-crew { gap: var(--sp-3); }
-.hud-crew__head { display: flex; align-items: center; gap: var(--sp-3); }
+/* --------------------------------------------------------------- status */
+.hud-crew { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-muted); }
 .hud-avatar {
-  display: grid;
+  display: inline-grid;
   place-items: center;
-  flex: none;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius);
-  border: 1px solid var(--hud-line-strong);
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line-strong);
   background: var(--surface-3);
-  font-family: var(--font-display);
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: var(--fs-xs);
+  font-weight: 600;
   color: var(--text);
 }
-.hud-crew__id { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
-.hud-crew__name { margin: 0; font-size: var(--fs-md); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hud-crew__role { font-size: var(--fs-xs); color: var(--text-faint); }
-.hud-crew__level {
+.hud-status > :not(.hud-panel__head) { margin-left: var(--sp-4); margin-right: var(--sp-4); }
+.hud-status__level {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  margin: 0;
+  margin-top: var(--sp-3);
+  margin-bottom: 0;
   color: var(--c-fg);
   font-family: var(--font-display);
   font-size: var(--fs-2xl);
   font-weight: 700;
   line-height: 1.1;
 }
-.hud-crew__level .ui-icon { color: var(--c); flex: none; }
-.att-critical .hud-crew__level { color: var(--danger-fg); }
-/* The level is carried by icon + word; the card edge gets the level colour. */
-.hud-crew { border-color: color-mix(in srgb, var(--c) 55%, transparent); }
-.hud-crew.att-normal, .hud-crew.att-unknown { border-color: var(--hud-line); }
-.hud-crew.att-unknown { border-style: dashed; }
-.hud-crew__desc { margin: 0; font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.4; }
-.hud-crew__counts { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
-.hud-crew__activity,
-.hud-crew__time {
+.hud-status__level .ui-icon { color: var(--c); flex: none; }
+.hud-status.att-critical .hud-status__level { color: var(--danger-fg); }
+.hud-status.att-critical, .hud-status.att-alert { border-top: 3px solid var(--c); }
+.hud-status__desc { margin-top: var(--sp-2); margin-bottom: 0; font-size: var(--fs-sm); color: var(--text-muted); }
+.hud-status__counts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: var(--sp-3); margin-bottom: 0; padding: 0; list-style: none; }
+.hud-status__meta { margin-top: var(--sp-2); margin-bottom: 0; font-size: var(--fs-xs); color: var(--text-faint); }
+.hud-status__foot {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-  font-size: var(--fs-xs);
-  color: var(--text-faint);
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--line);
 }
-.hud-crew__activity { color: var(--text-muted); }
-.hud-crew__activity.is-expired { color: var(--att-watch-fg); }
-.hud-crew__actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-2); }
 
-/* ----------------------------------------------------------- alerts card */
-.hud-alerts__summary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin: 0; }
-.hud-alerts__list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--hud-line); }
-.hud-alerts__list > li + li { border-top: 1px solid var(--hud-line); }
-.hud-alerts__item {
-  display: flex;
+/* --------------------------------------------------------------- alerts */
+.hud-alert {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--sp-2);
   width: 100%;
-  padding: var(--sp-2) 0;
+  padding: var(--sp-3) var(--sp-4);
   border: 0;
+  border-radius: 0;
   background: none;
   color: var(--text);
   font: inherit;
@@ -240,23 +192,14 @@ button.hud-card:hover {
   text-align: left;
   cursor: pointer;
 }
-.hud-alerts__item:hover .hud-alerts__title { text-decoration: underline; text-underline-offset: 3px; }
-.hud-alerts__title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hud-alerts.att-alert,
-.hud-alerts.att-critical { border-color: color-mix(in srgb, var(--c) 70%, transparent); }
+.hud-alert:hover { background: var(--surface-2); }
+.hud-alert__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-alert__state { font-size: var(--fs-xs); color: var(--text-faint); }
 
-/* ------------------------------------------------------------ clock card */
-.hud-clock__time { font-size: var(--fs-hud); }
-.hud-clock__time small { font-family: var(--font-mono); font-size: var(--fs-lg); color: var(--text-faint); }
-.hud-rows { display: flex; flex-direction: column; gap: 4px; margin: 0; }
-.hud-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-sm); }
-.hud-row dt { color: var(--text-faint); }
-.hud-row dd { margin: 0; color: var(--text); font-variant-numeric: tabular-nums; text-align: right; }
-.hud-row .hud-link { font-size: var(--fs-sm); }
-
-/* Cabin row stays short so the 3D scene below it can be tall: only the
- * featured CO2 card keeps a trace (inline, next to the number). */
-.hud__top .hud-metric:not(.hud-metric--feature) .hud-metric__trace { display: none; }
-.hud__top .hud-metric--feature .hud-metric__body { flex-wrap: nowrap; }
-.hud__top .hud-metric--feature .hud-metric__trace { min-width: 48px; height: 28px; }
-.hud__top .hud-card { gap: 6px; padding: var(--sp-2) var(--sp-3); }
+/* ---------------------------------------------------------------- clock */
+.hud-clock { font-family: var(--font-mono); font-size: var(--fs-md); color: var(--text); }
+.hud-kv { margin: 0; padding: var(--sp-2) var(--sp-4); }
+.hud-kv > div { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 6px 0; font-size: var(--fs-sm); }
+.hud-kv > div + div { border-top: 1px solid var(--line); }
+.hud-kv dt { color: var(--text-faint); }
+.hud-kv dd { margin: 0; text-align: right; }

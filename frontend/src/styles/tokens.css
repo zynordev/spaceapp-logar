@@ -115,10 +115,10 @@
   --sp-5: 24px;
   --sp-6: 32px;
 
-  /* Shape: minimal corners */
-  --radius-sm: 2px;     /* badges, tags, chips */
-  --radius: 4px;        /* buttons, cards, inputs */
-  --radius-lg: 4px;     /* panels, dialogs */
+  /* Shape: square corners (status dots only are round) */
+  --radius-sm: 0;
+  --radius: 0;
+  --radius-lg: 0;
   --radius-full: 9999px; /* status dots only */
   --shadow: none;
   --shadow-pop: 0 8px 32px rgba(2, 6, 23, 0.5);
