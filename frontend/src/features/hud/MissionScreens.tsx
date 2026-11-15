@@ -163,7 +163,7 @@ const SEVERITY = ['Yok', 'Hafif', 'Orta', 'Şiddetli', 'Çok şiddetli'];
 
 /* ============================================================ crew card */
 
-const CARD_TOPS = [13, 279, 545, 812];
+const CARD_TOPS = [13, 279, 545, 811];
 
 function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: string; top: number; alerts: AlertRead[]; onClick: () => void; open?: boolean }) {
   const d = useCrewData(crewId);
@@ -191,7 +191,7 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
       <span className="dz-crew__photo" aria-hidden="true" data-tour="crew-open" data-crew={crewId}>
         {initials(crewId)}
       </span>
-      <span className="dz-crew__label" style={box(183, 60, 160, 64)}>
+      <span className="dz-crew__label" style={box(183, 60, 132, 64)}>
         ACİL
         <br />
         DURUM:
@@ -200,21 +200,21 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
         {urgent.length ? upperTr(urgent[0].action_card?.title_tr ?? urgent[0].rule_id) : 'AÇIK ACİL DURUM YOK.'}
       </span>
       <span className="dz-rule" style={box(183, 130, 420, 4)} />
-      <span className="dz-crew__label" style={box(183, 137, 200, 64)}>
+      <span className="dz-crew__label" style={box(183, 137, 150, 64)}>
         GENEL
         <br />
         SAĞLIK:
       </span>
-      <span className="dz-abs" style={box(382, 145, 62, 62)}>
+      <span className="dz-abs" style={box(380, 139, 58, 58)}>
         <Ring
           pct={pct}
           level={overall.level}
-          size={62}
+          size={58}
           stroke={7}
           label={d.crewRules.length ? `${d.crewRules.length} kuralın ${normal} tanesi normal. Genel durum: ${overall.label}` : 'Değerlendirilmiş kural yok'}
         />
       </span>
-      <span className="dz-crew__list" style={box(458, 150, 140, 44)}>
+      <span className="dz-crew__list" style={box(448, 147, 150, 44)}>
         <span>
           ›Fizyolojik <b className={physio ? `t-${physio.health_attention.toLowerCase()}` : undefined}>{physio ? attentionMeta(physio.health_attention).label : '—'}</b>
         </span>
@@ -222,7 +222,7 @@ function CrewCard({ crewId, top, alerts, onClick, open = false }: { crewId: stri
           ›Kan <b>{blood}</b>
         </span>
       </span>
-      <span className="dz-crew__resume" style={box(183, 198, 412, 40)}>
+      <span className="dz-crew__resume" style={box(183, 201, 412, 36)}>
         Sağlık özeti: <b className={`t-${overall.level.toLowerCase()}`}>{data ? upperTr(overall.label) : '…'}</b>
         {data ? ` — ${overall.description}` : ''}
       </span>
@@ -297,7 +297,7 @@ function RoomCol({
       <span className="dz-room__unit">{unit}</span>
       <Bar level={measured ? top?.health_attention ?? null : null} text={measured ? undefined : 'ÖLÇÜM YOK'} className="dz-room__bar" />
       {/* line 1: threshold (as in the design's NASA line); line 2: provenance badges around the icon */}
-      {src && <span className={`dz-room__src${src.demo ? ' is-demo' : ''}`}>{src.demo ? src.text.replace('DEMO EŞİK // ', 'EŞİK // ') : src.text}</span>}
+      <span className={`dz-room__src${src?.demo ? ' is-demo' : ''}`}>{src ? (src.demo ? src.text.replace('DEMO EŞİK // ', 'EŞİK // ') : src.text) : '\u00a0'}</span>
       <span className="dz-room__prov">
         {thrSrc && (
           <SourceBadge
@@ -486,13 +486,13 @@ function PersonCol({
     const trend = rules.find((r) => r.rule_id === 'VITAL_TEMP_TREND_V1');
     caption = `EĞİLİM: ${trend ? upperTr(attentionMeta(trend.health_attention).label) : '—'}`;
   } else if (col.metric === 'SYSTOLIC_BP') caption = last ? `SİS ${fmtAuto(last.value)} / DİA ${last2 ? fmtAuto(last2.value) : '—'}` : 'VERİ YOK';
-  else if (col.metric === 'SLEEP_DURATION') caption = last ? `GÜNLÜK KAYIT · ${fmtClock(last.observed_at)}` : 'KAYIT YOK';
+  else if (col.metric === 'SLEEP_DURATION') caption = last ? 'GÜNLÜK KAYIT' : 'KAYIT YOK';
 
   return (
     <button
       type="button"
       className="dz-pcol"
-      style={box(x, 46, col.w, 200)}
+      style={box(x, 50, col.w, 204)}
       onClick={() => def && onOpenMetric(def.metric)}
       title={last ? `${def?.label} · ${fmtClock(last.observed_at)} (${relTime(last.observed_at)})${demo ? ' · DEMO eşik' : ''}` : def?.label}
     >
@@ -597,7 +597,7 @@ function PersonScreen({
         {warnList.length > 2 && <p className="dz-warn__more">+{warnList.length - 2} UYARI DAHA · AYRINTI İÇİN TIKLAYIN</p>}
       </section>
 
-      <section className="dz-card" style={box(19, 549, 689, 517)} aria-label="Vücut parametreleri">
+      <section className="dz-card" style={box(16, 549, 692, 517)} aria-label="Vücut parametreleri">
         <h2 className="dz-strip">BODY PARAMETERS</h2>
         <ul className="dz-params">
           {BODY_ROWS.map((row) => {
@@ -618,20 +618,20 @@ function PersonScreen({
         </ul>
       </section>
 
-      <section className="dz-card" style={box(736, 27, 1154, 255)} aria-label="Kişinin genel verileri" data-tour="vitals">
+      <section className="dz-card" style={box(736, 20, 1154, 262)} aria-label="Kişinin genel verileri" data-tour="vitals">
         <h2 className="dz-strip">GENERAL DATAS OF PERSON</h2>
         {PERSON_COLS.map((col, i) => {
           const cx = x;
           x += col.w;
           return (
             <span key={col.metric}>
-              {i > 0 && <span className="dz-vsep dz-vsep--thin" style={box(cx - 1, 53, 3, 185)} />}
+              {i > 0 && <span className="dz-vsep dz-vsep--thin" style={box(cx - 1, 58, 3, 188)} />}
               <PersonCol col={col} x={cx} defs={vitalsDefs} rules={rules} onOpenMetric={onOpenMetric} scenarioId={scenarioId} />
             </span>
           );
         })}
-        <span className="dz-vsep dz-vsep--thin" style={box(x - 1, 53, 3, 185)} />
-        <button type="button" className="dz-pcol dz-pcol--blood" style={box(x, 46, 1154 - x, 200)} onClick={() => onOpen('inputs')}>
+        <span className="dz-vsep dz-vsep--thin" style={box(x - 1, 58, 3, 188)} />
+        <button type="button" className="dz-pcol dz-pcol--blood" style={box(x, 50, 1154 - x, 204)} onClick={() => onOpen('inputs')}>
           <span className="dz-pcol__title">BLOOD PARAMETERS</span>
           <span className="dz-pcol__ringwrap">
             <Ring

@@ -354,3 +354,69 @@ button.dz-room__col:hover { background: rgba(255, 255, 255, 0.04); }
 .dz-room__label { letter-spacing: 0; }
 .dz-room__prov { gap: 5px; padding: 0 2px; }
 .dz-stage .ui-src--xs { padding: 1px 4px; font-size: 11px; gap: 3px; }
+
+/* ===== polish: three colours, fixed row grids, no overlaps ===== */
+/* warning (ALERT) and CRITICAL are both red; CRITICAL keeps the darker fill */
+.dz-bar--alert { background: #e03b3b; color: #ffffff; }
+.dz-bar--critical { background: #b42323; color: #ffffff; }
+.dz-stage .t-alert { color: #fecaca; }
+.dz-ring--alert .dz-ring__arc, .dz-ring--critical .dz-ring__arc { stroke: #ef3b46; }
+
+/* rings as in the design: white disc, light track, butt-capped arc, dark bold
+ * number with a small % in the arc colour */
+.dz-ring__track { stroke: #e6e6e6; }
+.dz-ring__num { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.02em; color: #3a3a3a; }
+.dz-ring__num sup { margin-left: 1px; font-size: 0.45em; font-weight: 700; vertical-align: 1em; }
+.dz-ring--normal .dz-ring__num sup { color: #2ecc4f; }
+.dz-ring--watch .dz-ring__num sup { color: #e8b100; }
+.dz-ring--alert .dz-ring__num sup, .dz-ring--critical .dz-ring__num sup { color: #ef3b46; }
+.dz-ring--unknown .dz-ring__num sup { color: #8a9796; }
+
+/* cabin columns: one shared row grid, so labels, values, bars, threshold
+ * lines and icons line up across all six columns */
+.dz-room__col {
+  display: grid;
+  grid-template-rows: 54px 84px 38px 36px 20px 30px;
+  row-gap: 3px;
+  justify-items: center;
+  align-items: center;
+  align-content: start;
+}
+.dz-room__label, .dz-room__value, .dz-room__unit, .dz-room__bar, .dz-room__src, .dz-room__prov { margin: 0; }
+.dz-room__value { line-height: 84px; }
+.dz-room__unit { line-height: 38px; }
+.dz-room__bar { margin: 0; }
+.dz-room__src { width: 100%; }
+.dz-room__prov { height: 30px; }
+.dz-room__col.is-unmeasured .dz-room__value { font-size: 84px; }
+
+/* crew card */
+.dz-crew__resume { font-size: 12.5px; line-height: 18px; }
+.dz-crew__list { font-size: 11.5px; }
+
+/* crew window labels stay inside their column */
+.dz-window__label { font-size: 28px; line-height: 34px; padding: 0 8px; overflow-wrap: anywhere; }
+
+/* person columns: one shared row grid */
+.dz-pcol {
+  display: grid;
+  grid-template-rows: 26px 64px 28px 26px 20px 24px;
+  row-gap: 2px;
+  justify-items: center;
+  align-items: center;
+  align-content: start;
+  padding-top: 4px;
+}
+.dz-pcol__title, .dz-pcol__value, .dz-pcol__unit, .dz-pcol__bar, .dz-pcol__demo, .dz-pcol__cap { margin: 0; }
+.dz-pcol__title { font-size: 17px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.dz-pcol__value { line-height: 64px; }
+.dz-pcol--blood { grid-template-rows: 26px 86px 26px 30px; }
+.dz-pcol--blood .dz-pcol__ringwrap, .dz-pcol--blood .dz-pcol__bar { margin: 0; }
+
+/* ECG band: everything inside the band (no clipped bottom line) */
+.dz-ecg { display: flex; align-items: center; padding: 4px 14px; }
+.dz-ecg .ecg-strip { width: 100%; gap: 2px; }
+.dz-ecg .ecg-strip__head { min-height: 0; }
+.dz-ecg .ecg-strip__label, .dz-ecg .ecg-strip__meta { font-size: 11px; line-height: 14px; margin: 0; }
+.dz-pcol--blood { grid-template-rows: 26px 94px 26px 30px; }
+.dz-window__label { font-size: 26px; line-height: 33px; overflow-wrap: normal; word-break: keep-all; hyphens: none; }

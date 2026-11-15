@@ -50,10 +50,10 @@
   --att-watch-fg: #fde68a;
   --att-watch-ink: #2f2600;
 
-  --att-alert: #f59a3a;
-  --att-alert-bg: rgba(245, 154, 58, 0.18);
-  --att-alert-fg: #fed7aa;
-  --att-alert-ink: #331a00;
+  --att-alert: #ef4b4b;     /* warning = red (user rule: any warning is red) */
+  --att-alert-bg: rgba(239, 75, 75, 0.16);
+  --att-alert-fg: #fecaca;
+  --att-alert-ink: #ffffff;
 
   --att-critical: #ef4b4b;
   --att-critical-bg: #b42323;

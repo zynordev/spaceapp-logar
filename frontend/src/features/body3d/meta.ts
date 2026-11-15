@@ -56,8 +56,8 @@ export const ATTENTION: Record<Attention, AttentionMeta> = {
     glyph: '!!',
     icon: 'alert',
     hint: 'Eylem kartını açın, adımları uygulayın.',
-    hex: '#f97316',
-    cssVar: 'var(--att-alert, #f97316)',
+    hex: '#ef4b4b',
+    cssVar: 'var(--att-alert, #ef4b4b)',
   },
   CRITICAL: {
     label: 'Kritik',
