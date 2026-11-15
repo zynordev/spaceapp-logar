@@ -172,6 +172,17 @@ kural veya eşik okumaz, risk kapsamında "yalnız veri" görünür.
   ortalama, en küçük, en büyük ve sayı.
 - **Kimlik:** `GET /v1/auth/config` (token istemez) ve `GET /v1/auth/me`.
 
+## Doğrulama (sentetik)
+
+Kural motoru, sabit tohumlu sentetik senaryolarda (normal günler, CO2, SpO2,
+ateş, kalp+solunum, sensör arızası, kırmızı bayrak) tek eşikli saf bir tabanla
+karşılaştırılır: yakalama oranı, normal pencerelerde yanlış alarm ve sensör
+arızasında "Bilinmiyor" oranı. **Sentetik veri — klinik doğrulama değildir;
+eşikler DEMO.** Yöntem ve sonuçlar: [docs/VALIDATION.md](docs/VALIDATION.md).
+Yeniden üretmek için: `uv run python scripts/validate_rules.py --n 15 --write docs/VALIDATION.md`
+(yaklaşık 2 dk). Ayrıca `tests/test_language_guard.py`, eylem kartlarında,
+kural metinlerinde ve arayüz metinlerinde tanı/ilaç dilini CI'da engeller.
+
 ## Bilinen sınırlar
 
 - **Aktivite bitirme sahiplik denetimi yapmaz:** `POST /v1/activities/{id}/end`
