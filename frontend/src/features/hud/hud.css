@@ -273,3 +273,29 @@
 .hud-col__prov { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 2px; }
 .hud-panel .ui-src { font-family: var(--font-mono); letter-spacing: 0.03em; }
 .hud-crew__list .hud-crew__src { display: flex; flex-direction: row; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+
+/* ---- mission line in the cabin header strip ---- */
+.hud-panel__sub { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 400; opacity: 0.85; }
+.hud-mission { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text); }
+.hud-mission__item { white-space: nowrap; }
+.hud-mission__item b { font-weight: 500; }
+.hud-mission__demo { color: var(--demo); }
+.hud-mission .hud-link { font-size: 0.75rem; color: var(--text); }
+.hud-mission__clock { font-family: var(--font-display); font-size: 1.375rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hud-mission__clock small { font-size: 0.75rem; font-weight: 400; }
+.hud-mission .console-entry { min-height: 28px; border-radius: 0; background: var(--surface); border-color: var(--surface); }
+@media (max-width: 1500px) { .hud-mission__demo { display: none; } }
+
+/* ---- crew cards share the left column (reference: four stacked cards) ---- */
+.hud__left .hud-crewcard { flex: 1 1 0; min-height: 168px; }
+.hud-crewcard .hud-panel__head { min-height: 32px; }
+.hud-crewcard .hud-panel__title { font-size: 1.375rem; }
+.hud-crew { grid-template-columns: 104px minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); height: 100%; }
+.hud-crew__photo { height: auto; min-height: 112px; font-size: 2.5rem; }
+.hud-crew__row { padding: 2px 0 6px; }
+.hud-crew__label { font-size: 0.8125rem; }
+.hud-crew__emergency { font-size: 0.75rem; }
+.hud-crew__resume { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-bottom: 4px; }
+.hud-crew__list { line-height: 1.35; }
+.hud-crew__list li { flex-direction: row; gap: 6px; white-space: nowrap; }
+.hud-crew__list li > span { flex: none; }

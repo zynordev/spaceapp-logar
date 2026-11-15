@@ -188,7 +188,7 @@ def test_limit_pages_oldest_first(api_client: tuple[TestClient, Engine]) -> None
     assert client.post("/v1/sync/ack", json=ack_body(page)).status_code == 200
 
     seen = {i["id"] for i in page["items"]}
-    for _ in range(10):
+    for _ in range(60):  # demo missions carry a full crew: more items to page
         nxt = packet(client, "FLIGHT_SURGEON", limit=1)
         if not nxt["items"]:
             break

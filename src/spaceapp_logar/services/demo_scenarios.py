@@ -29,6 +29,15 @@ from spaceapp_logar.services.space_weather import (
 )
 
 CREW = "crew-01"
+# Crew mates on the same station: synthetic normal course so the mission has
+# a full crew on screen. They never carry the scenario's event (that stays on
+# CREW) and are labelled SYNTHETIC like everything else.
+CREW_MATES: tuple[tuple[str, float, float, float], ...] = (
+    # (crew id, resting HR, respiration, body temperature)
+    ("crew-02", 64.0, 13.0, 36.6),
+    ("crew-03", 70.0, 14.0, 36.8),
+    ("crew-04", 60.0, 12.5, 36.5),
+)
 HABITAT = "iss-destiny-lab"
 SECOND_MODULE = "iss-harmony-node2"
 SOURCE_ID = "demo-scenario-runner"
@@ -158,12 +167,13 @@ def _vitals(
     activity: Callable[[int], str] = lambda m: "REST",
     spo2_quality: Callable[[int], str] = lambda m: "VALID",
     nights_h: tuple[float, ...] = (6.9,),
+    target: str | None = None,
 ) -> None:
     for m in range(minutes):
         when = start + timedelta(minutes=m)
         state = activity(m)
-        _add(plan, when, Metric.HEART_RATE, hr(m) + rng.gauss(0, 1.5), activity=state)
-        _add(plan, when, Metric.RESPIRATION_RATE, rr(m) + rng.gauss(0, 0.5), activity=state)
+        _add(plan, when, Metric.HEART_RATE, hr(m) + rng.gauss(0, 1.5), activity=state, target=target)
+        _add(plan, when, Metric.RESPIRATION_RATE, rr(m) + rng.gauss(0, 0.5), activity=state, target=target)
         _add(
             plan,
             when,
@@ -171,20 +181,21 @@ def _vitals(
             min(100.0, spo2(m) + rng.gauss(0, 0.3)),
             activity=state,
             quality=spo2_quality(m),
+            target=target,
         )
-        _add(plan, when, Metric.BODY_TEMPERATURE, temp(m) + rng.gauss(0, 0.04), activity=state)
+        _add(plan, when, Metric.BODY_TEMPERATURE, temp(m) + rng.gauss(0, 0.04), activity=state, target=target)
         if m % 30 == 0:
             # Synthetic HRV (data only; no rule reads it); varies with activity.
             hrv = {"EXERCISE": 22.0, "SLEEP": 62.0}.get(state, 45.0)
             # Separate deterministic stream so other metrics' noise is unchanged.
             hrv_noise = Random(f"hrv:{start.isoformat()}:{m}").gauss(0, 4)
-            _add(plan, when, Metric.HRV_RMSSD, hrv + hrv_noise, activity=state)
-            _add(plan, when, Metric.SYSTOLIC_BP, 118 + rng.gauss(0, 3), activity=state)
-            _add(plan, when, Metric.DIASTOLIC_BP, 76 + rng.gauss(0, 2), activity=state)
+            _add(plan, when, Metric.HRV_RMSSD, hrv + hrv_noise, activity=state, target=target)
+            _add(plan, when, Metric.SYSTOLIC_BP, 118 + rng.gauss(0, 3), activity=state, target=target)
+            _add(plan, when, Metric.DIASTOLIC_BP, 76 + rng.gauss(0, 2), activity=state, target=target)
     # One sleep record per night; the last night ends at the scenario start.
     for index, hours in enumerate(nights_h):
         night = start - timedelta(days=len(nights_h) - 1 - index)
-        _add(plan, night, Metric.SLEEP_DURATION, hours, activity="REST")
+        _add(plan, night, Metric.SLEEP_DURATION, hours, activity="REST", target=target)
 
 
 def _check_in(plan: Plan, when: datetime, **scores: int) -> None:
@@ -636,6 +647,23 @@ SCENARIOS: dict[str, Scenario] = {
 }
 
 
+def _add_crew_mates(plan: Plan, start: datetime, minutes: int, rng: Random) -> None:
+    """Normal resting vitals for the other crew members over the same span as
+    the scenario, so their personal baselines form the same way."""
+    for crew_id, hr, rr, temp in CREW_MATES:
+        _vitals(
+            plan,
+            start,
+            minutes,
+            rng,
+            hr=lambda m, v=hr: v,
+            rr=lambda m, v=rr: v,
+            spo2=lambda m: 98.0,
+            temp=lambda m, v=temp: v,
+            target=crew_id,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class ScenarioRun:
     mission_id: str
@@ -660,6 +688,10 @@ def run_scenario(
     start = end - timedelta(minutes=scenario.duration_minutes - 1)
     mission_id = f"demo-{scenario_id}-{current:%Y%m%dT%H%M%S}-{uuid4().hex[:4]}"
     plan = scenario.build(start, Random(seed))
+    # Crew mates are stored after the scenario's own events, so the scenario's
+    # alerts, escalations and sync packets come out exactly as before.
+    mates = Plan()
+    _add_crew_mates(mates, start, scenario.duration_minutes, Random(seed + 1))
 
     # Synthetic missions run on an ISS-like station. The context starts before
     # the earliest record (sleep history), so the mission day is derived from it.
@@ -721,6 +753,19 @@ def run_scenario(
             session.flush()
             evaluate_check_in(session, check_in)
 
+    for item in sorted(mates.measurements, key=lambda entry: entry["observed_at"]):
+        observation = store_measurement(
+            session,
+            MeasurementCreate(
+                mission_id=mission_id,
+                source_type="SYNTHETIC",
+                source_id=SOURCE_ID,
+                scenario_id=scenario_id,
+                **item,
+            ),
+        )
+        evaluate_observation(session, observation)
+
     for item in plan.labs:
         lab = LabResultCreate(
             mission_id=mission_id,
@@ -752,7 +797,7 @@ def run_scenario(
         crew_member_id=CREW,
         environment_target_id=HABITAT,
         scenario_id=scenario_id,
-        observations_posted=len(plan.measurements),
+        observations_posted=len(plan.measurements) + len(mates.measurements),
         check_ins_posted=len(plan.check_ins),
         lab_results_posted=len(plan.labs),
     )

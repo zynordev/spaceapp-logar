@@ -454,7 +454,9 @@ interface SyncStatusLite {
   pending_escalations: number;
 }
 
-function MissionCard({ scenarioId, onOpen }: { scenarioId: string | null; onOpen: (tab: DetailTab) => void }) {
+/** Mission line in the cabin header strip: UTC clock, light delay, ground
+ * sync and the ground console link (the left column is for crew cards). */
+function MissionStrip({ scenarioId, onOpen }: { scenarioId: string | null; onOpen: (tab: DetailTab) => void }) {
   const missionId = useApp((s) => s.missionId);
   const now = useNow(1000);
   const sync = usePolling<SyncStatusLite>(missionId ? `/v1/sync/status${qs({ mission_id: missionId })}` : null, 30_000);
@@ -462,49 +464,33 @@ function MissionCard({ scenarioId, onOpen }: { scenarioId: string | null; onOpen
   const p2 = (n: number) => String(n).padStart(2, '0');
   const delay = sync.data?.link_delay_seconds;
   const pending = sync.data ? sync.data.recipients.reduce((n, r) => n + r.pending_items, 0) : null;
+  const esc = sync.data?.pending_escalations ?? 0;
 
   return (
-    <Panel
-      title="GÖREV"
-      id="hud-mission-title"
-      tour="mission"
-      className="hud-mission"
-      aside={scenarioId ? <span className="hud-tag" title="Bu görevdeki ölçümler sentetik demo verisidir">SENTETİK · {scenarioId}</span> : undefined}
-    >
-      <div className="hud-mission__body">
-        <p className="hud-mission__clock">
-          <time dateTime={d.toISOString()}>
-            {p2(d.getUTCHours())}:{p2(d.getUTCMinutes())}:{p2(d.getUTCSeconds())}
-          </time>
-          <small>UTC</small>
-        </p>
-        <dl className="hud-kv">
-          <div>
-            <dt>IŞIK GECİKMESİ</dt>
-            <dd>{delay == null ? 'tanımsız' : `${fmtAuto(delay)} sn`}</dd>
-          </div>
-          <div>
-            <dt>YER SENKRONU</dt>
-            <dd>
-              {pending == null ? (
-                sync.error ? 'alınamadı' : '—'
-              ) : (
-                <button type="button" className="hud-link" onClick={() => onOpen('ground')}>
-                  {pending} öğe bekliyor
-                </button>
-              )}
-            </dd>
-          </div>
-          {sync.data && sync.data.pending_escalations > 0 && (
-            <div>
-              <dt>ESKALASYON</dt>
-              <dd className="t-alert">{sync.data.pending_escalations} bekliyor</dd>
-            </div>
-          )}
-        </dl>
-        <GroundConsoleLink />
-      </div>
-    </Panel>
+    <div className="hud-mission" role="group" aria-label="Görev" data-tour="mission">
+      {scenarioId && (
+        <span className="hud-mission__item hud-mission__demo" title="Bu görevdeki ölçümler sentetik demo verisidir">
+          SENTETİK · {scenarioId}
+        </span>
+      )}
+      <span className="hud-mission__item">
+        IŞIK GECİKMESİ <b>{delay == null ? 'tanımsız' : `${fmtAuto(delay)} sn`}</b>
+      </span>
+      <span className="hud-mission__item">
+        YER{' '}
+        {pending == null ? (
+          <b>{sync.error ? 'alınamadı' : '—'}</b>
+        ) : (
+          <button type="button" className="hud-link" onClick={() => onOpen('ground')}>
+            {pending} bekliyor{esc ? ` · ${esc} eskalasyon` : ''}
+          </button>
+        )}
+      </span>
+      <time className="hud-mission__clock" dateTime={d.toISOString()}>
+        {p2(d.getUTCHours())}:{p2(d.getUTCMinutes())}:{p2(d.getUTCSeconds())} <small>UTC</small>
+      </time>
+      <GroundConsoleLink compact />
+    </div>
   );
 }
 
@@ -538,11 +524,10 @@ export function HudOverlay({ scenarioId, crewIds = [], onOpen, bodyOpen = false,
             onToggle={() => onOpenCrew(c)}
           />
         ))}
-        <MissionCard scenarioId={scenarioId} onOpen={onOpen} />
       </div>
 
       <div className="hud__room">
-        <Panel title="KABİN ORTAMI" id="hud-room-title" tour="cabin" aside={envId ? <span className="hud-tag">{envId}</span> : undefined}>
+        <Panel title={<>KABİN ORTAMI{envId && <small className="hud-panel__sub"> · {envId}</small>}</>} id="hud-room-title" tour="cabin" aside={<MissionStrip scenarioId={scenarioId} onOpen={onOpen} />}>
           <ul className="hud-cols">
             {pick(metrics, ENV_ORDER).map((m) => (
               <MetricColumn key={m.metric} def={m} rules={rules} onOpen={openMetric} scenarioId={scenarioId} />
