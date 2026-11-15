@@ -9,7 +9,7 @@ import { Legend, RegionChips } from './RegionChips';
 import { AttentionBadge, RegionDetail, formatWhen } from './RegionDetail';
 import { useBodyMap } from './useBodyMap';
 import type { ViewCommand } from './BodyScene';
-import type { RegionKey } from './types';
+import { isRegionKey, type RegionKey } from './types';
 
 const BodyScene = lazy(() => import('./BodyScene'));
 
@@ -80,7 +80,15 @@ export function BodyMapPanel() {
       return false;
     }
   });
-  const [selected, setSelected] = useState<RegionKey | null>(null);
+  // `?region=heart` preselects a region (deep link for demos / screenshots).
+  const [selected, setSelected] = useState<RegionKey | null>(() => {
+    try {
+      const r = new URLSearchParams(window.location.search).get('region');
+      return isRegionKey(r) ? r : null;
+    } catch {
+      return null;
+    }
+  });
   const [hovered, setHovered] = useState<RegionKey | null>(null);
   const [view, setView] = useState<ViewCommand>({ kind: 'front', n: 0 });
 

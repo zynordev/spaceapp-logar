@@ -3,8 +3,8 @@
 // the astronaut's left side is +x. Render loop is on demand: frames are only
 // drawn on interaction, camera easing or the gentle CRITICAL pulse.
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { ContactShadows, Html, OrbitControls } from '@react-three/drei';
-import { useEffect, useMemo, useRef } from 'react';
+import { ContactShadows, OrbitControls } from '@react-three/drei';
+import { useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { ATTENTION, CHIP_ORDER, REGION_META } from './meta';
 import { RegionIcon } from './icons';
@@ -138,8 +138,8 @@ function useMats(): Mats {
     }
     return {
       organ,
-      shell: makeHolo(0.035, 0.75, 2.2, 0.35),
-      wall: makeHolo(0.0, 0.16, 3.0, 0.0),
+      shell: makeHolo(0.07, 1.0, 1.8, 0.3),
+      wall: makeHolo(0.0, 0.1, 4.0, 0.0),
       ring: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.9, toneMapped: false }),
       hit: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false }),
       leader: new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false }),
@@ -192,21 +192,21 @@ function Limb({ side, mats }: { side: 1 | -1; mats: Mats }) {
       <group position={[0.19 * side, 1.4, 0]} rotation={[0, 0, 0.14 * side]}>
         <mesh geometry={GEO.sphere} material={shell} scale={0.05} userData={skinTag} renderOrder={2} />
         <mesh geometry={GEO.upperArm} material={shell} position={[0, -0.15, 0]} userData={skinTag} renderOrder={2} />
-        <mesh geometry={GEO.longBone} material={bone} position={[0, -0.15, 0]} scale={[0.012, 0.25, 0.012]} raycast={noRaycast} />
+        <mesh geometry={GEO.longBone} material={bone} position={[0, -0.15, 0]} scale={[0.009, 0.25, 0.009]} raycast={noRaycast} />
         <group position={[0, -0.3, 0]} rotation={[-0.12, 0, 0.04 * side]}>
           <mesh geometry={GEO.forearm} material={shell} position={[0, -0.14, 0]} userData={skinTag} renderOrder={2} />
-          <mesh geometry={GEO.longBone} material={bone} position={[0, -0.14, 0]} scale={[0.01, 0.23, 0.01]} raycast={noRaycast} />
+          <mesh geometry={GEO.longBone} material={bone} position={[0, -0.14, 0]} scale={[0.008, 0.23, 0.008]} raycast={noRaycast} />
           <mesh geometry={GEO.sphere} material={shell} position={[0, -0.32, 0.005]} scale={[0.034, 0.068, 0.022]} userData={skinTag} renderOrder={2} />
         </group>
       </group>
       {/* leg: hip pivot */}
       <group position={[0.085 * side, 0.9, 0]} rotation={[0, 0, 0.025 * side]}>
         <mesh geometry={GEO.thigh} material={shell} position={[0, -0.21, 0]} userData={skinTag} renderOrder={2} />
-        <mesh geometry={GEO.longBone} material={bone} position={[0, -0.21, 0]} scale={[0.018, 0.38, 0.018]} userData={tag('musculoskeletal', 'inner')} />
+        <mesh geometry={GEO.longBone} material={bone} position={[0, -0.21, 0]} scale={[0.012, 0.38, 0.012]} userData={tag('musculoskeletal', 'inner')} />
         <group position={[0, -0.43, 0]}>
           <mesh geometry={GEO.sphere} material={bone} position={[0, 0, 0.045]} scale={0.022} userData={tag('musculoskeletal', 'inner')} />
           <mesh geometry={GEO.shin} material={shell} position={[0, -0.2, 0]} userData={skinTag} renderOrder={2} />
-          <mesh geometry={GEO.longBone} material={bone} position={[0, -0.2, 0]} scale={[0.015, 0.36, 0.015]} userData={tag('musculoskeletal', 'inner')} />
+          <mesh geometry={GEO.longBone} material={bone} position={[0, -0.2, 0]} scale={[0.01, 0.36, 0.01]} userData={tag('musculoskeletal', 'inner')} />
           <mesh geometry={GEO.foot} material={shell} position={[0, -0.425, 0.045]} rotation={[Math.PI / 2, 0, 0]} userData={skinTag} renderOrder={2} />
         </group>
       </group>
@@ -381,43 +381,70 @@ function Leaders({ states, material }: { states: RegionStates; material: THREE.L
   return <lineSegments geometry={geom} material={material} raycast={noRaycast} />;
 }
 
+type MarkerEls = Partial<Record<RegionKey, HTMLDivElement | null>>;
+
+/**
+ * Projects the 3D marker anchors to screen space every rendered frame and
+ * moves the DOM pills directly (no React re-render, no extra React roots).
+ */
+function Projector({ els }: { els: MutableRefObject<MarkerEls> }) {
+  const v = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ camera, size }) => {
+    for (const k of CHIP_ORDER) {
+      const el = els.current[k];
+      if (!el) continue;
+      v.set(...REGION_META[k].marker).project(camera);
+      const hidden = v.z > 1 || Math.abs(v.x) > 1.2 || Math.abs(v.y) > 1.2;
+      const x = (v.x * 0.5 + 0.5) * size.width;
+      const y = (-v.y * 0.5 + 0.5) * size.height;
+      el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -50%)`;
+      el.style.visibility = hidden ? 'hidden' : 'visible';
+    }
+  });
+  return null;
+}
+
 function Markers({
   states,
   selected,
   hovered,
   onHover,
   onSelect,
-}: Pick<BodySceneProps, 'states' | 'selected' | 'hovered' | 'onHover' | 'onSelect'>) {
+  els,
+}: Pick<BodySceneProps, 'states' | 'selected' | 'hovered' | 'onHover' | 'onSelect'> & {
+  els: MutableRefObject<MarkerEls>;
+}) {
   return (
-    <>
+    <div className="b3d-markers" aria-hidden="true">
       {CHIP_ORDER.map((k) => {
         const st = states[k];
         const att = ATTENTION[st.attention];
         const active = hovered === k || selected === k;
         return (
-          <Html key={k} position={REGION_META[k].marker} center zIndexRange={[30, 10]}>
-            <div
-              aria-hidden="true"
-              className={`b3d-marker att-${st.attention.toLowerCase()}${active ? ' is-active' : ''}${selected === k ? ' is-selected' : ''}`}
-              style={{ ['--c' as string]: att.cssVar }}
-              onPointerEnter={() => onHover(k)}
-              onPointerLeave={() => onHover(null)}
-              onClick={() => onSelect(k)}
-            >
-              <RegionIcon region={k} size={14} />
-              <span className="b3d-marker-label">{REGION_META[k].short}</span>
-              <span className="b3d-marker-glyph">{att.glyph}</span>
-              {active && (
-                <span className="b3d-marker-extra">
-                  {att.label}
-                  {st.alerts > 0 ? ` · ${st.alerts} açık uyarı` : ''}
-                </span>
-              )}
-            </div>
-          </Html>
+          <div
+            key={k}
+            ref={(el) => {
+              els.current[k] = el;
+            }}
+            className={`b3d-marker att-${st.attention.toLowerCase()}${active ? ' is-active' : ''}${selected === k ? ' is-selected' : ''}`}
+            style={{ ['--c' as string]: att.cssVar, visibility: 'hidden' }}
+            onPointerEnter={() => onHover(k)}
+            onPointerLeave={() => onHover(null)}
+            onClick={() => onSelect(k)}
+          >
+            <RegionIcon region={k} size={14} />
+            <span className="b3d-marker-label">{REGION_META[k].short}</span>
+            <span className="b3d-marker-glyph">{att.glyph}</span>
+            {active && (
+              <span className="b3d-marker-extra">
+                {att.label}
+                {st.alerts > 0 ? ` · ${st.alerts} açık uyarı` : ''}
+              </span>
+            )}
+          </div>
         );
       })}
-    </>
+    </div>
   );
 }
 
@@ -488,7 +515,7 @@ function StateSync({
 // ---------------------------------------------------------------- camera
 
 const HOME_TARGET = new THREE.Vector3(0, 1.0, 0);
-const HOME_DIST = 3.4;
+const HOME_DIST = 4.1;
 
 interface ControlsLike {
   target: THREE.Vector3;
@@ -537,7 +564,7 @@ function CameraRig({ selected, view, reducedMotion }: Pick<BodySceneProps, 'sele
   useFrame((_, rawDt) => {
     const g = goal.current;
     if (!g || !controls) return;
-    const dt = Math.min(rawDt, 1 / 30);
+    const dt = Math.min(rawDt, 0.1);
     const k = reducedMotion ? 1 : 1 - Math.exp(-dt * 5.5);
     const cur = tmp.sph.setFromVector3(tmp.off.copy(camera.position).sub(controls.target));
     let dTheta = g.sph.theta - cur.theta;
@@ -561,8 +588,8 @@ function CameraRig({ selected, view, reducedMotion }: Pick<BodySceneProps, 'sele
 
 // ---------------------------------------------------------------- scene root
 
-function Scene(props: BodySceneProps) {
-  const { states, selected, hovered, onHover, onSelect, view, reducedMotion } = props;
+function Scene(props: BodySceneProps & { els: MutableRefObject<MarkerEls> }) {
+  const { states, selected, hovered, onHover, onSelect, view, reducedMotion, els } = props;
   const mats = useMats();
   const gl = useThree((s) => s.gl);
 
@@ -602,7 +629,6 @@ function Scene(props: BodySceneProps) {
       </group>
 
       <Leaders states={states} material={mats.leader} />
-      <Markers states={states} selected={selected} hovered={hovered} onHover={onHover} onSelect={onSelect} />
       <ContactShadows position={[0, 0.004, 0]} scale={1.6} blur={2.4} far={1.2} opacity={0.55} resolution={256} frames={1} color="#000814" />
 
       <StateSync mats={mats} states={states} selected={selected} hovered={hovered} reducedMotion={reducedMotion} />
@@ -620,27 +646,41 @@ function Scene(props: BodySceneProps) {
         zoomSpeed={0.8}
       />
       <CameraRig selected={selected} view={view} reducedMotion={reducedMotion} />
+      <Projector els={els} />
     </>
   );
 }
 
 export default function BodyScene(props: BodySceneProps) {
-  const { onFail } = props;
+  const { onFail, states, selected, hovered, onHover, onSelect } = props;
+  const els = useRef<MarkerEls>({});
+  // R3F force-loses the context when the canvas unmounts (e.g. switching to
+  // 2D); only a context loss while mounted counts as a failure.
+  const mounted = useRef(true);
+  useLayoutEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   return (
-    <Canvas
-      className="b3d-canvas"
-      frameloop="demand"
-      dpr={[1, 2]}
-      camera={{ position: [0, 1.15, HOME_DIST], fov: 34, near: 0.05, far: 30 }}
-      gl={{ antialias: true, powerPreference: 'high-performance' }}
-      onCreated={({ gl }) => {
-        gl.domElement.addEventListener('webglcontextlost', (ev) => {
-          ev.preventDefault();
-          onFail();
-        });
-      }}
-    >
-      <Scene {...props} />
-    </Canvas>
+    <div className="b3d-scene">
+      <Canvas
+        className="b3d-canvas"
+        frameloop="demand"
+        dpr={[1, 2]}
+        camera={{ position: [0, 1.12, HOME_DIST], fov: 34, near: 0.05, far: 30 }}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        onCreated={({ gl }) => {
+          gl.domElement.addEventListener('webglcontextlost', (ev) => {
+            ev.preventDefault();
+            if (mounted.current) onFail();
+          });
+        }}
+      >
+        <Scene {...props} els={els} />
+      </Canvas>
+      <Markers states={states} selected={selected} hovered={hovered} onHover={onHover} onSelect={onSelect} els={els} />
+    </div>
   );
 }
