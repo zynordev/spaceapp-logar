@@ -15,6 +15,9 @@
   min-height: 32px;
 }
 
+.ecg-strip__head > .ui-src { margin-right: auto; }
+.ecg-strip__tag { white-space: nowrap; }
+
 .ecg-strip__tag {
   display: inline-flex;
   align-items: center;

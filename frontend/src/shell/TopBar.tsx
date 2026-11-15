@@ -2,6 +2,8 @@ import { Suspense, type ReactNode } from 'react';
 import { useApp } from '../lib/store';
 import { Button, Chip, Icon, Select, Skeleton, formatDateTime, roleLabel } from '../ui';
 import { FeatureBoundary } from './FeatureBoundary';
+// From the file, not the folder index: the tour overlay stays a lazy chunk.
+import { TourStrip } from '../features/tour/TourStrip';
 import { DemoScenarioControl } from './lazyFeatures';
 import { selectMission, type AuthInfo, type MissionsInfo } from './useBootstrap';
 
@@ -118,6 +120,10 @@ export function TopBar({ missions, auth, onLogin, onLogout }: TopBarProps) {
       </div>
 
       <UserChip auth={auth} onLogin={onLogin} onLogout={onLogout} />
+
+      <div className="shell-jury">
+        <TourStrip />
+      </div>
     </header>
   );
 }

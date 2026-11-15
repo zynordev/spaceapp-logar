@@ -91,8 +91,21 @@
 }
 .shell-user__role { font-size: var(--fs-xs); color: var(--accent-strong); }
 
+/* Jury strip: guided tours, mission profile, "Ne gerçek, ne simüle?". */
+.shell-jury {
+  order: 10;
+  flex: 1 1 100%;
+  min-width: 0;
+  margin: 0 calc(-1 * var(--sp-5));
+  padding: 6px var(--sp-5) 0;
+  border-top: 1px solid var(--line);
+}
+
 @media (max-width: 1520px) {
   .shell-brand__sub { display: none; }
+}
+@media (max-width: 900px) {
+  .shell-jury { margin: 0 calc(-1 * var(--sp-3)); padding: 6px var(--sp-3) 0; }
 }
 @media (max-width: 900px) {
   .shell-topbar { padding: var(--sp-2) var(--sp-3); gap: var(--sp-2) var(--sp-3); }
@@ -286,6 +299,17 @@
 .shell-crash__detail { font-size: var(--fs-sm); color: var(--text-muted); }
 
 .shell-login { display: flex; flex-direction: column; gap: var(--sp-4); }
+.shell-demo-login {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+.shell-demo-login__title { margin: 0; font-size: var(--fs-sm); font-weight: 600; }
+.shell-demo-login__btns { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.shell-demo-login__note { margin: 0; font-size: var(--fs-xs); }
 
 /* ------------------------------------------------------------- Footer */
 .shell-footer {

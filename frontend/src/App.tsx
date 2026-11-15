@@ -6,6 +6,7 @@ import { Button, EmptyState, ErrorNote, Skeleton, Tabs, ToastHost, toast } from 
 import { DisclaimerBand, OfflineBanner } from './shell/Banners';
 import { FeatureBoundary } from './shell/FeatureBoundary';
 import { LoginDialog } from './shell/LoginDialog';
+import { useDetailTabRequest } from './shell/detailTab';
 import { TopBar } from './shell/TopBar';
 import { AlertsPanel, BodyMapPanel, GroundPanel, HudOverlay, InputsPanel, VitalsPanel, prefetchFeatures } from './shell/lazyFeatures';
 import { useAuthBootstrap, useMissions } from './shell/useBootstrap';
@@ -85,6 +86,11 @@ export default function App() {
   }, []);
 
   useEffect(() => prefetchFeatures(), []);
+  // Guided tour (or any other caller) asks for a detail tab.
+  const tabRequest = useDetailTabRequest((s) => s.request);
+  useEffect(() => {
+    if (tabRequest) setTab(tabRequest.tab);
+  }, [tabRequest]);
   useChromeHeight();
 
   const forced = auth.authRequired === true && !token;

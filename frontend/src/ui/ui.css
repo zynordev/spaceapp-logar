@@ -391,3 +391,38 @@ h3.ui-panel__title { font-size: var(--fs-md); }
 .ui-dialog { border-radius: var(--radius-lg); overflow: hidden; background: var(--surface); }
 .ui-panel { border-radius: var(--radius-lg); overflow: hidden; border: 0; }
 .ui-panel__head { background: var(--strip); }
+
+/* ---------------------------------------------------------- SourceBadge */
+/* Provenance: border style + icon + word. Neutral ink; never an attention hue. */
+.ui-src {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  line-height: 1.6;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+.ui-src .ui-icon { flex: none; color: var(--text-faint); }
+.ui-src__detail { font-weight: 500; letter-spacing: 0.01em; color: var(--text-faint); }
+.ui-src__detail::before { content: '·'; margin-right: 4px; }
+.ui-src--xs { padding: 0 4px; font-size: 0.625rem; gap: 3px; }
+.ui-src--real { border-color: var(--text-faint); color: var(--text); }
+.ui-src--real .ui-icon { color: var(--text-muted); }
+.ui-src--standard { border: 3px double var(--text-faint); line-height: 1.35; color: var(--text); }
+.ui-src--standard .ui-icon { color: var(--text); }
+.ui-src--demo { border-style: dashed; border-color: var(--demo); color: var(--demo); }
+.ui-src--demo .ui-icon,
+.ui-src--demo .ui-src__detail { color: var(--demo); }
+.ui-src--synthetic { border-style: dotted; border-color: var(--text-faint); }
+.ui-src--manual { border-color: var(--line-strong); }
+.ui-src-row { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }

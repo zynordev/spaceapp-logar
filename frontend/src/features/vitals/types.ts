@@ -2,6 +2,7 @@
 // (src/spaceapp_logar/schemas/{status,alerts,action_cards,measurements}.py)
 // and contract section F (trend). Only the fields this track reads.
 import type { Attention } from '../../lib/store';
+import type { EarthResponse } from '../profile/types';
 
 export type DataQuality = 'VALID' | 'SUSPECT' | 'MISSING' | 'FAULT';
 export type AlertStatus = 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED';
@@ -51,6 +52,8 @@ export interface Situation {
   level_since: string | null;
   reassess_at: string | null;
   completed_steps: CompletedStep[];
+  /** Mission-profile track: ground round trip vs the card's act-within window. */
+  earth_response?: EarthResponse | null;
 }
 
 export interface BaselineUsed {

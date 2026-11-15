@@ -9,6 +9,7 @@ import { Legend, RegionChips } from './RegionChips';
 import { RegionDetail, formatWhen } from './RegionDetail';
 import { Icon } from '../../ui';
 import { useBodyMap } from './useBodyMap';
+import { useBodySelection } from './selection';
 import type { LayerState, ModelKind, ViewCommand } from './BodyScene';
 import { isRegionKey, type RegionKey } from './types';
 
@@ -90,6 +91,11 @@ export function BodyMapPanel() {
       return null;
     }
   });
+  // External selection (guided tour): applied like a click on the region.
+  const request = useBodySelection((s) => s.request);
+  useEffect(() => {
+    if (request) setSelected(request.region);
+  }, [request]);
   const [hovered, setHovered] = useState<RegionKey | null>(null);
   const [view, setView] = useState<ViewCommand>({ kind: 'front', n: 0 });
   const [layers, setLayers] = useState<LayerState>({ skin: true, organs: true, skeleton: true, skinOpacity: 0.22 });

@@ -2,7 +2,7 @@
 // NSR 16265, 30 s, 128 Hz). It is not a live sensor and derives nothing from
 // the signal: no heart rate, no rhythm reading. See ./README.md.
 import { useEffect, useRef, useState } from 'react';
-import { Button, EmptyState, Icon, Skeleton } from '../../ui';
+import { Button, EmptyState, Icon, Skeleton, SourceBadge } from '../../ui';
 import { ECG_ATTRIBUTION_URL, loadEcg, type EcgRecord } from './data';
 import './ecg.css';
 
@@ -310,6 +310,12 @@ export function EcgStrip({ height, compact = false, className }: EcgStripProps) 
           <Icon name="clock" size={compact ? 14 : 16} />
           <span>Kayıt · canlı değil</span>
         </span>
+        <SourceBadge
+          kind="REAL"
+          detail={compact ? null : 'PhysioNet'}
+          size={compact ? 'xs' : 'sm'}
+          title="Gerçek kayıt: PhysioNet MIT-BIH NSR 16265 (ODC-By). Canlı sensör değil; kalp hızı değeri bu kayıttan gelmez."
+        />
         {rec && !staticView && (
           <Button
             variant="ghost"

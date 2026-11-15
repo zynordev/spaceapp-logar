@@ -12,6 +12,7 @@ import { COMPRESSIONS, PRESETS, clampSeconds, clock, formatDelay, resolveDelay, 
 import { buildEvents, byNewest, seenEntries, type LocalAck } from './events';
 import { EscalationList, PacketPanel } from './GroundActions';
 import { SignalLink } from './SignalLink';
+import { ProfileSelector } from '../profile/ProfileSelector';
 import { Timeline } from './Timeline';
 import { useNow, useReducedMotion, useTracker } from './transit';
 import type { AlertRead, CrewStatusLite, EscalationRead, Recipient, SyncStatusRead } from './types';
@@ -201,6 +202,7 @@ export function GroundConsoleApp() {
               ))}
             </Select>
           </label>
+          <ProfileSelector variant="console" />
           <div className="console-header__links">
             {offline ? (
               <Chip tone="danger" icon="offline">

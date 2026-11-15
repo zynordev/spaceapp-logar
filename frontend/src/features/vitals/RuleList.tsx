@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import { AttBadge, QualityBadge, ValidationBadge } from './Badges';
+import { AttBadge, QualityBadge, ThresholdSource } from './Badges';
 import { BASELINE, GENERIC_NEXT, METRIC_INFO, TIME_SCALE, attInfo, cmpSymbol, displayUnit } from './copy';
 import { rank, useSeries } from './data';
 import { fmtAuto, fmtDateTime, fmtNum, isNum, relTime, safeUrl, toMs } from './format';
@@ -144,7 +144,7 @@ function RuleRow({
         </div>
         <div className="vt-rule-badges">
           <QualityBadge q={rule.data_quality} />
-          <ValidationBadge v={rule.validation_status} />
+          <ThresholdSource r={rule} />
         </div>
         <button
           type="button"

@@ -5,7 +5,7 @@
 import { useState, type FormEvent } from 'react';
 import { api, qs, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
-import { Icon, type IconName } from '../../ui';
+import { Icon, SourceBadge, labSource, type IconName } from '../../ui';
 import { Segmented } from './Segmented';
 import {
   InlineMsg, NeedSelection, Notice, SOURCE_ID, Section, fmtDateTime, fmtNum, localInputValue, useAction,
@@ -247,6 +247,7 @@ export function LabsSection() {
 
 function LabCard({ r }: { r: LabAnalyteSummary }) {
   const pos = POSITION[r.position_vs_reference];
+  const src = labSource(r.source_type);
   const lo = r.reference_low;
   const hi = r.reference_high;
   const span = Math.max(hi - lo, 1e-9);
@@ -272,7 +273,10 @@ function LabCard({ r }: { r: LabAnalyteSummary }) {
       </div>
       <div className="lgi-muted">Referans: {fmtNum(lo)}–{fmtNum(hi)} {u}</div>
       <div className="lgi-muted">Öncekine göre: {signed(r.change_from_previous)} · Başlangıca göre: {signed(r.change_from_baseline)}</div>
-      <div className="lgi-muted">{PHASE[r.phase] ?? r.phase} · {fmtDateTime(r.sampled_at)} · {r.source_id} ({r.source_type})</div>
+      <div className="lgi-muted">
+        {PHASE[r.phase] ?? r.phase} · {fmtDateTime(r.sampled_at)} · {r.source_id}{' '}
+        {src ? <SourceBadge kind={src.kind} detail={src.detail} size="xs" /> : `(${r.source_type})`}
+      </div>
     </li>
   );
 }

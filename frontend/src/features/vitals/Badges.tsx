@@ -1,5 +1,16 @@
 import { ALERT_STATUS, QUALITY, attInfo } from './copy';
-import { Icon } from '../../ui';
+import { Icon, SourceBadge, ruleSource } from '../../ui';
+
+/** Threshold provenance: STANDART · NASA-STD-3001 (approved) or DEMO (evidence F). */
+export function ThresholdSource({
+  r,
+}: {
+  r: { validation_status?: string | null; evidence_level?: string | null; source?: string | null; references?: { label: string }[] | null };
+}) {
+  const s = ruleSource(r);
+  if (!s) return <ValidationBadge v={r.validation_status} />;
+  return <SourceBadge kind={s.kind} detail={s.detail} />;
+}
 
 export function AttBadge({ att, size = 'md' }: { att: string | null | undefined; size?: 'sm' | 'md' | 'lg' }) {
   const a = attInfo(att);

@@ -1,0 +1,193 @@
+/* Guided jury tour. Prefix: tour-. Flat dim + 2px neutral outline, square card,
+ * no glow. The dim never blocks the page (pointer-events: none). */
+.tour { position: fixed; inset: 0; z-index: calc(var(--z-dialog) - 5); pointer-events: none; }
+
+.tour__dim { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.55); }
+
+.tour__spot {
+  position: fixed;
+  outline: 2px solid var(--focus);
+  outline-offset: 0;
+  box-shadow: 0 0 0 200vmax rgba(2, 6, 23, 0.6);
+  transition: top 0.28s ease, left 0.28s ease, width 0.28s ease, height 0.28s ease;
+}
+.tour.is-reduced .tour__spot { transition: none; }
+
+.tour__card {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 24px));
+  pointer-events: auto;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-top: 3px solid var(--focus);
+  box-shadow: var(--shadow-pop);
+  color: var(--text);
+}
+.tour__card:focus { outline: none; }
+.tour__card--bottom { bottom: 10px; }
+.tour__card--top { top: calc(var(--topbar-real, 64px) + 12px); }
+
+.tour__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 6px var(--sp-2) 6px var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.tour__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.tour__count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.tour__beat { color: var(--text-faint); }
+.tour__close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tour__close:hover { background: var(--surface-3); color: var(--text); }
+.tour__count + .tour__close { margin-left: 0; }
+.tour__kicker + .tour__close { margin-left: auto; }
+
+.tour__body { padding: 10px var(--sp-4); }
+.tour__title {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.tour__caption { margin: 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--text); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.tour__honest {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+.tour__honest .ui-icon { flex: none; position: relative; top: 2px; color: var(--demo); }
+.tour__note {
+  margin: var(--sp-2) 0 0;
+  padding: 4px 8px;
+  border-left: 2px solid var(--line-strong);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+.tour__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  flex-wrap: wrap;
+}
+.tour__auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tour__auto input { accent-color: var(--accent); }
+.tour__keys {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+.tour__dots {
+  display: flex;
+  gap: 4px;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tour__dots li { flex: 1; height: 3px; background: var(--line-strong); }
+.tour__dots li.is-done { background: var(--text-faint); }
+.tour__dots li.is-on { background: var(--text); }
+
+/* Top-bar jury strip (buttons + profile + "Ne gerçek?") */
+.tour-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.tour-strip__label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.tour-strip .ui-btn { white-space: nowrap; }
+.tour-strip__caps { margin-left: auto; }
+.tour-strip__short { display: none; }
+@media (max-width: 1280px) {
+  .tour-strip { gap: var(--sp-2); }
+  .tour-strip__label { display: none; }
+}
+@media (max-width: 1100px) {
+  .tour-strip__long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .tour-strip__short { display: inline; }
+}
+
+/* "Ne gerçek, ne simüle?" table */
+.cap-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.cap-table th,
+.cap-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.cap-table th { font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.cap-table td:first-child { font-weight: 600; color: var(--text); }
+.cap-table td:last-child { color: var(--text-muted); }
+.cap-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--line-strong);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.cap-state--works { border-color: var(--text-faint); color: var(--text); }
+.cap-state--sim { border-style: dotted; border-color: var(--text-faint); color: var(--text-muted); }
+.cap-state--planned { border-style: dashed; border-color: var(--demo); color: var(--demo); }
+.cap-state--none { border-color: var(--line-strong); color: var(--text-faint); }
+.cap-legend { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); margin: 0 0 var(--sp-3); font-size: var(--fs-xs); color: var(--text-muted); }
+.cap-scroll { max-height: min(62vh, 560px); overflow: auto; }
+
+@media (max-width: 640px) {
+  .tour__keys { display: none; }
+  .tour__card--bottom { bottom: 8px; }
+}

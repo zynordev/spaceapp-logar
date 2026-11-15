@@ -36,6 +36,8 @@ your own CSS classes with your feature name (`body3d-…`, `vitals-…`); `ui-` 
 | `Dialog` | `open, title, onClose?, children, footer?, width?` (native `<dialog>`) |
 | `Tabs` | `tabs: {id,label,badge?}[], value, onChange, label, children` |
 | `Icon` | `name: IconName, size?` (inline SVG, offline) |
+| `SourceBadge` | `kind: 'REAL'\|'STANDARD'\|'DEMO'\|'SYNTHETIC'\|'MANUAL', detail?, size?: 'xs'\|'sm'` — provenance of a value/threshold (GERÇEK / STANDART / DEMO / SENTETİK / ELLE); border style + icon + word |
+| `ruleSource(rule)`, `measurementSource(scenarioId)`, `labSource(sourceType)` | derive the SourceBadge kind from data (rule validation_status, mission scenario, lab source_type) |
 | `formatDateTime(v, withSeconds?)`, `formatTime`, `formatRelative`, `formatDuration(sec)`, `formatNumber(v, digits?)`, `roleLabel(role)`, `ROLE_LABEL` | Turkish formatting |
 
 Store (`src/lib/store.ts`): read `missionId`, `crewId`, `environmentTargetId`, `user`, `offline` via `useApp()`.

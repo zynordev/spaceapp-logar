@@ -40,6 +40,15 @@ export { Dialog, type DialogProps } from './Dialog';
 export { Tabs, type TabItem, type TabsProps } from './Tabs';
 export { Icon, type IconName } from './icons';
 export {
+  SOURCE_META,
+  SourceBadge,
+  labSource,
+  measurementSource,
+  ruleSource,
+  type SourceBadgeProps,
+  type SourceKind,
+} from './SourceBadge';
+export {
   ROLE_LABEL,
   formatDateTime,
   formatDuration,

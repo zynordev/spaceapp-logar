@@ -4,7 +4,8 @@
 import { useState } from 'react';
 import { ApiError, api } from '../../lib/api';
 import { useApp } from '../../lib/store';
-import { AttBadge, ValidationBadge } from './Badges';
+import { AttBadge, ThresholdSource } from './Badges';
+import { EarthResponseLine } from '../profile/EarthResponse';
 import { attInfo } from './copy';
 import { useNow } from './data';
 import { fmtClock, fmtDateTime, fmtDuration, safeUrl, toMs } from './format';
@@ -85,7 +86,7 @@ export function ActionCardView({
     <article className={`vt-ac vt-ac-${a.cls}`} aria-labelledby={`ac-${card.card_id}`}>
       <div className="vt-ac-top">
         <AttBadge att={card.attention} size="lg" />
-        <ValidationBadge v={card.validation_status} />
+        <ThresholdSource r={card} />
         {since != null && <span className="vt-muted vt-small">Bu seviyede {fmtDuration(now - since)}</span>}
       </div>
       {context && <p className="vt-muted vt-small">{context}</p>}
@@ -100,6 +101,8 @@ export function ActionCardView({
       )}
 
       {situation?.reassess_at && <ReassessCounter at={situation.reassess_at} every={card.reassess_minutes} />}
+
+      <EarthResponseLine er={situation?.earth_response} />
 
       {card.requires_mission_procedure && (
         <p className="vt-callout vt-callout-proc"><span aria-hidden="true"><Icon name="flag" size={14} /></span>Görev prosedürü önceliklidir.</p>

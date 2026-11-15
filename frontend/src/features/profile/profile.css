@@ -1,0 +1,87 @@
+/* Mission profile selector + earth response line. Prefix: prof- */
+.prof {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.prof__label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.prof__seg {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-2);
+}
+.prof__opt {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 30px;
+  padding: 3px 10px;
+  border: 0;
+  border-right: 1px solid var(--line-strong);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.prof__opt:last-child { border-right: 0; }
+.prof__opt:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+.prof__opt.is-on {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.prof__opt:disabled { cursor: not-allowed; opacity: 0.6; }
+.prof__opt[aria-busy='true'] { opacity: 1; }
+.prof__name { font-weight: 650; }
+.prof__delay {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.prof__opt.is-on .prof__delay { color: var(--text-muted); }
+.prof__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.prof__meta strong { color: var(--text); font-weight: 600; }
+.prof__muted { color: var(--text-faint); }
+.prof--console .prof__opt { min-height: 34px; }
+
+@media (max-width: 1180px) {
+  .prof--bar .prof__label { display: none; }
+  .prof--bar .prof__opt { padding: 3px 8px; }
+}
+
+/* Action card: earth response */
+.prof-er {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px var(--sp-2);
+  align-items: start;
+  margin: var(--sp-2) 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--text-faint);
+  background: var(--surface-2);
+  font-size: var(--fs-sm);
+}
+.prof-er > .ui-icon { margin-top: 3px; color: var(--text-muted); }
+.prof-er.is-onboard { border-left-color: var(--att-watch); }
+.prof-er__line { margin: 0; color: var(--text); }
+.prof-er__note { grid-column: 2; margin: 0; font-size: var(--fs-xs); color: var(--text-muted); }
+.prof-num { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; }

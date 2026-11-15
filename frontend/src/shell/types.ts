@@ -24,6 +24,13 @@ export interface TokenRead {
   user_id: string;
 }
 
+/** GET /v1/auth/demo-roles item (no passcode, ever). */
+export interface DemoRoleRead {
+  role: Role;
+  user_id: string;
+  label_tr: string;
+}
+
 export interface ActivityCurrentRead {
   state: 'ACTIVE' | 'EXPIRED' | 'NONE';
   remaining_seconds: number | null;
