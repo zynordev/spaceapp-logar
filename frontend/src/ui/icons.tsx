@@ -18,7 +18,18 @@ export type IconName =
   | 'chevron-down'
   | 'clock'
   | 'satellite'
-  | 'warning';
+  | 'warning'
+  | 'heart'
+  | 'pulse'
+  | 'droplet'
+  | 'thermometer'
+  | 'lungs'
+  | 'gauge'
+  | 'wind'
+  | 'radiation'
+  | 'moon'
+  | 'signal'
+  | 'arrow-down';
 
 const paths: Record<IconName, ReactElement> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
@@ -106,6 +117,42 @@ const paths: Record<IconName, ReactElement> = {
       <path d="M5 19a4 4 0 0 0 4 0" />
     </>
   ),
+  heart: <path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" />,
+  pulse: <path d="M2.5 12.5h4l2-4.5 3.5 9 2.5-6.5 1.5 2h5.5" />,
+  droplet: <path d="M12 3.5s6 6.3 6 10.7a6 6 0 0 1-12 0C6 9.8 12 3.5 12 3.5z" />,
+  thermometer: (
+    <>
+      <path d="M10 13.6V5.5a2 2 0 0 1 4 0v8.1a4 4 0 1 1-4 0z" />
+      <path d="M12 9.5v6" />
+    </>
+  ),
+  lungs: (
+    <>
+      <path d="M12 4v7.5M12 11.5l-2.5 2M12 11.5l2.5 2" />
+      <path d="M8.5 7.5C6 8.5 4 12.5 4 17.5c0 1.6 1.4 2.4 2.8 1.9l2.7-1V9.2c0-1.1-.5-1.9-1-1.7zM15.5 7.5c2.5 1 4.5 5 4.5 10 0 1.6-1.4 2.4-2.8 1.9l-2.7-1V9.2c0-1.1.5-1.9 1-1.7z" />
+    </>
+  ),
+  gauge: (
+    <>
+      <path d="M4 17a8 8 0 1 1 16 0" />
+      <path d="M12 17l4-5.5" />
+      <circle cx="12" cy="17" r="1" fill="currentColor" />
+    </>
+  ),
+  wind: <path d="M3 9h11a2.8 2.8 0 1 0-2.8-2.8M3 15h15a2.8 2.8 0 1 1-2.8 2.8M3 12h7" />,
+  radiation: (
+    <>
+      <circle cx="12" cy="12" r="1.6" />
+      <path d="M12 3.5a8.5 8.5 0 0 1 7.4 4.3L14 11M12 3.5a8.5 8.5 0 0 0-7.4 4.3L10 11M7.6 19.4a8.5 8.5 0 0 0 8.8 0L13.5 14h-3z" />
+    </>
+  ),
+  moon: <path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z" />,
+  signal: (
+    <>
+      <path d="M4 20V16M9 20v-7M14 20V9.5M19 20V5" />
+    </>
+  ),
+  'arrow-down': <path d="M12 4.5v15M6 13.5l6 6 6-6" />,
 };
 
 export function Icon({ name, size = 18, className }: { name: IconName; size?: number; className?: string }) {

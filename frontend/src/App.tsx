@@ -1,14 +1,13 @@
 // App shell (owned by the UI-shell track): layout, selection, auth UI,
 // banners. Feature tracks never edit this file; their panels are lazy-loaded.
-import { Suspense, useEffect, useState, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useApp } from './lib/store';
 import { Button, EmptyState, ErrorNote, Skeleton, Tabs, ToastHost, toast } from './ui';
 import { DisclaimerBand, OfflineBanner } from './shell/Banners';
 import { FeatureBoundary } from './shell/FeatureBoundary';
 import { LoginDialog } from './shell/LoginDialog';
-import { StatusHero } from './shell/StatusHero';
 import { TopBar } from './shell/TopBar';
-import { AlertsPanel, BodyMapPanel, GroundPanel, InputsPanel, VitalsPanel, prefetchFeatures } from './shell/lazyFeatures';
+import { AlertsPanel, BodyMapPanel, GroundPanel, HudOverlay, InputsPanel, VitalsPanel, prefetchFeatures } from './shell/lazyFeatures';
 import { useAuthBootstrap, useMissions } from './shell/useBootstrap';
 import './shell/shell.css';
 
@@ -32,6 +31,37 @@ function Slot({ name, height, className, children }: { name: string; height: num
   );
 }
 
+type DetailTab = 'rules' | 'inputs' | 'ground';
+
+/** Height of the sticky chrome (top bar + bands) -> --chrome-h for the HUD stage. */
+function useChromeHeight() {
+  useEffect(() => {
+    const els = () => document.querySelectorAll<HTMLElement>('.shell-topbar, .shell-disclaimer, .shell-offline');
+    const update = () => {
+      let h = 0;
+      els().forEach((el) => (h += el.offsetHeight));
+      document.documentElement.style.setProperty('--chrome-h', `${h}px`);
+      const bar = document.querySelector<HTMLElement>('.shell-topbar');
+      if (bar) document.documentElement.style.setProperty('--topbar-real', `${bar.offsetHeight}px`);
+    };
+    const ro = new ResizeObserver(update);
+    const observe = () => {
+      ro.disconnect();
+      els().forEach((el) => ro.observe(el));
+      update();
+    };
+    observe();
+    // The offline band mounts/unmounts: re-observe on top-level DOM changes.
+    const mo = new MutationObserver(observe);
+    const root = document.getElementById('root');
+    if (root) mo.observe(root, { childList: true });
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+    };
+  }, []);
+}
+
 export default function App() {
   const auth = useAuthBootstrap();
   const missions = useMissions();
@@ -41,9 +71,10 @@ export default function App() {
   const missionId = useApp((s) => s.missionId);
   const offline = useApp((s) => s.offline);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [tab, setTab] = useState<'inputs' | 'ground' | null>(null);
+  const [tab, setTab] = useState<DetailTab | null>(null);
 
   useEffect(() => prefetchFeatures(), []);
+  useChromeHeight();
 
   const forced = auth.authRequired === true && !token;
   const dialogOpen = loginOpen || loginRequired || forced;
@@ -59,7 +90,14 @@ export default function App() {
   };
 
   // Ground crew lands on the ground tab unless they picked one.
-  const activeTab = tab ?? (user?.role === 'GROUND' ? 'ground' : 'inputs');
+  const activeTab: DetailTab = tab ?? (user?.role === 'GROUND' ? 'ground' : 'rules');
+  const openDetails = useCallback((id: DetailTab) => {
+    setTab(id);
+    requestAnimationFrame(() => {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.getElementById('details')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    });
+  }, []);
   const list = missions.missions;
   const noMissions = list !== null && list.length === 0 && !missionId;
   const waiting = list === null && !missionId;
@@ -101,31 +139,48 @@ export default function App() {
           </EmptyState>
         ) : (
           <>
-            <StatusHero scenarioId={missions.current?.scenario_id ?? null} />
+            <section className="hud" aria-label="Görev ekranı">
+              <div className="hud__scene">
+                <Slot name="3D vücut haritası" height={560} className="hud__body">
+                  <BodyMapPanel />
+                </Slot>
+              </div>
+              <div className="hud__overlay">
+                <FeatureBoundary name="Görev ekranı">
+                  <Suspense fallback={null}>
+                    <HudOverlay scenarioId={missions.current?.scenario_id ?? null} onOpen={openDetails} />
+                  </Suspense>
+                </FeatureBoundary>
+              </div>
+            </section>
 
-            <div className="shell-grid">
-              <Slot name="3D vücut haritası" height={560} className="shell-grid__body">
-                <BodyMapPanel />
-              </Slot>
-              <Slot name="Alarmlar" height={560} className="shell-grid__alerts">
-                <AlertsPanel />
-              </Slot>
-              <Slot name="Ölçümler ve kurallar" height={420} className="shell-grid__vitals">
-                <VitalsPanel />
-              </Slot>
-            </div>
-
-            <section className="shell-sections" aria-label="Veri girişi ve yer istasyonu">
+            <section id="details" className="shell-details" aria-labelledby="details-title" tabIndex={-1}>
+              <div className="shell-details__head">
+                <h2 id="details-title" className="shell-details__title">
+                  Ayrıntılar
+                </h2>
+                <p className="shell-details__sub">Kurallar ve “Neden?”, alarm ve eylem kartı, veri girişi, yer istasyonu.</p>
+              </div>
               <Tabs
                 label="Bölümler"
                 value={activeTab}
-                onChange={(id) => setTab(id as 'inputs' | 'ground')}
+                onChange={(id) => setTab(id as DetailTab)}
                 tabs={[
+                  { id: 'rules', label: 'Kurallar ve alarmlar' },
                   { id: 'inputs', label: 'Veri girişi' },
                   { id: 'ground', label: 'Yer istasyonu' },
                 ]}
               >
-                {activeTab === 'inputs' ? (
+                {activeTab === 'rules' ? (
+                  <div className="shell-grid">
+                    <Slot name="Alarmlar" height={560} className="shell-grid__alerts">
+                      <AlertsPanel />
+                    </Slot>
+                    <Slot name="Ölçümler ve kurallar" height={420} className="shell-grid__vitals">
+                      <VitalsPanel />
+                    </Slot>
+                  </div>
+                ) : activeTab === 'inputs' ? (
                   <Slot name="Veri girişi" height={360}>
                     <InputsPanel />
                   </Slot>

@@ -1,0 +1,260 @@
+/* HUD cards floating over the 3D scene. Prefix: hud-
+ * Flat semi-opaque navy, 1px hairline border, big tabular numbers, amber
+ * (--data) only for data ink. Attention = badge (icon + text) + border tint. */
+
+.hud-card {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--hud-card);
+  border: 1px solid var(--hud-line);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.8);
+}
+@supports (backdrop-filter: blur(1px)) {
+  .hud-card { backdrop-filter: blur(3px); }
+}
+button.hud-card {
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+button.hud-card:hover {
+  background: var(--hud-card-hover);
+  border-color: var(--hud-line-strong);
+}
+.hud-card.is-flagged { border-color: color-mix(in srgb, var(--c) 70%, transparent); }
+.hud-card.is-flagged:hover { border-color: var(--c); }
+
+.hud-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 22px;
+}
+.hud-card__icon { flex: none; color: var(--text-muted); }
+.hud-card__label {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-card__badge { flex: none; }
+
+.hud-value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-hud-sm);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+.hud-value small {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+.hud-value--sm { font-size: var(--fs-hud-sm); }
+.is-empty .hud-value { color: var(--text-faint); }
+
+.hud-card__foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+.hud-card__time { margin-left: auto; white-space: nowrap; color: var(--text-faint); }
+
+.hud-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border: 1px solid var(--hud-line);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.hud-tag--demo { color: var(--demo); border-color: color-mix(in srgb, var(--demo) 45%, transparent); background: var(--demo-bg); }
+.hud-tag--ok { color: var(--accent-strong); border-color: var(--accent-line); }
+.hud-tag--warn { color: var(--att-watch-fg); border-color: color-mix(in srgb, var(--att-watch) 50%, transparent); }
+
+.hud-muted { color: var(--text-faint); }
+.hud-warn-text { color: var(--att-alert-fg); font-weight: 600; }
+
+.hud-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--accent-line);
+  text-underline-offset: 3px;
+}
+.hud-link:hover { color: var(--accent-strong); text-decoration-color: currentColor; }
+
+.hud-skel {
+  display: block;
+  height: 30px;
+  width: 60%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2));
+  background-size: 200% 100%;
+  animation: hud-shimmer 1.4s linear infinite;
+}
+.hud-skel--block { width: 100%; height: 64px; }
+@keyframes hud-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .hud-skel { animation: none; } }
+
+/* ---------------------------------------------------------- metric cards */
+.hud-metric { container-type: inline-size; }
+.hud-metric__body { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); min-height: 34px; }
+.hud-metric__trace { flex: 1 1 96px; min-width: 96px; height: 30px; }
+.hud-metric .vt-spark { width: 100%; height: 100%; overflow: visible; }
+.hud-metric .vt-spark path {
+  fill: none;
+  stroke: var(--data);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.hud-metric .vt-spark circle { fill: var(--data); stroke: none; }
+.hud-card__time.is-stale { display: inline-flex; align-items: center; gap: 3px; color: var(--text-muted); }
+@container (max-width: 200px) {
+  .hud-card__rel { display: none; }
+}
+@container (max-width: 150px) {
+  .hud-card__icon { display: none; }
+}
+
+.hud-metric--hero .hud-value { font-size: var(--fs-hud); }
+.hud-metric--hero .hud-metric__body { min-height: 64px; flex-wrap: nowrap; }
+.hud-metric--hero .hud-metric__trace {
+  align-self: stretch;
+  height: auto;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 1px solid var(--hud-line);
+  border-radius: var(--radius);
+  background: rgba(4, 12, 22, 0.45);
+}
+
+/* ------------------------------------------------------------- crew card */
+.hud-crew { gap: var(--sp-3); }
+.hud-crew__head { display: flex; align-items: center; gap: var(--sp-3); }
+.hud-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius);
+  border: 1px solid var(--hud-line-strong);
+  background: var(--surface-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+.hud-crew__id { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.hud-crew__name { margin: 0; font-size: var(--fs-md); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-crew__role { font-size: var(--fs-xs); color: var(--text-faint); }
+.hud-crew__level {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c);
+  border-radius: var(--radius);
+  background: var(--c-bg);
+  color: var(--c-fg);
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.1;
+}
+.hud-crew__level .ui-icon { color: var(--c); flex: none; }
+.att-unknown .hud-crew__level { border-style: dashed; }
+.att-critical .hud-crew__level { background: var(--att-critical-bg); color: #fff; }
+.att-critical .hud-crew__level .ui-icon { color: #fff; }
+.hud-crew__desc { margin: 0; font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.4; }
+.hud-crew__counts { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.hud-crew__activity,
+.hud-crew__time {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+.hud-crew__activity { color: var(--text-muted); }
+.hud-crew__activity.is-expired { color: var(--att-watch-fg); }
+.hud-crew__actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-2); }
+
+/* ----------------------------------------------------------- alerts card */
+.hud-alerts__summary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin: 0; }
+.hud-alerts__list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.hud-alerts__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 6px var(--sp-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: rgba(4, 12, 22, 0.4);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.hud-alerts__item:hover { border-color: var(--hud-line-strong); }
+.hud-alerts__title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-alerts.att-alert,
+.hud-alerts.att-critical { border-color: color-mix(in srgb, var(--c) 70%, transparent); }
+
+/* ------------------------------------------------------------ clock card */
+.hud-clock__time { font-size: var(--fs-hud); }
+.hud-clock__time small { font-family: var(--font-display); font-size: var(--fs-lg); color: var(--text-faint); }
+.hud-rows { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+.hud-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-sm); }
+.hud-row dt { color: var(--text-faint); }
+.hud-row dd { margin: 0; color: var(--text); font-variant-numeric: tabular-nums; text-align: right; }
+.hud-row .hud-link { font-size: var(--fs-sm); }

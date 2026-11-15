@@ -13,11 +13,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(1100px 520px at 85% -12%, rgba(42, 74, 150, 0.35) 0%, transparent 60%),
-    radial-gradient(800px 400px at -10% 110%, rgba(30, 60, 120, 0.25) 0%, transparent 60%),
-    var(--bg);
-  background-attachment: fixed;
+  background: var(--bg);
   color: var(--text);
   font: var(--fs-md) / 1.5 var(--font-sans);
   -webkit-font-smoothing: antialiased;
