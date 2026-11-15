@@ -204,3 +204,22 @@ def test_not_found_and_validation_errors(api_client) -> None:
     ):
         assert client.post("/v1/routines", json=bad).status_code == 422
     assert client.get("/v1/routines/due", params={"mission_id": MISSION}).status_code == 422
+
+
+def test_second_completion_in_same_window_fills_nothing(api_client) -> None:
+    client, _ = api_client
+    schedule = make_schedule(client)
+    first = complete(client, schedule["id"], ANCHOR + timedelta(minutes=10)).json()
+    second = complete(client, schedule["id"], ANCHOR + timedelta(minutes=20)).json()
+
+    assert second["current_streak"] == 1
+    assert second["best_streak"] == 1
+    assert second["next_due_at"] == first["next_due_at"]
+
+
+def test_future_completed_at_is_rejected(api_client) -> None:
+    client, _ = api_client
+    schedule = make_schedule(client)
+    future = datetime.now(timezone.utc) + timedelta(hours=1)
+
+    assert complete(client, schedule["id"], future).status_code == 422

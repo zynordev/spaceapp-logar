@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from uuid import UUID
 
@@ -114,6 +114,11 @@ def complete_routine(
     if not schedule.active:
         raise HTTPException(status.HTTP_409_CONFLICT, "Routine schedule is inactive")
     completed_at = payload.completed_at or service.utc_now()
+    if completed_at > service.utc_now() + timedelta(minutes=5):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "completed_at must not be in the future",
+        )
     session.add(
         RoutineCompletion(
             schedule_id=schedule.id,

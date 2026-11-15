@@ -4,11 +4,11 @@ Slots fall every ``interval_minutes`` from ``anchor_at`` (slot k opens at
 ``anchor_at + k * interval``). A slot is *completed* when a completion is
 assigned to it; the window of slot k is ``[slot_k, slot_k + interval)``.
 
-Assignment rule (chronological, greedy): a completion at time ``c`` fills the
-earliest unfilled slot whose window has not closed by ``c``
-(``slot_k + interval > c``). Completing before a slot opens therefore counts
-for the upcoming slot, but only if that slot opens within one interval after
-``c``; any further early or duplicate completion is stored but fills nothing.
+Assignment rule: a completion at time ``c`` fills the slot j whose window
+contains it; if that slot is already filled the completion fills nothing (it
+is still stored). Completing before the schedule's first slot opens
+(``c < anchor``, at most one interval early) counts for slot 0, the upcoming
+slot; no other early completion is credited to a future slot.
 A slot whose window closed unfilled is *missed* and breaks the streak.
 
 ``next_due_at`` is the slot after the last filled slot (slot 0 when nothing is
@@ -129,14 +129,12 @@ def filled_slots(
     anchor = schedule.anchor_at
     filled: set[int] = set()
     for completed_at in sorted(completions):
-        # Earliest slot whose window is still open at completed_at.
-        k = 0
-        if completed_at >= anchor + interval:
-            k = int((completed_at - anchor) // interval)
-        while k in filled:
-            k += 1
-        if anchor + k * interval - completed_at <= interval:
-            filled.add(k)
+        if completed_at < anchor:
+            # Early: counts for the upcoming slot 0, at most one interval ahead.
+            if anchor - completed_at <= interval:
+                filled.add(0)
+            continue
+        filled.add(int((completed_at - anchor) // interval))
     return filled
 
 
