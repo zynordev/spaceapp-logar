@@ -4,6 +4,7 @@
 // mission/crew come from useApp().
 import { useRef, useState, type KeyboardEvent } from 'react';
 import { useApp } from '../../lib/store';
+import { Icon, type IconName } from '../../ui';
 import { ActivitySection } from './Activity';
 import { CheckInSection } from './CheckIn';
 import { DemoScenarioPicker } from './DemoScenario';
@@ -14,12 +15,12 @@ import { MOCK } from './shared';
 import './inputs.css';
 
 type TabKey = 'checkin' | 'activity' | 'routines' | 'labs' | 'redflag';
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'checkin', label: 'Öznel durum', icon: '☺' },
-  { key: 'activity', label: 'Aktivite', icon: '⏱' },
-  { key: 'routines', label: 'Rutinler', icon: '✓' },
-  { key: 'labs', label: 'Laboratuvar', icon: '⚗' },
-  { key: 'redflag', label: 'Kırmızı bayrak', icon: '⚠' },
+const TABS: { key: TabKey; label: string; icon: IconName }[] = [
+  { key: 'checkin', label: 'Öznel durum', icon: 'smile' },
+  { key: 'activity', label: 'Aktivite', icon: 'clock' },
+  { key: 'routines', label: 'Rutinler', icon: 'check' },
+  { key: 'labs', label: 'Laboratuvar', icon: 'flask' },
+  { key: 'redflag', label: 'Kırmızı bayrak', icon: 'warning' },
 ];
 
 export function InputsPanel() {
@@ -65,7 +66,7 @@ export function InputsPanel() {
             className={`lgi-tab${tab === t.key ? ' is-on' : ''}${t.key === 'redflag' ? ' lgi-tab--crit' : ''}`}
             onClick={() => setTab(t.key)}
           >
-            <span className="lgi-tab__icon" aria-hidden="true">{t.icon}</span>
+            <span className="lgi-tab__icon" aria-hidden="true"><Icon name={t.icon} size={16} /></span>
             {t.label}
           </button>
         ))}

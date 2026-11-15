@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { api, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
+import { Icon } from '../../ui';
 import { InlineMsg, NeedSelection, Notice, SOURCE_ID, Section, useAction } from './shared';
 import type { RedFlagAccepted, RedFlagOption } from './types';
 
@@ -54,7 +55,7 @@ export function RedFlagsSection() {
       id="lgi-redflag"
       title="Kırmızı bayrak"
       hint="Bu belirtilerden biri varsa seçip bildirin. Bildirim hemen KRİTİK alarm açar: ortalama, zaman penceresi ya da sensör onayı beklenmez. Bu bir teşhis değildir."
-      badge={<span className="lgi-chip lgi-chip--crit"><span aria-hidden="true">⚠ </span>Acil</span>}
+      badge={<span className="lgi-chip lgi-chip--crit"><Icon name="warning" size={14} />{' '}Acil</span>}
     >
       {!missionId || !crewId ? <NeedSelection /> : (
         <>
@@ -77,7 +78,7 @@ export function RedFlagsSection() {
                       onClick={() => toggle(c.flag)}
                       disabled={busy}
                     >
-                      <span className="lgi-flag__box" aria-hidden="true">{on ? '✓' : ''}</span>
+                      <span className="lgi-flag__box" aria-hidden="true">{on ? <Icon name="check" size={20} /> : null}</span>
                       <span className="lgi-flag__label">{c.label}</span>
                       <span className="lgi-flag__state" aria-hidden="true">{on ? 'Seçildi' : 'Seç'}</span>
                     </button>
@@ -95,7 +96,7 @@ export function RedFlagsSection() {
                 disabled={!selected.length || busy}
                 onClick={() => setConfirming(true)}
               >
-                <span aria-hidden="true">⚠ </span>
+                <Icon name="warning" size={14} />{' '}
                 {selected.length ? `Acil durumu bildir (${selected.length} belirti)` : 'Önce belirti seçin'}
               </button>
               {selected.length > 0 && (

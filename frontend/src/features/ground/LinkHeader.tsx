@@ -1,32 +1,33 @@
 // Link + light-delay header with a small Earth <-> habitat signal visual.
 import type { ApiError } from '../../lib/api';
+import { Icon, type IconName } from '../../ui';
 import { formatDuration, formatTime } from './format';
 import type { SyncStatusRead } from './types';
 
 type LinkState = 'UP' | 'LOCAL' | 'NO_SERVICE' | 'OFFLINE' | 'WAIT';
 
-const STATE_INFO: Record<LinkState, { label: string; icon: string; detail: string }> = {
+const STATE_INFO: Record<LinkState, { label: string; icon: IconName; detail: string }> = {
   UP: {
     label: 'Gecikmeli bağlantı',
-    icon: '◉',
+    icon: 'signal',
     detail: 'Sistem gemide otonom çalışıyor; paketler bağlantı penceresinde yer ekiplerine gider.',
   },
   LOCAL: {
     label: 'Yerel demo',
-    icon: '◌',
+    icon: 'offline',
     detail: 'Dünya bağlantısı simüle edilmiyor; paketler hazırlanıp elle indirilebilir.',
   },
   NO_SERVICE: {
     label: 'Senkronizasyon servisi yok',
-    icon: '◌',
+    icon: 'offline',
     detail: 'Bu sunucuda /v1/sync henüz yok. Önizleme için adrese ?mock=1 ekleyin.',
   },
   OFFLINE: {
     label: 'Gemi sunucusuna ulaşılamıyor',
-    icon: '✕',
+    icon: 'x',
     detail: 'Arayüz son bilinen verileri gösteriyor; bağlantı dönünce yenilenir.',
   },
-  WAIT: { label: 'Durum alınıyor…', icon: '…', detail: 'Senkronizasyon durumu sorgulanıyor.' },
+  WAIT: { label: 'Durum alınıyor…', icon: 'hourglass', detail: 'Senkronizasyon durumu sorgulanıyor.' },
 };
 
 export function LinkHeader(props: {
@@ -89,7 +90,7 @@ export function LinkHeader(props: {
 
       <div className="gp-link-text">
         <p className="gp-link-state" role="status">
-          <span aria-hidden="true" className="gp-link-icon">{info.icon}</span>
+          <span aria-hidden="true" className="gp-link-icon"><Icon name={info.icon} size={16} /></span>
           <strong>{info.label}</strong>
           {mock && <span className="gp-tag">Örnek veri (?mock=1)</span>}
         </p>

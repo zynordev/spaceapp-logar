@@ -11,6 +11,8 @@
   --vt-text: var(--text, #e8edf7);
   --vt-muted: var(--text-muted, #9aa6bf);
   --vt-accent: var(--accent, #5cc8ff);
+  --vt-data: var(--data, #f2a03d);
+  --vt-thr-c: var(--text-muted, #a6b7cf);
   --vt-normal: var(--att-normal, #3ecf8e);
   --vt-unknown: var(--att-unknown, #a0aac0);
   --vt-watch: var(--att-watch, #ffc83d);
@@ -119,7 +121,7 @@
 .vt-callout-proc { border-color: color-mix(in srgb, var(--vt-alert) 45%, transparent); font-weight: 600; }
 .vt-callout-info { color: var(--vt-muted); }
 .vt-inline-err { margin-top: 8px !important; color: var(--vt-critical); font-size: 0.84rem; font-weight: 600; }
-.vt-inline-err::before { content: '✖ '; }
+
 .vt-empty-state { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 28px 16px; border: 1px dashed var(--vt-border-strong); border-radius: var(--vt-radius); color: var(--vt-muted); }
 .vt-empty-small { padding: 20px 14px; }
 .vt-empty-icon { font-size: 1.6rem; line-height: 1; opacity: 0.8; }
@@ -147,7 +149,7 @@
   transition: border-color var(--vt-dur) var(--vt-ease), background var(--vt-dur) var(--vt-ease), transform var(--vt-dur) var(--vt-ease), box-shadow var(--vt-dur) var(--vt-ease);
 }
 .vt-tile::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--c); }
-.vt-tile:hover { border-color: var(--vt-border-strong); transform: translateY(-1px); }
+.vt-tile:hover { border-color: var(--vt-border-strong); }
 .vt-tile.is-selected { border-color: var(--vt-accent); background: color-mix(in srgb, var(--vt-accent) 7%, var(--vt-bg-2)); box-shadow: 0 0 0 1px var(--vt-accent) inset; }
 .vt-tile-normal { --c: var(--vt-normal); }
 .vt-tile-unknown { --c: var(--vt-unknown); }
@@ -165,8 +167,8 @@
 .vt-tile-time { font-size: 0.72rem; color: var(--vt-muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vt-tile-skel { display: flex; flex-direction: column; gap: 6px; }
 .vt-spark { width: 100%; height: 34px; display: block; overflow: visible; }
-.vt-spark path { fill: none; stroke: var(--vt-accent); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; opacity: 0.9; }
-.vt-spark circle { fill: var(--vt-accent); }
+.vt-spark path { fill: none; stroke: var(--vt-data); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; opacity: 0.9; }
+.vt-spark circle { fill: var(--vt-data); }
 
 /* ---------- chart ---------- */
 .vt-chart-card { display: flex; flex-direction: column; gap: 10px; }
@@ -178,12 +180,12 @@
 .vt-seg button.is-on { background: var(--vt-bg); color: var(--vt-text); box-shadow: 0 1px 0 var(--vt-border-strong), 0 0 0 1px var(--vt-border-strong) inset; }
 .vt-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.76rem; color: var(--vt-muted); }
 .vt-legend li { display: inline-flex; align-items: center; gap: 6px; }
-.vt-lg-line { stroke: var(--vt-accent); stroke-width: 2; }
+.vt-lg-line { stroke: var(--vt-data); stroke-width: 2; }
 .vt-lg-band { fill: color-mix(in srgb, var(--vt-accent) 22%, transparent); }
 .vt-lg-suspect { fill: var(--vt-bg); stroke: var(--vt-watch); stroke-width: 1.6; }
 .vt-lg-fault { color: var(--vt-critical); font-size: 0.8rem; }
 .vt-lg-gap { fill: color-mix(in srgb, var(--vt-unknown) 22%, transparent); stroke: color-mix(in srgb, var(--vt-unknown) 40%, transparent); stroke-dasharray: 2 2; }
-.vt-lg-thr { stroke: var(--vt-watch); stroke-width: 2; stroke-dasharray: 5 3; }
+.vt-lg-thr { stroke: var(--vt-thr-c); stroke-width: 2; stroke-dasharray: 5 3; }
 .vt-lg-open { color: var(--vt-alert); }
 .vt-lg-res { color: var(--vt-normal); }
 .vt-chart-hint { margin-top: 2px; }
@@ -201,19 +203,19 @@
 .vt-hatch { stroke: color-mix(in srgb, var(--vt-unknown) 40%, transparent); stroke-width: 2; }
 .vt-gap { stroke: none; }
 .vt-gap-text { fill: var(--vt-muted); font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; }
-.vt-band { fill: color-mix(in srgb, var(--vt-accent) 18%, transparent); stroke: color-mix(in srgb, var(--vt-accent) 30%, transparent); stroke-width: 0.6; }
-.vt-line { fill: none; stroke: var(--vt-accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.vt-band { fill: color-mix(in srgb, var(--vt-data) 16%, transparent); stroke: color-mix(in srgb, var(--vt-data) 30%, transparent); stroke-width: 0.6; }
+.vt-line { fill: none; stroke: var(--vt-data); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .vt-dot { fill: var(--vt-accent); }
 .vt-suspect { fill: var(--vt-bg); stroke: var(--vt-watch); stroke-width: 1.6; }
 .vt-fault { fill: var(--vt-critical); font-size: 10px; font-weight: 700; }
-.vt-thr { stroke: var(--vt-watch); stroke-width: 1.6; stroke-dasharray: 6 4; }
-.vt-thr-text { fill: var(--vt-watch); font-size: 11px; font-weight: 650; paint-order: stroke; stroke: var(--vt-bg-2); stroke-width: 4px; stroke-linejoin: round; }
+.vt-thr { stroke: var(--vt-thr-c); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.vt-thr-text { fill: var(--vt-thr-c); font-size: 11px; font-weight: 650; paint-order: stroke; stroke: var(--vt-bg-2); stroke-width: 4px; stroke-linejoin: round; }
 .vt-mk-open line { stroke: var(--vt-alert); stroke-width: 1.4; stroke-dasharray: 3 3; }
 .vt-mk-open text { fill: var(--vt-alert); font-size: 10.5px; font-weight: 650; }
 .vt-mk-res line { stroke: var(--vt-normal); stroke-width: 1.4; stroke-dasharray: 3 3; }
 .vt-mk-res text { fill: var(--vt-normal); font-size: 10.5px; font-weight: 650; }
 .vt-cross line { stroke: var(--vt-text); stroke-opacity: 0.45; stroke-width: 1; }
-.vt-cross .vt-cross-range { stroke: var(--vt-accent); stroke-opacity: 1; stroke-width: 3; stroke-linecap: round; }
+.vt-cross .vt-cross-range { stroke: var(--vt-data); stroke-opacity: 1; stroke-width: 3; stroke-linecap: round; }
 .vt-cross circle { fill: var(--vt-bg); stroke: var(--vt-accent); stroke-width: 2.5; }
 .vt-tip {
   position: absolute; pointer-events: none; z-index: 2; min-width: 150px; max-width: 240px;
@@ -385,3 +387,8 @@
   .vt-badge, .vt-tile, .vt-rule, .vt-alert, .vt-ac { border: 1px solid CanvasText; }
   .vt-line { stroke: CanvasText; }
 }
+
+/* SVG icons (ui/icons) inline with text; base.css makes svg display:block. */
+.vt-panel .ui-icon, .vt-dialog .ui-icon { display: inline-block; vertical-align: -0.15em; flex: none; }
+.vt-empty-icon .ui-icon { display: block; }
+.vt-fault-x { stroke: var(--vt-critical); stroke-width: 2; stroke-linecap: round; fill: none; }

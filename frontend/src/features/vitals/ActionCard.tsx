@@ -9,6 +9,7 @@ import { attInfo } from './copy';
 import { useNow } from './data';
 import { fmtClock, fmtDateTime, fmtDuration, safeUrl, toMs } from './format';
 import type { ActionCard, Situation } from './types';
+import { Icon } from '../../ui';
 
 function ReassessCounter({ at, every }: { at: string; every: number | null }) {
   const now = useNow(1000);
@@ -24,7 +25,7 @@ function ReassessCounter({ at, every }: { at: string; every: number | null }) {
   } else clock = fmtDuration(left);
   return (
     <div className={`vt-reassess${due ? ' is-due' : ''}`}>
-      <span className="vt-reassess-icon" aria-hidden="true">⏱</span>
+      <span className="vt-reassess-icon" aria-hidden="true"><Icon name="clock" size={14} /></span>
       <div>
         <div className="vt-reassess-label">{due ? 'Yeniden değerlendirme zamanı geldi' : 'Yeniden değerlendirmeye'}</div>
         <div className="vt-reassess-sub">
@@ -101,7 +102,7 @@ export function ActionCardView({
       {situation?.reassess_at && <ReassessCounter at={situation.reassess_at} every={card.reassess_minutes} />}
 
       {card.requires_mission_procedure && (
-        <p className="vt-callout vt-callout-proc"><span aria-hidden="true">⚑</span>Görev prosedürü önceliklidir.</p>
+        <p className="vt-callout vt-callout-proc"><span aria-hidden="true"><Icon name="flag" size={14} /></span>Görev prosedürü önceliklidir.</p>
       )}
 
       {steps.length > 0 && (
@@ -119,7 +120,7 @@ export function ActionCardView({
               const done = isDone(st.key);
               return (
                 <li key={st.key} className={`vt-step${done ? ' is-done' : ''}`}>
-                  <span className="vt-step-num" aria-hidden="true">{done ? '✓' : i + 1}</span>
+                  <span className="vt-step-num" aria-hidden="true">{done ? <Icon name="check" size={14} /> : i + 1}</span>
                   <div className="vt-step-body">
                     <div className="vt-step-text">{st.text_tr || st.key}</div>
                     {st.why_tr && <div className="vt-step-why"><b>Neden:</b> {st.why_tr}</div>}
@@ -154,13 +155,13 @@ export function ActionCardView({
       <div className="vt-ac-conds">
         {card.escalate_if_tr?.length > 0 && (
           <div className="vt-ac-cond vt-ac-escalate">
-            <h4><span aria-hidden="true">▲</span> Seviye yükselir / acil durum</h4>
+            <h4><span aria-hidden="true"><Icon name="alert" size={14} /></span> Seviye yükselir / acil durum</h4>
             <ul>{card.escalate_if_tr.map((x, i) => <li key={i}>{x}</li>)}</ul>
           </div>
         )}
         {card.closes_when_tr && (
           <div className="vt-ac-cond vt-ac-closes">
-            <h4><span aria-hidden="true">✓</span> Ne zaman kapanır?</h4>
+            <h4><span aria-hidden="true"><Icon name="check" size={14} /></span> Ne zaman kapanır?</h4>
             <p>{card.closes_when_tr}</p>
           </div>
         )}
@@ -174,7 +175,7 @@ export function ActionCardView({
       )}
 
       {card.allows_automatic_vehicle_command === false && (
-        <p className="vt-callout vt-callout-info"><span aria-hidden="true">ℹ</span>Yazılım araç/ekipman komutu vermez.</p>
+        <p className="vt-callout vt-callout-info"><span aria-hidden="true"><Icon name="info" size={14} /></span>Yazılım araç/ekipman komutu vermez.</p>
       )}
       {card.footer_note_tr && <p className="vt-ac-footer">{card.footer_note_tr}</p>}
       {card.references?.length > 0 && (

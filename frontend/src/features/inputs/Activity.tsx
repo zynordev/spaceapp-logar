@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, qs, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
+import { Icon, type IconName } from '../../ui';
 import { mockActivity } from './mock';
 import { Segmented } from './Segmented';
 import {
@@ -10,11 +11,11 @@ import {
 } from './shared';
 import type { ActivityCurrentRead, ActivityRead, ActivityState } from './types';
 
-export const ACTIVITY_LABELS: Record<ActivityState, { label: string; icon: string; sub: string }> = {
-  EXERCISE: { label: 'Egzersiz', icon: '🏃', sub: 'Antrenman' },
-  LIGHT: { label: 'Hafif iş', icon: '🔧', sub: 'Görev, bakım' },
-  REST: { label: 'Dinlenme', icon: '🪑', sub: 'Uyanık, sakin' },
-  SLEEP: { label: 'Uyku', icon: '🌙', sub: 'Uyku dönemi' },
+export const ACTIVITY_LABELS: Record<ActivityState, { label: string; icon: IconName; sub: string }> = {
+  EXERCISE: { label: 'Egzersiz', icon: 'run', sub: 'Antrenman' },
+  LIGHT: { label: 'Hafif iş', icon: 'wrench', sub: 'Görev, bakım' },
+  REST: { label: 'Dinlenme', icon: 'chair', sub: 'Uyanık, sakin' },
+  SLEEP: { label: 'Uyku', icon: 'moon', sub: 'Uyku dönemi' },
 };
 const STATES: ActivityState[] = ['EXERCISE', 'LIGHT', 'REST', 'SLEEP'];
 const PRESETS = [15, 30, 45, 60, 90];
@@ -150,7 +151,7 @@ export function ActivitySection() {
               onChange={setPick}
               options={STATES.map((s) => ({
                 value: s,
-                label: <><span aria-hidden="true">{ACTIVITY_LABELS[s].icon} </span>{ACTIVITY_LABELS[s].label}</>,
+                label: <><Icon name={ACTIVITY_LABELS[s].icon} size={14} />{' '}{ACTIVITY_LABELS[s].label}</>,
                 aria: ACTIVITY_LABELS[s].label,
                 sub: ACTIVITY_LABELS[s].sub,
               }))}
@@ -216,7 +217,7 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
   if (!current || current.state === 'NONE' || !current.activity) {
     return (
       <div className="lgi-activity lgi-activity--none">
-        <span className="lgi-activity__icon" aria-hidden="true">○</span>
+        <span className="lgi-activity__icon" aria-hidden="true"><Icon name="circle" size={28} /></span>
         <div>
           <strong>Beyan edilmiş aktivite yok.</strong>
           <div className="lgi-muted">{current?.message_tr || 'Aktivite bağlamı bilinmiyor; aşağıdan seçin.'}</div>
@@ -225,13 +226,13 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
     );
   }
   const a = current.activity;
-  const meta = ACTIVITY_LABELS[a.activity_state] ?? { label: a.activity_state, icon: '•', sub: '' };
+  const meta = ACTIVITY_LABELS[a.activity_state] ?? { label: a.activity_state, icon: 'dot' as IconName, sub: '' };
   const planned = plannedMinutes(a);
 
   if (expired) {
     return (
       <div className="lgi-activity lgi-activity--expired" role="alert">
-        <span className="lgi-activity__icon" aria-hidden="true">⚠</span>
+        <span className="lgi-activity__icon" aria-hidden="true"><Icon name="warning" size={28} /></span>
         <div className="lgi-activity__body">
           <strong className="lgi-activity__big">Beyan edilen süre doldu — aktivite bağlamı bilinmiyor</strong>
           {current.message_tr && current.state === 'EXPIRED' && !current.message_tr.startsWith('Beyan edilen süre doldu') && (
@@ -242,7 +243,7 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
           </div>
           <div className="lgi-actions">
             <button type="button" className="lgi-btn lgi-btn--primary" disabled={busy} onClick={() => onRestart(a)}>
-              <span aria-hidden="true">↻ </span>Yeniden başlat: {meta.label}, {planned} dk
+              <Icon name="refresh" size={14} />{' '}Yeniden başlat: {meta.label}, {planned} dk
             </button>
             <button type="button" className="lgi-btn" disabled={busy} onClick={() => onEnd(a)}>Bitir</button>
           </div>
@@ -255,7 +256,7 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
   const pct = remaining === null ? 0 : Math.max(0, Math.min(100, 100 - (remaining / total) * 100));
   return (
     <div className="lgi-activity lgi-activity--active">
-      <span className="lgi-activity__icon" aria-hidden="true">{meta.icon}</span>
+      <span className="lgi-activity__icon" aria-hidden="true"><Icon name={meta.icon} size={28} /></span>
       <div className="lgi-activity__body">
         <div className="lgi-activity__row">
           <strong className="lgi-activity__big">{meta.label}</strong>
@@ -273,7 +274,7 @@ function CurrentActivity({ current, remaining, expired, loading, busy, onEnd, on
         {current.message_tr && <div className="lgi-muted">{current.message_tr}</div>}
         <div className="lgi-actions">
           <button type="button" className="lgi-btn" disabled={busy} onClick={() => onEnd(a)}>
-            <span aria-hidden="true">■ </span>Bitir
+            <Icon name="stop" size={14} />{' '}Bitir
           </button>
         </div>
       </div>

@@ -6,26 +6,26 @@
   color-scheme: dark;
 
   /* Surfaces (deep space -> raised panels) */
-  --bg: #060a14;
-  --bg-2: #0a1020;
-  --surface: #0f1729;
-  --surface-2: #152038;
-  --surface-3: #1c2a48;
-  --line: #263556;
-  --line-strong: #3a4d78;
+  --bg: #06101d;
+  --bg-2: #091627;
+  --surface: #0c1a2d;
+  --surface-2: #10223a;
+  --surface-3: #172d4b;
+  --line: #1e3352;
+  --line-strong: #2f4a70;
 
   /* Text */
   --text: #e9eefb;          /* 16.5:1 on --surface */
-  --text-muted: #a9b6d3;    /* 8.3:1 */
-  --text-faint: #8391b2;    /* 5.4:1 — smallest text allowed */
-  --text-inverse: #060a14;
+  --text-muted: #a6b7cf;    /* 8.3:1 */
+  --text-faint: #8396b2;    /* 5.4:1 — smallest text allowed */
+  --text-inverse: #06101d;
 
   /* Brand / interaction */
-  --accent: #5cc8ff;        /* 9.6:1 */
-  --accent-strong: #8ad8ff;
-  --accent-bg: rgba(92, 200, 255, 0.12);
-  --accent-line: rgba(92, 200, 255, 0.45);
-  --focus: #ffd65c;         /* focus ring: distinct from every attention hue */
+  --accent: #8cc8f5;        /* ice blue: interaction only, 9.9:1 */
+  --accent-strong: #b8dcf8;
+  --accent-bg: rgba(140, 200, 245, 0.12);
+  --accent-line: rgba(140, 200, 245, 0.45);
+  --focus: #e6f2ff;         /* focus ring: near-white, distinct from every attention hue */
 
   /* Attention levels: --att-*: line/icon, -bg: fill, -fg: text on fill */
   --att-normal: #34d399;
@@ -37,9 +37,9 @@
   --att-unknown-bg: rgba(154, 166, 194, 0.14);
   --att-unknown-fg: #d3daea;
 
-  --att-watch: #fbbf24;
-  --att-watch-bg: rgba(251, 191, 36, 0.15);
-  --att-watch-fg: #fdd77a;
+  --att-watch: #ffd84d;     /* pale yellow: kept apart from the amber data hue */
+  --att-watch-bg: rgba(255, 216, 77, 0.14);
+  --att-watch-fg: #ffe58a;
 
   --att-alert: #fb7a3c;
   --att-alert-bg: rgba(251, 122, 60, 0.18);
@@ -58,8 +58,21 @@
   --demo: #c9a2ff;           /* 'DEMO' threshold marker: violet, not an attention hue */
   --demo-bg: rgba(201, 162, 255, 0.13);
 
+  /* HUD layer: flat semi-opaque navy cards over the 3D scene (no heavy blur). */
+  --hud-card: rgba(11, 26, 45, 0.84);
+  --hud-card-hover: rgba(16, 36, 61, 0.92);
+  --hud-line: rgba(132, 172, 222, 0.24);
+  --hud-line-strong: rgba(150, 192, 242, 0.5);
+  --scene-top: #0d2036;
+  --scene-bottom: #040a13;
+
+  /* Data ink: the single warm accent. Only for data lines and value highlights,
+   * never for attention (attention = badge with icon + text). */
+  --data: #f2a03d;
+  --data-soft: rgba(242, 160, 61, 0.16);
+
   /* Type */
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --fs-xs: 0.75rem;
   --fs-sm: 0.8125rem;
@@ -67,6 +80,9 @@
   --fs-lg: 1.125rem;
   --fs-xl: 1.5rem;
   --fs-2xl: 2rem;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, Roboto, "Noto Sans", Arial, sans-serif;
+  --fs-hud: 2.5rem;   /* hero numbers */
+  --fs-hud-sm: 1.875rem;
 
   /* Space / shape */
   --sp-1: 4px;
@@ -77,7 +93,7 @@
   --sp-6: 32px;
   --radius-sm: 6px;
   --radius: 10px;
-  --radius-lg: 14px;
+  --radius-lg: 12px;
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px -12px rgba(0, 0, 0, 0.6);
   --shadow-pop: 0 18px 50px -10px rgba(0, 0, 0, 0.75);
 
@@ -86,7 +102,7 @@
   --dur: 200ms;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-  --topbar-h: 60px;
+  --topbar-h: 56px;
   --z-sticky: 20;
   --z-dialog: 50;
   --z-toast: 60;

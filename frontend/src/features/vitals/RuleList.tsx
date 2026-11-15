@@ -4,6 +4,7 @@ import { BASELINE, GENERIC_NEXT, METRIC_INFO, TIME_SCALE, attInfo, cmpSymbol, di
 import { rank, useSeries } from './data';
 import { fmtAuto, fmtDateTime, fmtNum, isNum, relTime, safeUrl, toMs } from './format';
 import type { MetricDef, RuleStatus } from './types';
+import { Icon } from '../../ui';
 
 function valueLine(r: RuleStatus): string {
   const unit = displayUnit(r.unit);
@@ -34,9 +35,9 @@ function EvidenceCounts({ rule, def }: { rule: RuleStatus; def: MetricDef }) {
   return (
     <span className="vt-evidence">
       <span><b>{total}</b> ölçüm</span>
-      <span className="vt-ev vt-ev-valid"><span aria-hidden="true">✓</span> {valid} geçerli</span>
-      {suspect > 0 && <span className="vt-ev vt-ev-suspect"><span aria-hidden="true">!</span> {suspect} şüpheli</span>}
-      {fault > 0 && <span className="vt-ev vt-ev-fault"><span aria-hidden="true">✖</span> {fault} arıza</span>}
+      <span className="vt-ev vt-ev-valid"><span aria-hidden="true"><Icon name="check" size={14} /></span> {valid} geçerli</span>
+      {suspect > 0 && <span className="vt-ev vt-ev-suspect"><span aria-hidden="true"><Icon name="warning" size={14} /></span> {suspect} şüpheli</span>}
+      {fault > 0 && <span className="vt-ev vt-ev-fault"><span aria-hidden="true"><Icon name="x" size={14} /></span> {fault} arıza</span>}
     </span>
   );
 }
@@ -51,13 +52,13 @@ function WhyPanel({ rule, def, metricLabel }: { rule: RuleStatus; def: MetricDef
     <div className="vt-why">
       {rule.data_quality !== 'VALID' && (
         <p className="vt-callout vt-callout-quality">
-          <span aria-hidden="true">∅</span>
+          <span aria-hidden="true"><Icon name="question" size={14} /></span>
           Veri kalitesi sorunu var: bu durum sağlık değerlendirmesinin güvenilir olmadığını gösterir. Kötü veri “normal” anlamına gelmez.
         </p>
       )}
       {rule.validation_status.startsWith('DEMO') && (
         <p className="vt-callout vt-callout-demo">
-          <span aria-hidden="true">◇</span>
+          <span aria-hidden="true"><Icon name="flask" size={14} /></span>
           DEMO eşik — uçuş tıbbı uzmanı doğrulaması bekliyor.
         </p>
       )}
@@ -76,7 +77,7 @@ function WhyPanel({ rule, def, metricLabel }: { rule: RuleStatus; def: MetricDef
           {bl ? (
             <span className="vt-baseline">
               <span className={`vt-badge vt-badge-sm vt-bl-${blInfo?.cls ?? 'estimated'}`}>
-                <span className="vt-bi" aria-hidden="true">{bl.classification === 'ESTABLISHED' ? '●' : '○'}</span>
+                <span className="vt-bi" aria-hidden="true"><Icon name={bl.classification === 'ESTABLISHED' ? 'dot' : 'circle'} size={12} /></span>
                 {blInfo?.label ?? bl.status_label}
               </span>
               <span>
@@ -152,7 +153,7 @@ function RuleRow({
           aria-controls={panelId}
           onClick={() => setOpen((v) => !v)}
         >
-          Neden? <span aria-hidden="true" className="vt-chev">▾</span>
+          Neden? <span aria-hidden="true" className="vt-chev"><Icon name="chevron-down" size={12} /></span>
         </button>
       </div>
       <div id={panelId} className="vt-collapse" data-open={open} hidden={!open}>

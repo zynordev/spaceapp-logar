@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from 'react';
 import { api, qs, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
+import { Icon } from '../../ui';
 import { Segmented } from './Segmented';
 import {
   InlineMsg, NeedSelection, Notice, SOURCE_ID, Section, fmtDateTime, relTime, toMs, useAction, useNow,
@@ -64,7 +65,7 @@ export function CheckInSection() {
       id="lgi-checkin"
       title="Öznel durum"
       hint="Her belirti için şu anki şiddeti seçin. 0 = yok, 4 = çok şiddetli."
-      badge={due ? <span className="lgi-chip lgi-chip--warn"><span aria-hidden="true">⏰ </span>Kontrol zamanı geldi</span> : null}
+      badge={due ? <span className="lgi-chip lgi-chip--warn"><Icon name="bell" size={14} />{' '}Kontrol zamanı geldi</span> : null}
     >
       {!missionId || !crewId ? <NeedSelection /> : (
         <>

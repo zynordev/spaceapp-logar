@@ -2,10 +2,11 @@
 // (src/spaceapp_logar/web/app.js). Colour is never the only signal: every
 // level has an icon and a label too.
 import type { Attention } from '../../lib/store';
+import type { IconName } from '../../ui';
 
 export interface LevelInfo {
   label: string;
-  icon: string;
+  icon: IconName;
   cls: string;
   rank: number;
   desc: string;
@@ -13,28 +14,28 @@ export interface LevelInfo {
 
 // rank: UNKNOWN is above NORMAL on purpose (bad data is not good health).
 export const ATTENTION: Record<Attention, LevelInfo> = {
-  NORMAL: { label: 'Normal', icon: '✓', cls: 'normal', rank: 1, desc: 'Etkin bir dikkat kuralı yok.' },
-  UNKNOWN: { label: 'Bilinmiyor', icon: '?', cls: 'unknown', rank: 2, desc: 'Güvenilir değerlendirme için yeterli veri yok. Bu "normal" anlamına gelmez.' },
-  WATCH: { label: 'İzle', icon: '!', cls: 'watch', rank: 3, desc: 'Bir ölçüm izlenmeli; acil olmayan bir yeniden kontrol gerekebilir.' },
-  ALERT: { label: 'Uyarı', icon: '▲', cls: 'alert', rank: 4, desc: 'Eylem kartındaki adımlar kısa sürede uygulanmalı; görev prosedürü önceliklidir.' },
-  CRITICAL: { label: 'Kritik', icon: '✖', cls: 'critical', rank: 5, desc: 'Acil prosedür hemen açılmalı ve ekip sağlık sorumlusu bilgilendirilmelidir.' },
+  NORMAL: { label: 'Normal', icon: 'check', cls: 'normal', rank: 1, desc: 'Etkin bir dikkat kuralı yok.' },
+  UNKNOWN: { label: 'Bilinmiyor', icon: 'question', cls: 'unknown', rank: 2, desc: 'Güvenilir değerlendirme için yeterli veri yok. Bu "normal" anlamına gelmez.' },
+  WATCH: { label: 'İzle', icon: 'eye', cls: 'watch', rank: 3, desc: 'Bir ölçüm izlenmeli; acil olmayan bir yeniden kontrol gerekebilir.' },
+  ALERT: { label: 'Uyarı', icon: 'alert', cls: 'alert', rank: 4, desc: 'Eylem kartındaki adımlar kısa sürede uygulanmalı; görev prosedürü önceliklidir.' },
+  CRITICAL: { label: 'Kritik', icon: 'critical', cls: 'critical', rank: 5, desc: 'Acil prosedür hemen açılmalı ve ekip sağlık sorumlusu bilgilendirilmelidir.' },
 };
 
 export function attInfo(att: string | null | undefined): LevelInfo {
   return (att && (ATTENTION as Record<string, LevelInfo>)[att]) || ATTENTION.UNKNOWN;
 }
 
-export const QUALITY: Record<string, { label: string; icon: string; cls: string }> = {
-  VALID: { label: 'Geçerli', icon: '✓', cls: 'valid' },
-  SUSPECT: { label: 'Şüpheli', icon: '!', cls: 'suspect' },
-  MISSING: { label: 'Eksik', icon: '∅', cls: 'missing' },
-  FAULT: { label: 'Arıza', icon: '✖', cls: 'fault' },
+export const QUALITY: Record<string, { label: string; icon: IconName; cls: string }> = {
+  VALID: { label: 'Geçerli', icon: 'check', cls: 'valid' },
+  SUSPECT: { label: 'Şüpheli', icon: 'warning', cls: 'suspect' },
+  MISSING: { label: 'Eksik', icon: 'question', cls: 'missing' },
+  FAULT: { label: 'Arıza', icon: 'x', cls: 'fault' },
 };
 
-export const ALERT_STATUS: Record<string, { label: string; icon: string; cls: string }> = {
-  OPEN: { label: 'Açık', icon: '●', cls: 'open' },
-  ACKNOWLEDGED: { label: 'Görüldü', icon: '✓', cls: 'ack' },
-  RESOLVED: { label: 'Çözüldü', icon: '✓✓', cls: 'res' },
+export const ALERT_STATUS: Record<string, { label: string; icon: IconName; cls: string }> = {
+  OPEN: { label: 'Açık', icon: 'dot', cls: 'open' },
+  ACKNOWLEDGED: { label: 'Görüldü', icon: 'eye', cls: 'ack' },
+  RESOLVED: { label: 'Çözüldü', icon: 'check', cls: 'res' },
 };
 
 const COMPARISON: Record<string, string> = {

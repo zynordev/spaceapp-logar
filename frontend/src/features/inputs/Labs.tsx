@@ -5,6 +5,7 @@
 import { useState, type FormEvent } from 'react';
 import { api, qs, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
+import { Icon, type IconName } from '../../ui';
 import { Segmented } from './Segmented';
 import {
   InlineMsg, NeedSelection, Notice, SOURCE_ID, Section, fmtDateTime, fmtNum, localInputValue, useAction,
@@ -39,11 +40,11 @@ export const unitText = (u: string | null | undefined) => (u ? UNIT_DISPLAY[u] ?
 const PHASE: Record<SamplePhase, string> = {
   PRE_FLIGHT: 'Uçuş öncesi', IN_FLIGHT: 'Uçuş sırasında', POST_FLIGHT: 'Uçuş sonrası',
 };
-const POSITION = {
-  BELOW: { label: 'Referansın altında', icon: '▼' },
-  WITHIN: { label: 'Referans aralığında', icon: '●' },
-  ABOVE: { label: 'Referansın üstünde', icon: '▲' },
-} as const;
+const POSITION: Record<'BELOW' | 'WITHIN' | 'ABOVE', { label: string; icon: IconName }> = {
+  BELOW: { label: 'Referansın altında', icon: 'arrow-down' },
+  WITHIN: { label: 'Referans aralığında', icon: 'dot' },
+  ABOVE: { label: 'Referansın üstünde', icon: 'arrow-up' },
+};
 
 /** Parse "5,4" or "5.4"; returns null for empty/invalid. */
 function parseNum(s: string): number | null {
@@ -138,7 +139,7 @@ export function LabsSection() {
     >
       <div className="lgi-actions lgi-actions--top">
         <button type="button" className="lgi-btn" onClick={importOsdr} disabled={osdr.busy} aria-busy={osdr.busy}>
-          <span aria-hidden="true">⇩ </span>{osdr.busy ? 'Yükleniyor…' : 'Gerçek OSDR lab verisi (Inspiration4)'}
+          <Icon name="download" size={14} />{' '}{osdr.busy ? 'Yükleniyor…' : 'Gerçek OSDR lab verisi (Inspiration4)'}
         </button>
         <span className="lgi-muted">NASA OSDR’den gerçek değerleri ayrı bir göreve yükler ve onu seçer.</span>
       </div>
@@ -209,7 +210,7 @@ export function LabsSection() {
             </div>
             {localErr.length > 0 && (
               <div className="lgi-msg lgi-msg--err" role="alert">
-                <span className="lgi-msg__icon" aria-hidden="true">!</span>
+                <span className="lgi-msg__icon" aria-hidden="true"><Icon name="warning" size={18} /></span>
                 <ul className="lgi-msg__fields">{localErr.map((t) => <li key={t}>{t}</li>)}</ul>
               </div>
             )}
@@ -258,7 +259,7 @@ function LabCard({ r }: { r: LabAnalyteSummary }) {
     <li className={`lgi-lab lgi-lab--${r.position_vs_reference.toLowerCase()}`}>
       <div className="lgi-lab__top">
         <strong>{LAB_LABELS[r.analyte] ?? r.analyte}</strong>
-        {pos && <span className="lgi-pos"><span aria-hidden="true">{pos.icon} </span>{pos.label}</span>}
+        {pos && <span className="lgi-pos"><Icon name={pos.icon} size={14} />{' '}{pos.label}</span>}
       </div>
       <div className="lgi-lab__value">{fmtNum(r.value)} <small>{u}</small></div>
       <div

@@ -9,12 +9,14 @@ export const InputsPanel = lazy(() => import('../features/inputs').then((m) => (
 export const DemoScenarioControl = lazy(() =>
   import('../features/inputs').then((m) => ({ default: m.DemoScenarioControl })),
 );
+export const HudOverlay = lazy(() => import('../features/hud').then((m) => ({ default: m.HudOverlay })));
 export const GroundPanel = lazy(() => import('../features/ground').then((m) => ({ default: m.GroundPanel })));
 
 /** Start downloading the heavy chunks once the shell is idle. */
 export function prefetchFeatures() {
   const run = () => {
     void import('../features/vitals');
+    void import('../features/hud');
     void import('../features/body3d');
     void import('../features/inputs');
     void import('../features/ground');

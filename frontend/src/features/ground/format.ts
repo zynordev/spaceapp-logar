@@ -43,32 +43,34 @@ export function shortHash(hash: string | null | undefined, n = 12): string {
   return hash.length > n ? `${hash.slice(0, n)}…` : hash;
 }
 
+import type { IconName } from '../../ui';
+
 export interface RecipientInfo {
   label: string;
   routed: string;
-  icon: string;
+  icon: IconName;
 }
 
 export const RECIPIENT_INFO: Record<Recipient, RecipientInfo> = {
   FLIGHT_SURGEON: {
     label: 'Uçuş cerrahı',
     routed: 'Sağlık uyarıları, kırmızı bayraklar, öznel bildirimler, laboratuvar ve öncelikli bildirimler',
-    icon: '✚',
+    icon: 'plus',
   },
   LIFE_SUPPORT: {
     label: 'Yaşam destek (ECLSS)',
     routed: 'Kabin CO₂, O₂ ve basınç değerlendirmeleri ile ortam uyarıları',
-    icon: '◎',
+    icon: 'wind',
   },
   RADIATION: {
     label: 'Radyasyon ekibi',
     routed: 'Doz hızı olayları ve kümülatif doz eğilimi',
-    icon: '☢︎',
+    icon: 'radiation',
   },
   MISSION_CONTROL: {
     label: 'Görev kontrol',
     routed: 'Genel durum özeti ve tüm ekiplere giden uyarıların kopyası',
-    icon: '⌖',
+    icon: 'satellite',
   },
 };
 
@@ -90,25 +92,25 @@ export function kindLabel(k: string): string {
   return (KIND_LABEL as Record<string, string | undefined>)[k] ?? k;
 }
 
-export const PRIORITY_INFO: Record<EscalationPriority, { label: string; icon: string }> = {
-  CRITICAL: { label: 'Kritik', icon: '⬣' },
-  ALERT: { label: 'Uyarı', icon: '▲' },
+export const PRIORITY_INFO: Record<EscalationPriority, { label: string; icon: IconName }> = {
+  CRITICAL: { label: 'Kritik', icon: 'critical' },
+  ALERT: { label: 'Uyarı', icon: 'alert' },
 };
 
-export const COVERAGE_INFO: Record<Coverage, { label: string; icon: string; legend: string }> = {
+export const COVERAGE_INFO: Record<Coverage, { label: string; icon: IconName; legend: string }> = {
   RULE: {
     label: 'Kural var',
-    icon: '◆',
+    icon: 'check',
     legend: 'Karar destek kuralı çalışıyor (teşhis değildir).',
   },
   DATA_ONLY: {
     label: 'Sadece veri',
-    icon: '◇',
+    icon: 'eye',
     legend: 'Veri toplanıyor ve gösteriliyor; doğrulanmış eşik/kural yok.',
   },
   GAP: {
     label: 'Boşluk',
-    icon: '○',
+    icon: 'circle',
     legend: 'GAP = bu prototipte henüz izlenmiyor.',
   },
 };
