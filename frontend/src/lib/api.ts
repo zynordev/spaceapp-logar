@@ -3,10 +3,17 @@
 // handling stay in one place. Endpoint shapes: see the contract (CONTRACT.md).
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from './store';
+import { toast } from '../ui/toast';
+
+/** Same text as ui/errors FORBIDDEN_MESSAGE (toasts with equal text are de-duplicated). */
+const FORBIDDEN_TOAST = 'Bu işlem için yetkiniz yok';
 
 export class ApiError extends Error {
+  /** HTTP status; 0 = network failure / timeout. */
   status: number;
+  /** `error.code` of the body (e.g. NOT_FOUND, VALIDATION_ERROR, FORBIDDEN). */
   code: string | null;
+  /** The nested `error` object {code, message, request_id, detail: original FastAPI detail}. */
   detail: unknown;
   constructor(message: string, status: number, code: string | null = null, detail: unknown = null) {
     super(message);
@@ -67,9 +74,22 @@ export async function api<T>(
       if (token) setToken(null);
       setLoginRequired(true);
     }
-    const detail = payload?.detail ?? null;
-    const message = typeof detail === 'string' ? detail : detail?.message ?? `HTTP ${res.status}`;
-    throw new ApiError(message, res.status, payload?.code ?? null, detail);
+    // A write refused for the caller's role: always tell the user, even if
+    // the feature forgets to handle it (reads stay silent; panels render it).
+    if (res.status === 403 && method === 'POST') toast.error(FORBIDDEN_TOAST);
+    // Backend error body (observability.py):
+    //   {"error": {"code", "message", "request_id"}, "detail": <FastAPI detail>}
+    // `detail` is a string, a {code, message} object (e.g. SCHEMA_OUTDATED) or
+    // the validation error list (422). Older servers send only `detail`.
+    const nested = payload?.error && typeof payload.error === 'object' ? payload.error : null;
+    const legacy = payload?.detail ?? null;
+    const legacyObj = legacy && typeof legacy === 'object' && !Array.isArray(legacy) ? legacy : null;
+    const legacyMsg = typeof legacy === 'string' ? legacy : typeof legacyObj?.message === 'string' ? legacyObj.message : null;
+    // For a dict detail, error.message is only the status name: prefer the detail's own message.
+    const message = legacyMsg ?? nested?.message ?? `HTTP ${res.status}`;
+    const code = nested?.code ?? legacyObj?.code ?? null;
+    const detail = nested ? { ...nested, detail: legacy } : legacy;
+    throw new ApiError(message, res.status, code, detail);
   }
   if (method === 'POST') bumpData();
   if (res.status === 204) return undefined as T;

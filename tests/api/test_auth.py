@@ -187,8 +187,11 @@ def test_health_and_dashboard_need_no_token(
     client, _ = api_client
 
     assert client.get("/health").status_code == 200
-    assert client.get("/ui/").status_code == 200
-    root = client.get("/", follow_redirects=False)
+    page = client.get("/ui/")
+    assert page.status_code == 200
+    # Built React app (frontend/dist) or the built-in "npm run build" page.
+    assert 'id="root"' in page.text or "npm run build" in page.text
+    root =client.get("/", follow_redirects=False)
     assert root.status_code in {302, 307}
 
 
