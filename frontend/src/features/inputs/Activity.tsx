@@ -174,7 +174,6 @@ export function ActivitySection() {
                 max={240}
                 step={1}
                 value={custom}
-                placeholder="—"
                 aria-invalid={custom !== '' && !customValid}
                 aria-describedby="lgi-act-custom-help"
                 onChange={(e) => setCustom(e.target.value)}
