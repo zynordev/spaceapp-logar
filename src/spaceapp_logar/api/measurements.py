@@ -163,6 +163,7 @@ def list_measurements(
                 value=row.value,
                 reported_quality=row.reported_quality,
                 activity_state=row.activity_state,
+                activity_source=row.activity_source,
             )
             for row in rows
         ],

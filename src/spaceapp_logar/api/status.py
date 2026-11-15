@@ -12,6 +12,7 @@ from spaceapp_logar.schemas import (
     CrewStatusRead,
     SubjectiveCheckInRead,
 )
+from spaceapp_logar.services.activities import current_activity
 from spaceapp_logar.services.status_view import (
     card_for_record,
     latest_rule_records,
@@ -99,6 +100,9 @@ def get_crew_status(
         rules=rules,
         latest_check_in=(
             SubjectiveCheckInRead.model_validate(check_in) if check_in else None
+        ),
+        current_activity=current_activity(
+            session, mission_id, crew_member_id, datetime.now(timezone.utc)
         ),
         limitations=LIMITATIONS,
     )

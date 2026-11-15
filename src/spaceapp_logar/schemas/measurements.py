@@ -151,6 +151,7 @@ class MeasurementPoint(BaseModel):
     value: float
     reported_quality: str
     activity_state: str | None
+    activity_source: str | None = None
 
 
 class MeasurementSeriesRead(BaseModel):
