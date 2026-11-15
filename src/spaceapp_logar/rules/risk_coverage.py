@@ -129,9 +129,9 @@ HAZARDS: tuple[Hazard, ...] = (
             Risk(
                 "cardiovascular_orthostatic",
                 "Kalp-damar uyumu ve ayağa kalkınca tansiyon düşmesi",
-                ("Kalp hızı", "Sistolik/diyastolik tansiyon"),
+                ("Kalp hızı", "Kalp hızı değişkenliği (RMSSD)", "Sistolik/diyastolik tansiyon"),
                 (),
-                "Veriler toplanıyor ve grafikte; kural için doğrulanmış eşik gerekiyor.",
+                "Veriler (HRV dahil) toplanıyor ve grafikte; HRV için kural/eşik yok, doğrulanmış eşik gerekiyor.",
                 data_only=True,
             ),
             Risk(

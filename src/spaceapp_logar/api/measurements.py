@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -16,10 +16,13 @@ from spaceapp_logar.schemas.measurements import (
     MeasurementPoint,
     MeasurementRead,
     MeasurementSeriesRead,
+    MeasurementTrendRead,
     Metric,
     MetricRead,
     MissionRead,
+    TrendBucket,
 )
+from spaceapp_logar.services.rule_engine import usable
 from spaceapp_logar.schemas.status import RuleStatusRead
 from spaceapp_logar.services.ingest import store_measurement
 from spaceapp_logar.services.rule_engine import evaluate_observation
@@ -165,6 +168,104 @@ def list_measurements(
                 activity_state=row.activity_state,
             )
             for row in rows
+        ],
+    )
+
+
+MAX_TREND_BUCKETS = 1000
+MAX_TREND_ROWS = 200_000
+_BUCKET_SIZE = {"hour": timedelta(hours=1), "day": timedelta(days=1)}
+_DEFAULT_WINDOW = {"hour": timedelta(days=7), "day": timedelta(days=30)}
+
+
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+@router.get("/v1/measurements/trend", response_model=MeasurementTrendRead)
+def measurement_trend(
+    session: Annotated[Session, Depends(get_session)],
+    mission_id: Annotated[str, Query(min_length=1, max_length=100)],
+    target_id: Annotated[str, Query(min_length=1, max_length=100)],
+    metric: Metric,
+    bucket: Literal["hour", "day"],
+    since: datetime | None = None,
+    until: datetime | None = None,
+) -> MeasurementTrendRead:
+    """Hourly/daily aggregates (count, mean, min, max) in UTC-aligned buckets.
+
+    Only VALID, finite, physically plausible observations are aggregated;
+    FAULT/SUSPECT/MISSING-quality and implausible values are excluded. Empty
+    buckets are omitted. The window is ``[since, until)``; by default it is the
+    last 7 days (hour) or 30 days (day) ending at the latest observation, or
+    now when there is none.
+    """
+
+    size = _BUCKET_SIZE[bucket]
+    base = (
+        Observation.mission_id == mission_id,
+        Observation.target_id == target_id,
+        Observation.metric == metric.value,
+    )
+    until_utc = _as_utc(until) if until is not None else None
+    if until_utc is None:
+        latest = session.scalar(select(func.max(Observation.observed_at)).where(*base))
+        until_utc = (
+            _as_utc(latest) + timedelta(microseconds=1)
+            if latest is not None
+            else datetime.now(timezone.utc)
+        )
+    since_utc = _as_utc(since) if since is not None else until_utc - _DEFAULT_WINDOW[bucket]
+    if since_utc >= until_utc:
+        raise HTTPException(status_code=422, detail="since, until değerinden önce olmalı.")
+
+    def floor(moment: datetime) -> datetime:
+        if bucket == "hour":
+            return moment.replace(minute=0, second=0, microsecond=0)
+        return moment.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    first = floor(since_utc)
+    span = (until_utc - first) / size
+    if span > MAX_TREND_BUCKETS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"En fazla {MAX_TREND_BUCKETS} dilim istenebilir; aralığı daraltın.",
+        )
+
+    rows = session.scalars(
+        select(Observation)
+        .where(
+            *base,
+            Observation.observed_at >= since_utc,
+            Observation.observed_at < until_utc,
+        )
+        .order_by(Observation.observed_at)
+        .limit(MAX_TREND_ROWS)
+    ).all()
+    groups: dict[datetime, list[float]] = {}
+    for row in rows:
+        if usable(row):
+            groups.setdefault(floor(_as_utc(row.observed_at)), []).append(row.value)
+    return MeasurementTrendRead(
+        mission_id=mission_id,
+        target_id=target_id,
+        metric=metric,
+        unit=METRIC_SPECS[metric].unit,
+        bucket=bucket,
+        since=since_utc,
+        until=until_utc,
+        buckets=[
+            TrendBucket(
+                start=start,
+                end=start + size,
+                count=len(values),
+                mean=sum(values) / len(values),
+                min=min(values),
+                max=max(values),
+            )
+            for start, values in sorted(groups.items())
         ],
     )
 

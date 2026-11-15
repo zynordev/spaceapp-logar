@@ -18,6 +18,7 @@ from spaceapp_logar.schemas.observations import (
 
 class Metric(StrEnum):
     HEART_RATE = "HEART_RATE"
+    HRV_RMSSD = "HRV_RMSSD"
     SPO2 = "SPO2"
     RESPIRATION_RATE = "RESPIRATION_RATE"
     BODY_TEMPERATURE = "BODY_TEMPERATURE"
@@ -54,6 +55,7 @@ METRIC_SPECS: dict[Metric, MetricSpec] = {
     spec.metric: spec
     for spec in (
         MetricSpec(Metric.HEART_RATE, "Kalp hızı", "bpm", TargetType.CREW_MEMBER, "vital", 20, 250),
+        MetricSpec(Metric.HRV_RMSSD, "Kalp hızı değişkenliği (RMSSD)", "ms", TargetType.CREW_MEMBER, "vital", 5, 300),
         MetricSpec(Metric.SPO2, "SpO₂", "%", TargetType.CREW_MEMBER, "vital", 50, 100),
         MetricSpec(Metric.RESPIRATION_RATE, "Solunum hızı", "breaths/min", TargetType.CREW_MEMBER, "vital", 2, 70),
         MetricSpec(Metric.BODY_TEMPERATURE, "Vücut sıcaklığı", "°C", TargetType.CREW_MEMBER, "vital", 30, 43),
@@ -158,6 +160,28 @@ class MeasurementSeriesRead(BaseModel):
     unit: str
     target_id: str
     points: list[MeasurementPoint]
+
+
+class TrendBucket(BaseModel):
+    start: datetime
+    end: datetime
+    count: int
+    mean: float
+    min: float
+    max: float
+
+
+class MeasurementTrendRead(BaseModel):
+    """Per-bucket aggregates over VALID, finite, plausible observations only."""
+
+    mission_id: str
+    target_id: str
+    metric: Metric
+    unit: str
+    bucket: str
+    since: datetime
+    until: datetime
+    buckets: list[TrendBucket]
 
 
 class MissionRead(BaseModel):
