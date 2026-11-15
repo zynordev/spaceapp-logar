@@ -157,6 +157,27 @@ etkin alarm vardır. Seviye yükselirse (WATCH → ALERT) aynı alarm güncellen
 daha önce "görüldü" olarak işaretlenmişse yeniden astronotun onayını bekler.
 Ayrıntı: [API_DATA_MODEL.md](API_DATA_MODEL.md).
 
+## Radyasyon senaryosu: gerçek NASA DONKI olay zamanlaması
+
+`radiation-spe` senaryosunun **zamanlaması** gerçek bir olaya dayanır; **doz
+değerleri sentetiktir**. Kaynak: NASA DONKI SEP kaydı, Mayıs 2024
+(`data/nasa/donki_sep_2024-05.json`, 14 kayıt). Bu dosya yalnızca olay
+zamanını ve üst veriyi içerir; akı veya doz değeri yoktur.
+
+Zaman eşlemesi (senaryo 180 dakikadır, gerçek zaman 37,75 kat sıkıştırılır):
+
+| Gerçek olay (GOES-P SEISS) | Gerçek zaman | Senaryo dakikası | Sentetik doz hızı |
+|---|---|---|---|
+| >10 MeV başlangıcı | 2024-05-10T13:35Z | 100 | 25 → 90 µSv/h yükselişi başlar |
+| >100 MeV başlangıcı | 2024-05-11T02:10Z (+755 gerçek dk) | 120 | 90 → 400 µSv/h ikinci basamak başlar |
+
+Eşikler ve kural mantığı (`ENV_RADIATION_V1`) değişmedi. Gösterilen etiket:
+"Olay zamanlaması gerçek NASA DONKI kaydından (Mayıs 2024 SEP, GOES >10 MeV
+başlangıcı 10 Mayıs 13:35Z); doz değerleri sentetiktir." Etiket senaryo
+açıklamasında, çalıştırma özetinde ve `GET /v1/space-weather/events?month=2024-05`
+yanıtında bulunur; radyasyon gözlemlerinin `source_id` değeri
+`demo-scenario-runner-donki-timing` olur. Teşhis veya yeni tıbbi eşik eklenmemiştir.
+
 ## Doğrulama öncesi yapılmaması gerekenler
 
 - Bu eşikleri gerçek görev kuralı olarak sunmak;

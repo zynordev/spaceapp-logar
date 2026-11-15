@@ -21,11 +21,39 @@ from spaceapp_logar.rules.red_flags import RedFlag
 from spaceapp_logar.services.ingest import store_measurement
 from spaceapp_logar.services.red_flags import record_red_flags
 from spaceapp_logar.services.rule_engine import evaluate_check_in, evaluate_observation
+from spaceapp_logar.services.space_weather import (
+    GOES_10_MEV_SEP_ID,
+    GOES_100_MEV_SEP_ID,
+    PROVENANCE_NOTE_TR,
+    load_sep_catalog,
+)
 
 CREW = "crew-01"
 HABITAT = "iss-destiny-lab"
 SECOND_MODULE = "iss-harmony-node2"
 SOURCE_ID = "demo-scenario-runner"
+# Radiation observations carry this source_id: synthetic dose values whose
+# event timing comes from the real NASA DONKI record (see PROVENANCE_NOTE_TR).
+RADIATION_SOURCE_ID = "demo-scenario-runner-donki-timing"
+
+# Radiation scenario time mapping (documented in docs/DEMO_RULES.md):
+#   scenario minute 100  <->  real GOES-P SEISS >10 MeV onset (2024-05-10T13:35Z)
+#   real time is compressed by REAL_MINUTES_PER_SCENARIO_MINUTE, so the real
+#   >100 MeV onset (2024-05-11T02:10Z, 755 real minutes later) lands at
+#   scenario minute 100 + 755 / 37.75 = 120.
+RADIATION_ONSET_MINUTE = 100
+REAL_MINUTES_PER_SCENARIO_MINUTE = 37.75
+
+
+def radiation_anchor_minutes() -> tuple[int, int]:
+    """Scenario minutes of the real GOES >10 MeV and >100 MeV onsets."""
+
+    catalog = load_sep_catalog("2024-05")
+    onset_10 = catalog.event(GOES_10_MEV_SEP_ID).event_time
+    onset_100 = catalog.event(GOES_100_MEV_SEP_ID).event_time
+    real_gap_minutes = (onset_100 - onset_10).total_seconds() / 60
+    step = RADIATION_ONSET_MINUTE + round(real_gap_minutes / REAL_MINUTES_PER_SCENARIO_MINUTE)
+    return RADIATION_ONSET_MINUTE, step
 
 
 @dataclass
@@ -66,11 +94,14 @@ def _add(
     quality: str = "VALID",
     activity: str | None = None,
     target: str | None = None,
+    source_id: str | None = None,
 ) -> None:
     spec = METRIC_SPECS[metric]
     default_target = CREW if spec.target_type.value == "CREW_MEMBER" else HABITAT
+    extra = {"source_id": source_id} if source_id else {}
     plan.measurements.append(
         {
+            **extra,
             "target_type": spec.target_type.value,
             "target_id": target or default_target,
             "metric": metric.value,
@@ -95,6 +126,7 @@ def _environment(
     radiation: Callable[[int], float] = lambda m: 25.0,
     atmosphere_every: int = 5,
     radiation_every: int = 5,
+    radiation_source_id: str | None = None,
 ) -> None:
     for m in range(minutes):
         when = start + timedelta(minutes=m)
@@ -104,7 +136,13 @@ def _environment(
             _add(plan, when, Metric.CABIN_PRESSURE, pressure(m) + rng.gauss(0, 0.1))
         if m % radiation_every == 0:
             rate = radiation(m)
-            _add(plan, when, Metric.RADIATION_DOSE_RATE, max(0.0, rate + rng.gauss(0, rate * 0.05)))
+            _add(
+                plan,
+                when,
+                Metric.RADIATION_DOSE_RATE,
+                max(0.0, rate + rng.gauss(0, rate * 0.05)),
+                source_id=radiation_source_id,
+            )
 
 
 def _vitals(
@@ -354,17 +392,31 @@ def build_cabin_o2_drop(start: datetime, rng: Random) -> Plan:
 def build_radiation_spe(start: datetime, rng: Random) -> Plan:
     minutes = 180
 
+    # Timing is anchored to the real NASA DONKI GOES >10 MeV / >100 MeV onsets
+    # (see radiation_anchor_minutes). The dose values themselves are synthetic.
+    onset_10, onset_100 = radiation_anchor_minutes()
+    step = onset_100 - onset_10
+
     def rate(m: int) -> float:
-        if m < 100:
+        if m < onset_10:
             return 25.0
-        if m < 120:
-            return _ramp(m, 100, 120, 25.0, 90.0)
-        if m < 140:
-            return _ramp(m, 120, 140, 90.0, 400.0)
+        if m < onset_100:
+            return _ramp(m, onset_10, onset_100, 25.0, 90.0)
+        if m < onset_100 + step:
+            return _ramp(m, onset_100, onset_100 + step, 90.0, 400.0)
         return 400.0
 
     plan = Plan()
-    _environment(plan, start, minutes, rng, co2=lambda m: 2.2, radiation=rate, radiation_every=1)
+    _environment(
+        plan,
+        start,
+        minutes,
+        rng,
+        co2=lambda m: 2.2,
+        radiation=rate,
+        radiation_every=1,
+        radiation_source_id=RADIATION_SOURCE_ID,
+    )
     _vitals(
         plan,
         start,
@@ -537,9 +589,10 @@ SCENARIOS: dict[str, Scenario] = {
             description=(
                 "Modülün doz hızı önce birkaç kat, sonra onlarca kat artar. Sistem "
                 "modülün kendi başlangıcına göre değerlendirir ve görev boyunca "
-                "kümülatif dozu hesaplar."
+                "kümülatif dozu hesaplar. " + PROVENANCE_NOTE_TR
             ),
             expected=(
+                PROVENANCE_NOTE_TR,
                 "Radyasyon kuralı önce İzle, sonra Uyarı (DEMO eşik)",
                 "Kart korunaklı bölüme geçiş prosedürünü ve EVA'nın durdurulmasını öne alır",
                 "Açıklamada kümülatif doz ve 600 mSv kariyer sınırı bağlamı",
@@ -635,12 +688,12 @@ def run_scenario(
 
     for _, kind, item in events:
         if kind == 0:
+            fields = {"source_id": SOURCE_ID, **item}
             payload = MeasurementCreate(
                 mission_id=mission_id,
                 source_type="SYNTHETIC",
-                source_id=SOURCE_ID,
                 scenario_id=scenario_id,
-                **item,
+                **fields,
             )
             observation = store_measurement(session, payload)
             evaluate_observation(session, observation)
