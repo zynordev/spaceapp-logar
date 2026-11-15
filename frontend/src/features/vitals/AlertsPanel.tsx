@@ -10,22 +10,22 @@ import type { AlertRead, RuleStatus } from './types';
 import { Freshness } from './VitalsPanel';
 import { Icon } from '../../ui';
 
-const NO_PERMISSION = 'Bu işlem için yetkiniz yok — ekip sağlık sorumlusu kapatabilir';
+const NO_PERMISSION = 'You are not allowed to do this — the crew health officer can close it';
 
 function actionError(e: unknown, kind: 'ack' | 'resolve'): string {
   const ae = e instanceof ApiError ? e : null;
   if (!ae) return String(e);
-  if (ae.network) return 'Sunucuya ulaşılamıyor; işlem kaydedilmedi. Bağlantı gelince tekrar deneyin.';
+  if (ae.network) return 'Cannot reach the server; the action was not saved. Try again when the connection returns.';
   if (ae.status === 403) return NO_PERMISSION;
   if (ae.status === 409) {
     if (kind === 'resolve' && /automatic/i.test(ae.message)) {
-      return 'Bu alarm ölçüm tabanlıdır: tam ve geçerli bir ölçüm penceresi yeniden normale döndüğünde kendiliğinden kapanır, elle kapatılamaz.';
+      return 'This alarm is measurement-based: it closes by itself once a complete, valid measurement window returns to normal; it cannot be closed by hand.';
     }
-    return 'Alarm zaten kapanmış.';
+    return 'The alarm is already closed.';
   }
-  if (ae.status === 422) return 'Bu işlem için bir ekip üyesi seçilmeli.';
-  if (ae.status === 404) return 'Alarm bulunamadı; liste yenileniyor.';
-  return `İşlem tamamlanamadı (${ae.message}).`;
+  if (ae.status === 422) return 'A crew member must be selected for this action.';
+  if (ae.status === 404) return 'Alarm not found; refreshing the list.';
+  return `The action could not be completed (${ae.message}).`;
 }
 
 function ResolveDialog({
@@ -40,14 +40,14 @@ function ResolveDialog({
   }, [alert]);
   return (
     <dialog ref={ref} className="vt-dialog" aria-labelledby="vt-resolve-title" onCancel={(e) => { e.preventDefault(); onCancel(); }}>
-      <h3 id="vt-resolve-title"><span aria-hidden="true"><Icon name="warning" size={14} /></span> Kırmızı bayrağı kapat</h3>
+      <h3 id="vt-resolve-title"><span aria-hidden="true"><Icon name="warning" size={14} /></span> Close red flag</h3>
       <p><b>{title}</b></p>
-      <p>Bu kırmızı bayrak olayı ekip sağlık sorumlusu tarafından değerlendirildi mi? Alarm kapatılacak ve kimin kapattığı kaydedilecek.</p>
-      <p className="vt-muted vt-small">Kırmızı bayraklar ölçümlerle kendiliğinden kapanmaz. Görev prosedürü önceliklidir.</p>
+      <p>Has this red flag event been reviewed by the crew health officer? The alarm will be closed and the person who closed it will be recorded.</p>
+      <p className="vt-muted vt-small">Red flags do not close on their own from measurements. The mission procedure takes priority.</p>
       <div className="vt-dialog-actions">
-        <button type="button" className="vt-btn vt-btn-ghost" onClick={onCancel} autoFocus>Vazgeç</button>
+        <button type="button" className="vt-btn vt-btn-ghost" onClick={onCancel} autoFocus>Cancel</button>
         <button type="button" className="vt-btn vt-btn-danger" onClick={onConfirm} disabled={busy} aria-busy={busy}>
-          {busy ? 'Kapatılıyor…' : 'Değerlendirildi, kapat'}
+          {busy ? 'Closing…' : 'Reviewed, close'}
         </button>
       </div>
     </dialog>
@@ -87,30 +87,30 @@ function AlertRow({
       )}
       {alert.explanation && <p className="vt-alert-exp">{alert.explanation}</p>}
       <p className="vt-alert-meta">
-        {alert.acknowledged_at && <span>Görüldü {fmtClock(alert.acknowledged_at)}{alert.acknowledged_by ? ` (${alert.acknowledged_by})` : ''}</span>}
-        {alert.resolved_at && <span>Çözüldü {fmtDateTime(alert.resolved_at)}{alert.resolved_by ? ` (${alert.resolved_by})` : ''}</span>}
-        {alert.manual_resolution && !resolved && <span>Ölçümlerle kendiliğinden kapanmaz; ekip sağlık sorumlusu değerlendirip kapatır.</span>}
-        {!alert.manual_resolution && !resolved && <span>Ölçümler normale döndüğünde kendiliğinden kapanır.</span>}
+        {alert.acknowledged_at && <span>Acknowledged {fmtClock(alert.acknowledged_at)}{alert.acknowledged_by ? ` (${alert.acknowledged_by})` : ''}</span>}
+        {alert.resolved_at && <span>Resolved {fmtDateTime(alert.resolved_at)}{alert.resolved_by ? ` (${alert.resolved_by})` : ''}</span>}
+        {alert.manual_resolution && !resolved && <span>Does not close on its own from measurements; the crew health officer reviews and closes it.</span>}
+        {!alert.manual_resolution && !resolved && <span>Closes by itself when the measurements return to normal.</span>}
       </p>
       {!resolved && (
         <div className="vt-alert-actions">
           {alert.status === 'OPEN' && (
             <button type="button" className="vt-btn vt-btn-primary vt-btn-sm" onClick={onAck} disabled={busy} aria-busy={busy}
-              aria-label={`Alarmı gördüm olarak işaretle: ${title}`}>
-              Gördüm
+              aria-label={`Mark alarm as acknowledged: ${title}`}>
+              Acknowledge
             </button>
           )}
           {alert.manual_resolution && (
             <button type="button" className="vt-btn vt-btn-sm vt-btn-danger-ghost" onClick={onResolve} disabled={busy}
-              aria-label={`Değerlendirildi olarak kapat: ${title}`}>
-              Değerlendirildi, kapat
+              aria-label={`Close as reviewed: ${title}`}>
+              Reviewed, close
             </button>
           )}
           {alert.action_card && !active && (
-            <button type="button" className="vt-btn vt-btn-ghost vt-btn-sm" onClick={onActivate}>Eylem kartını göster</button>
+            <button type="button" className="vt-btn vt-btn-ghost vt-btn-sm" onClick={onActivate}>Show action card</button>
           )}
           {onShowChart && (
-            <button type="button" className="vt-btn vt-btn-ghost vt-btn-sm" onClick={onShowChart}>Grafikte göster</button>
+            <button type="button" className="vt-btn vt-btn-ghost vt-btn-sm" onClick={onShowChart}>Show on chart</button>
           )}
         </div>
       )}
@@ -133,9 +133,9 @@ export function AlertsPanel() {
 
   if (!missionId) {
     return (
-      <section className="vt-panel" aria-label="Alarmlar ve eylem kartı">
-        <h2 className="vt-h2">Alarmlar ve eylem kartı</h2>
-        <div className="vt-empty-state"><span aria-hidden="true" className="vt-empty-icon"><Icon name="info" size={22} /></span><p>Alarmları görmek için bir görev seçin.</p></div>
+      <section className="vt-panel" aria-label="Alarms and action card">
+        <h2 className="vt-h2">Alarms and action card</h2>
+        <div className="vt-empty-state"><span aria-hidden="true" className="vt-empty-icon"><Icon name="info" size={22} /></span><p>Select a mission to see alarms.</p></div>
       </section>
     );
   }
@@ -200,33 +200,33 @@ export function AlertsPanel() {
   });
 
   return (
-    <section className="vt-panel" aria-label="Alarmlar ve eylem kartı">
+    <section className="vt-panel" aria-label="Alarms and action card">
       <header className="vt-panel-head">
         <div>
           <h2 className="vt-h2">
-            Alarmlar ve eylem kartı
-            {openCount > 0 && <span className="vt-count vt-count-hot" aria-label={`${openCount} açık alarm`}>{openCount}</span>}
+            Alarms and action card
+            {openCount > 0 && <span className="vt-count vt-count-hot" aria-label={`${openCount} open alarms`}>{openCount}</span>}
           </h2>
-          <p className="vt-muted vt-small">Kartlar önceden yazılmıştır; teşhis koymaz, görev prosedürünün yerini almaz.</p>
+          <p className="vt-muted vt-small">Cards are pre-written; they do not diagnose and do not replace the mission procedure.</p>
         </div>
         <Freshness at={status.data?.generated_at} error={!!alerts.error} />
       </header>
 
       {!crewId && (
-        <p className="vt-note" role="status"><span aria-hidden="true"><Icon name="info" size={14} /></span>İşlem yapmak için bir ekip üyesi seçin.</p>
+        <p className="vt-note" role="status"><span aria-hidden="true"><Icon name="info" size={14} /></span>Select a crew member to take action.</p>
       )}
 
       <div className="vt-alerts-layout">
         <div className="vt-alerts-col">
           {!alerts.data ? (
             alerts.error ? (
-              <p className="vt-note vt-note-warn" role="alert"><span aria-hidden="true"><Icon name="warning" size={14} /></span>Alarmlar alınamadı ({alerts.error.network ? 'bağlantı yok' : alerts.error.message}).</p>
+              <p className="vt-note vt-note-warn" role="alert"><span aria-hidden="true"><Icon name="warning" size={14} /></span>Could not load alarms ({alerts.error.network ? 'no connection' : alerts.error.message}).</p>
             ) : <Skeleton lines={3} height={64} />
           ) : activeList.length === 0 ? (
             <div className="vt-empty-state vt-empty-small">
               <span aria-hidden="true" className="vt-empty-icon vt-ok"><Icon name="check" size={22} /></span>
-              <p>Açık alarm yok.</p>
-              <p className="vt-muted vt-small">Alarm olmaması tüm verilerin geçerli olduğu anlamına gelmez; kural listesindeki veri kalitesine bakın.</p>
+              <p>No open alarms.</p>
+              <p className="vt-muted vt-small">No alarms does not mean all data is valid; check the data quality in the rules list.</p>
             </div>
           ) : (
             <ul className="vt-alerts">{activeList.map((a) => <AlertRow key={a.id} {...rowProps(a)} />)}</ul>
@@ -247,7 +247,7 @@ export function AlertsPanel() {
               situation={situation}
               alertId={current.id}
               completedKeys={current.completed_step_keys}
-              context={`Alarm: ${titleOf(current)} · açıldı ${fmtDateTime(current.opened_at)}`}
+              context={`Alarm: ${titleOf(current)} · opened ${fmtDateTime(current.opened_at)}`}
             />
           ) : ruleCard?.action_card ? (
             <ActionCardView
@@ -261,8 +261,8 @@ export function AlertsPanel() {
           ) : alerts.data ? (
             <div className="vt-empty-state vt-empty-small">
               <span aria-hidden="true" className="vt-empty-icon"><Icon name="info" size={22} /></span>
-              <p>Şu an etkin bir eylem kartı yok.</p>
-              <p className="vt-muted vt-small">Kartlar yalnızca bir kural dikkat gerektirdiğinde, önceden yazılmış metinlerle gösterilir.</p>
+              <p>No action card is active right now.</p>
+              <p className="vt-muted vt-small">Cards appear, with pre-written text, only when a rule needs attention.</p>
             </div>
           ) : <Skeleton lines={6} height={18} />}
         </div>

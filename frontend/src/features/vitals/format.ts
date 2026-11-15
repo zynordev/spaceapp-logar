@@ -48,10 +48,10 @@ export function relTime(iso: string | number | null | undefined, now = Date.now(
   if (t == null) return '';
   const s = Math.round((now - t) / 1000);
   if (s < -60) return 'gelecekte';
-  if (s < 60) return 'az önce';
-  if (s < 3600) return `${Math.round(s / 60)} dk önce`;
-  if (s < 86400) return `${Math.round(s / 3600)} sa önce`;
-  return `${Math.round(s / 86400)} gün önce`;
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  return `${Math.round(s / 86400)} d ago`;
 }
 
 export function fmtDuration(ms: number): string {

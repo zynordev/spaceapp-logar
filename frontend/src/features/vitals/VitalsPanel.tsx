@@ -14,7 +14,7 @@ export function Freshness({ at, error }: { at: string | null | undefined; error:
   return (
     <span className={`vt-fresh${stale ? ' is-stale' : ''}`} role="status">
       <Icon name={stale ? 'warning' : 'dot'} size={12} />
-      {stale ? `Son bilinen veri · ${fmtClock(at)} (${relTime(at)})` : `Güncel · ${fmtClock(at)}`}
+      {stale ? `Last known data · ${fmtClock(at)} (${relTime(at)})` : `Current · ${fmtClock(at)}`}
     </span>
   );
 }
@@ -38,11 +38,11 @@ export function VitalsPanel() {
 
   if (!missionId || !crewId) {
     return (
-      <section className="vt-panel" aria-label="Ölçümler ve kurallar">
-        <h2 className="vt-h2">Ölçümler ve kurallar</h2>
+      <section className="vt-panel" aria-label="Measurements and rules">
+        <h2 className="vt-h2">Measurements and rules</h2>
         <div className="vt-empty-state">
           <span aria-hidden="true" className="vt-empty-icon"><Icon name="info" size={22} /></span>
-          <p>Ölçümleri görmek için bir görev ve ekip üyesi seçin.</p>
+          <p>Select a mission and a crew member to see measurements.</p>
         </div>
       </section>
     );
@@ -51,15 +51,15 @@ export function VitalsPanel() {
   const def = metrics.find((m) => m.metric === selectedMetric) ?? null;
   const groups = [
     { key: 'vital', title: 'Vital', list: metrics.filter((m) => m.category !== 'environment') },
-    { key: 'environment', title: 'Çevre', list: metrics.filter((m) => m.category === 'environment') },
+    { key: 'environment', title: 'Environment', list: metrics.filter((m) => m.category === 'environment') },
   ];
 
   return (
-    <section className="vt-panel" aria-label="Ölçümler ve kurallar">
+    <section className="vt-panel" aria-label="Measurements and rules">
       <header className="vt-panel-head">
         <div>
-          <h2 className="vt-h2">Ölçümler ve kurallar</h2>
-          <p className="vt-muted vt-small">Açıklanabilir kurallar: her seviye için gözlenen değer, eşik ve “nedenler”.</p>
+          <h2 className="vt-h2">Measurements and rules</h2>
+          <p className="vt-muted vt-small">Explainable rules: for each level, the observed value, the threshold and the “reasons”.</p>
         </div>
         <div className="vt-head-right">
           <Freshness at={status.data?.generated_at} error={!!status.error} />
@@ -69,12 +69,12 @@ export function VitalsPanel() {
       {status.error && !status.data && (
         <p className="vt-note vt-note-warn" role="alert">
           <span aria-hidden="true"><Icon name="warning" size={14} /></span>
-          {status.error.network ? 'Sunucuya ulaşılamıyor; bağlantı gelince veriler yüklenecek.' : `Durum alınamadı (${status.error.message}).`}
+          {status.error.network ? 'Cannot reach the server; data will load when the connection returns.' : `Status could not be loaded (${status.error.message}).`}
         </p>
       )}
 
       <div className="vt-picker">
-        <label htmlFor="vt-metric-pick" className="vt-picker__label">Grafikteki ölçüm</label>
+        <label htmlFor="vt-metric-pick" className="vt-picker__label">Measurement on chart</label>
         <select
           id="vt-metric-pick"
           className="vt-picker__select"
@@ -98,11 +98,11 @@ export function VitalsPanel() {
       <div className="vt-card">
         <h3 className="vt-h3 vt-card-title">Kurallar</h3>
         {!status.data ? (
-          status.error ? <p className="vt-muted">Kurallar şu an alınamadı.</p> : <Skeleton lines={4} height={44} />
+          status.error ? <p className="vt-muted">Rules could not be loaded right now.</p> : <Skeleton lines={4} height={44} />
         ) : rules.length === 0 ? (
           <div className="vt-empty-state vt-empty-small">
             <span aria-hidden="true" className="vt-empty-icon"><Icon name="question" size={22} /></span>
-            <p>Bu görev için henüz değerlendirilmiş kural yok. Veri yoksa durum “bilinmiyor”dur, “normal” değil.</p>
+            <p>No rules have been evaluated for this mission yet. Without data the status is “unknown”, not “normal”.</p>
           </div>
         ) : (
           <RuleList
@@ -116,7 +116,7 @@ export function VitalsPanel() {
         )}
         {status.data && status.data.limitations.length > 0 && (
           <details className="vt-limits">
-            <summary>Sınırlamalar</summary>
+            <summary>Limitations</summary>
             <ul>{status.data.limitations.map((l) => <li key={l}>{l}</li>)}</ul>
           </details>
         )}

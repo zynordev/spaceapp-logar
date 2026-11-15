@@ -84,8 +84,8 @@ export function TimeChart(props: Props) {
     return (
       <div ref={boxRef} className="vt-chart-box"><div className="vt-chart-empty" role="note">
         <span aria-hidden="true" className="vt-empty-icon"><Icon name="question" size={22} /></span>
-        <p>Bu aralıkta çizilecek geçerli veri yok. Eksik veri “normal” anlamına gelmez.</p>
-        {faults.length > 0 && <p className="vt-muted">{faults.length} ölçüm sensör arızası olarak işaretli.</p>}
+        <p>There is no valid data to plot in this range. Missing data does not mean “normal”.</p>
+        {faults.length > 0 && <p className="vt-muted">{faults.length} readings are marked as sensor faults.</p>}
       </div></div>
     );
   }
@@ -146,15 +146,15 @@ export function TimeChart(props: Props) {
   };
 
   const lastV = lastItem.v;
-  const summary = `${label} ${props.mode === 'trend' ? 'eğilim grafiği' : 'zaman grafiği'}. ${items.length} ${
-    props.mode === 'trend' ? 'zaman dilimi' : 'ölçüm'
-  }, ${fmtDateTime(t0)} – ${fmtDateTime(t1)}. Son değer ${fmtAuto(lastV)} ${unit}.${
-    threshold ? ` Eşik ${cmpSymbol(threshold.comparison)} ${fmtAuto(threshold.value)} ${unit}.` : ''
-  }${gaps.length ? ` ${gaps.length} veri boşluğu.` : ''} Noktalar arasında ok tuşlarıyla gezinin.`;
+  const summary = `${label} ${props.mode === 'trend' ? 'trend chart' : 'time chart'}. ${items.length} ${
+    props.mode === 'trend' ? 'time buckets' : 'readings'
+  }, ${fmtDateTime(t0)} – ${fmtDateTime(t1)}. Last value ${fmtAuto(lastV)} ${unit}.${
+    threshold ? ` Threshold ${cmpSymbol(threshold.comparison)} ${fmtAuto(threshold.value)} ${unit}.` : ''
+  }${gaps.length ? ` ${gaps.length} data gaps.` : ''} Use the arrow keys to move between points.`;
 
   const announce = active
     ? active.kind === 'bucket'
-      ? `${fmtDateTime(active.start)}: ortalama ${fmtAuto(active.v)} ${unit}, en düşük ${fmtAuto(active.lo)}, en yüksek ${fmtAuto(active.hi)}, ${active.count} ölçüm.`
+      ? `${fmtDateTime(active.start)}: average ${fmtAuto(active.v)} ${unit}, lowest ${fmtAuto(active.lo)}, highest ${fmtAuto(active.hi)}, ${active.count} readings.`
       : `${fmtDateTime(active.t, true)}: ${fmtAuto(active.v)} ${unit}, veri ${QUALITY[active.quality]?.label ?? active.quality}.`
     : '';
 
@@ -210,7 +210,7 @@ export function TimeChart(props: Props) {
           <g key={`g${a}`}>
             <rect className="vt-gap" x={X(a)} y={m.t} width={Math.max(1, X(b) - X(a))} height={ih} fill={`url(#${liveId}-hatch)`} />
             {X(b) - X(a) > 74 && (
-              <text className="vt-gap-text" x={(X(a) + X(b)) / 2} y={m.t + 14} textAnchor="middle">Veri boşluğu</text>
+              <text className="vt-gap-text" x={(X(a) + X(b)) / 2} y={m.t + 14} textAnchor="middle">Data gap</text>
             )}
           </g>
         ))}
@@ -230,7 +230,7 @@ export function TimeChart(props: Props) {
           <g>
             <line className="vt-thr" x1={m.l} x2={W - m.r} y1={Y(threshold.value)} y2={Y(threshold.value)} />
             <text className="vt-thr-text" x={W - m.r - 4} y={Y(threshold.value) - 6} textAnchor="end">
-              Eşik {cmpSymbol(threshold.comparison)} {fmtAuto(threshold.value)} {unit}
+              Threshold {cmpSymbol(threshold.comparison)} {fmtAuto(threshold.value)} {unit}
             </text>
           </g>
         )}
@@ -288,8 +288,8 @@ export function TimeChart(props: Props) {
             <>
               <div className="vt-tip-time">{fmtDateTime(active.start)} – {fmtClock(active.end)}</div>
               <div className="vt-tip-val">{fmtAuto(active.v)} <small>{unit} ort.</small></div>
-              <div className="vt-tip-sub">en düşük {fmtAuto(active.lo)} · en yüksek {fmtAuto(active.hi)}</div>
-              <div className="vt-tip-sub">{active.count} ölçüm</div>
+              <div className="vt-tip-sub">lowest {fmtAuto(active.lo)} · highest {fmtAuto(active.hi)}</div>
+              <div className="vt-tip-sub">{active.count} readings</div>
             </>
           ) : (
             <>

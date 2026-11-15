@@ -10,13 +10,13 @@ function valueLine(r: RuleStatus): string {
   const unit = displayUnit(r.unit);
   const obs = isNum(r.observed_value) ? `${fmtAuto(r.observed_value)} ${unit}` : '—';
   const thr = isNum(r.threshold) ? `${cmpSymbol(r.comparison)} ${fmtAuto(r.threshold)} ${unit}` : '—';
-  return `${obs} · eşik ${thr}`;
+  return `${obs} · threshold ${thr}`;
 }
 
 /** Counts the raw measurements inside the rule's evaluation window. */
 function EvidenceCounts({ rule, def }: { rule: RuleStatus; def: MetricDef }) {
   const { data, error } = useSeries(def, 500, 15000);
-  if (!data) return <span className="vt-muted">{error ? 'Ölçümler alınamadı' : 'Hesaplanıyor…'}</span>;
+  if (!data) return <span className="vt-muted">{error ? 'Readings could not be loaded' : 'Calculating…'}</span>;
   const end = toMs(rule.evaluated_at);
   if (end == null) return <span>—</span>;
   const start = end - rule.window_minutes * 60_000;
@@ -31,13 +31,13 @@ function EvidenceCounts({ rule, def }: { rule: RuleStatus; def: MetricDef }) {
     else fault++;
   }
   const total = valid + suspect + fault;
-  if (!total) return <span>Pencerede ölçüm yok (son 500 ölçüm içinde)</span>;
+  if (!total) return <span>No readings in the window (within the last 500 readings)</span>;
   return (
     <span className="vt-evidence">
-      <span><b>{total}</b> ölçüm</span>
-      <span className="vt-ev vt-ev-valid"><span aria-hidden="true"><Icon name="check" size={14} /></span> {valid} geçerli</span>
-      {suspect > 0 && <span className="vt-ev vt-ev-suspect"><span aria-hidden="true"><Icon name="warning" size={14} /></span> {suspect} şüpheli</span>}
-      {fault > 0 && <span className="vt-ev vt-ev-fault"><span aria-hidden="true"><Icon name="x" size={14} /></span> {fault} arıza</span>}
+      <span><b>{total}</b> readings</span>
+      <span className="vt-ev vt-ev-valid"><span aria-hidden="true"><Icon name="check" size={14} /></span> {valid} valid</span>
+      {suspect > 0 && <span className="vt-ev vt-ev-suspect"><span aria-hidden="true"><Icon name="warning" size={14} /></span> {suspect} suspect</span>}
+      {fault > 0 && <span className="vt-ev vt-ev-fault"><span aria-hidden="true"><Icon name="x" size={14} /></span> {fault} fault</span>}
     </span>
   );
 }
@@ -53,26 +53,26 @@ function WhyPanel({ rule, def, metricLabel }: { rule: RuleStatus; def: MetricDef
       {rule.data_quality !== 'VALID' && (
         <p className="vt-callout vt-callout-quality">
           <span aria-hidden="true"><Icon name="question" size={14} /></span>
-          Veri kalitesi sorunu var: bu durum sağlık değerlendirmesinin güvenilir olmadığını gösterir. Kötü veri “normal” anlamına gelmez.
+          There is a data quality problem: this means the health assessment is not reliable. Bad data does not mean “normal”.
         </p>
       )}
       {rule.validation_status.startsWith('DEMO') && (
         <p className="vt-callout vt-callout-demo">
           <span aria-hidden="true"><Icon name="flask" size={14} /></span>
-          DEMO eşik — uçuş tıbbı uzmanı doğrulaması bekliyor.
+          DEMO threshold — awaiting flight medicine expert validation.
         </p>
       )}
-      <p className="vt-why-text">{rule.explanation || 'Açıklama yok.'}</p>
+      <p className="vt-why-text">{rule.explanation || 'No explanation.'}</p>
       <dl className="vt-kv">
-        <dt>Gözlenen değer</dt>
+        <dt>Observed value</dt>
         <dd>{isNum(rule.observed_value) ? `${fmtAuto(rule.observed_value)} ${unit}` : '—'}</dd>
-        <dt>Eşik</dt>
+        <dt>Threshold</dt>
         <dd>{isNum(rule.threshold) ? `${cmpSymbol(rule.comparison)} ${fmtAuto(rule.threshold)} ${unit}` : '—'}</dd>
         <dt>Pencere</dt>
         <dd>{fmtNum(rule.window_minutes, 0)} dk · {TIME_SCALE[rule.time_scale] ?? rule.time_scale}</dd>
-        <dt>Kanıt</dt>
-        <dd>{def ? <EvidenceCounts rule={rule} def={def} /> : <span className="vt-muted">Bu kural sayısal ölçüm dışı girdiler kullanır</span>}</dd>
-        <dt>Kişisel başlangıç</dt>
+        <dt>Evidence</dt>
+        <dd>{def ? <EvidenceCounts rule={rule} def={def} /> : <span className="vt-muted">This rule uses inputs other than numeric measurements</span>}</dd>
+        <dt>Personal baseline</dt>
         <dd>
           {bl ? (
             <span className="vt-baseline">
@@ -81,31 +81,31 @@ function WhyPanel({ rule, def, metricLabel }: { rule: RuleStatus; def: MetricDef
                 {blInfo?.label ?? bl.status_label}
               </span>
               <span>
-                {isNum(bl.value) ? `${fmtAuto(bl.value)} ${unit}` : '—'} · {bl.sample_count ?? 0} örnek
+                {isNum(bl.value) ? `${fmtAuto(bl.value)} ${unit}` : '—'} · {bl.sample_count ?? 0} samples
                 {bl.profile_version ? ` · profil v${bl.profile_version}` : ''}
               </span>
               {blInfo && <span className="vt-muted vt-small">{blInfo.note}</span>}
             </span>
           ) : (
-            <span className="vt-muted">Bu kural kişisel başlangıç kullanmıyor</span>
+            <span className="vt-muted">This rule does not use a personal baseline</span>
           )}
         </dd>
-        <dt>Değerlendirme</dt>
+        <dt>Assessment</dt>
         <dd>{fmtDateTime(rule.evaluated_at, true)} · {relTime(rule.evaluated_at)}</dd>
         <dt>Kaynak</dt>
         <dd>
           {src ? <a href={src} target="_blank" rel="noopener noreferrer">{rule.source || src}</a> : rule.source || '—'}
-          {rule.evidence_level ? <span className="vt-muted"> · kanıt sınıfı {rule.evidence_level}</span> : null}
+          {rule.evidence_level ? <span className="vt-muted"> · evidence class {rule.evidence_level}</span> : null}
         </dd>
         <dt>Kural</dt>
         <dd className="vt-mono">{rule.rule_id} v{rule.rule_version}</dd>
       </dl>
       {rule.related_metrics?.length > 0 && (
-        <p className="vt-muted vt-small">Birlikte değerlendirilen ölçümler: {rule.related_metrics.map(metricLabel).join(', ')}</p>
+        <p className="vt-muted vt-small">Measurements assessed together: {rule.related_metrics.map(metricLabel).join(', ')}</p>
       )}
       {info && (
         <div className="vt-info">
-          <h4>Bu ölçüm neden önemli?</h4>
+          <h4>Why does this measurement matter?</h4>
           <p>{info.why}</p>
           <h4>Ne zaman dikkat?</h4>
           <p>{info.watch}{GENERIC_NEXT}</p>
@@ -134,7 +134,7 @@ function RuleRow({
         <div className="vt-rule-body">
           {onSelect ? (
             <button type="button" className="vt-rule-title vt-linklike" onClick={onSelect} aria-pressed={selected}
-              title="Grafikte göster">
+              title="Show on chart">
               {rule.title || rule.rule_id}
             </button>
           ) : (
@@ -177,18 +177,18 @@ export function RuleList({
   const metricLabel = (m: string) => byMetric.get(m)?.label ?? m;
   const sorted = [...rules].sort((a, b) => rank(b) - rank(a) || a.title.localeCompare(b.title, 'tr'));
   const groups = [
-    { key: 'vital', title: 'Vital ve öznel', list: sorted.filter((r) => r.target_id !== envTargetId) },
-    { key: 'env', title: 'Çevre', list: sorted.filter((r) => envTargetId != null && r.target_id === envTargetId) },
+    { key: 'vital', title: 'Vital and subjective', list: sorted.filter((r) => r.target_id !== envTargetId) },
+    { key: 'env', title: 'Environment', list: sorted.filter((r) => envTargetId != null && r.target_id === envTargetId) },
   ];
   return (
     <div className="vt-rule-groups">
       {groups.map((g) => (
-        <section key={g.key} className="vt-rule-group" aria-label={`${g.title} kuralları`}>
+        <section key={g.key} className="vt-rule-group" aria-label={`${g.title} rules`}>
           <h3 className="vt-h3">
             {g.title} <span className="vt-count">{g.list.length}</span>
           </h3>
           {g.list.length === 0 ? (
-            <p className="vt-muted vt-small">Bu grupta henüz değerlendirilmiş kural yok.</p>
+            <p className="vt-muted vt-small">No rules have been evaluated in this group yet.</p>
           ) : (
             <ul className="vt-rules">
               {g.list.map((r) => {

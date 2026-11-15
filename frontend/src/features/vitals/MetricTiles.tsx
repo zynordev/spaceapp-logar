@@ -54,7 +54,7 @@ export function MetricTile({
   const noRule = !top;
   const ariaLabel = `${def.label}: ${last ? `${fmtAuto(last.value)} ${unit}` : 'veri yok'}. ${
     att ? att.label : 'Kural yok'
-  }. Grafiği bu ölçüme geçir.`;
+  }. Switch the chart to this measurement.`;
 
   return (
     <button
@@ -67,8 +67,8 @@ export function MetricTile({
       <span className="vt-tile-head">
         <span className="vt-tile-label">{def.label}</span>
         {att ? <AttBadge att={top!.health_attention} size="sm" /> : (
-          <span className="vt-badge vt-badge-sm vt-att-none" title="Bu ölçüm için etkin kural yok">
-            <span className="vt-bi" aria-hidden="true">–</span>{def.metric === 'HRV_RMSSD' ? 'Yalnızca veri' : 'Kural yok'}
+          <span className="vt-badge vt-badge-sm vt-att-none" title="No active rule for this measurement">
+            <span className="vt-bi" aria-hidden="true">–</span>{def.metric === 'HRV_RMSSD' ? 'Data only' : 'No rule'}
           </span>
         )}
       </span>
@@ -80,13 +80,13 @@ export function MetricTile({
             {last ? fmtAuto(last.value) : '—'}
             {last && <small>{unit}</small>}
           </span>
-          {last ? <Sparkline points={pts} /> : <span className="vt-tile-nodata">{targetMissing ? 'Hedef seçilmedi' : 'Veri yok'}</span>}
+          {last ? <Sparkline points={pts} /> : <span className="vt-tile-nodata">{targetMissing ? 'No target selected' : 'No data'}</span>}
         </>
       )}
       <span className="vt-tile-foot">
         <span className="vt-tile-time">{last ? `${fmtClock(last.observed_at)} · ${relTime(last.observed_at)}` : ' '}</span>
         {!pending && (quality !== 'VALID' || !last) && <QualityBadge q={last ? quality : 'MISSING'} prefix="" />}
-        {noRule && def.metric === 'HRV_RMSSD' && <span className="vt-sr">HRV için kural veya eşik yok.</span>}
+        {noRule && def.metric === 'HRV_RMSSD' && <span className="vt-sr">No rule or threshold for HRV.</span>}
       </span>
     </button>
   );

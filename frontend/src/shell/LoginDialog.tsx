@@ -9,7 +9,7 @@ import type { AuthMeRead, DemoRoleRead, TokenRead } from './types';
 
 const DEMO_ROLE_LABEL: Record<string, string> = {
   ASTRONAUT: 'Astronot',
-  CREW_MEDICAL_OFFICER: 'Uçuş cerrahı / Sağlık sorumlusu',
+  CREW_MEDICAL_OFFICER: 'Flight surgeon / Crew health officer',
   GROUND: 'Yer ekibi',
 };
 
@@ -50,7 +50,7 @@ export function LoginDialog({ open, onClose }: LoginDialogProps) {
     } catch {
       /* older server without /v1/auth/me: keep the token's identity */
     }
-    toast.success(`Oturum açıldı: ${t.user_id} (${roleLabel(t.role)})`);
+    toast.success(`Signed in: ${t.user_id} (${roleLabel(t.role)})`);
     onClose?.();
   };
 
@@ -61,8 +61,8 @@ export function LoginDialog({ open, onClose }: LoginDialogProps) {
       const t = await api<TokenRead>('POST', '/v1/auth/demo-login', { role });
       await finish(t);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 404) setError('Demo girişi bu sunucuda kapalı.');
-      else if (err instanceof ApiError && err.status === 503) setError('Sunucuda kimlik doğrulama yapılandırılmamış.');
+      if (err instanceof ApiError && err.status === 404) setError('Demo sign-in is disabled on this server.');
+      else if (err instanceof ApiError && err.status === 503) setError('Authentication is not configured on the server.');
       else setError(describeError(err).title);
     } finally {
       setDemoBusy(null);
@@ -72,7 +72,7 @@ export function LoginDialog({ open, onClose }: LoginDialogProps) {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!userId.trim() || !passcode) {
-      setError('Kullanıcı kimliği ve parola gerekli.');
+      setError('User ID and password are required.');
       return;
     }
     setBusy(true);
@@ -83,9 +83,9 @@ export function LoginDialog({ open, onClose }: LoginDialogProps) {
       const t = await api<TokenRead>('POST', '/v1/auth/token', { user_id: userId.trim(), passcode: code });
       await finish(t);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) setError('Kullanıcı kimliği veya parola hatalı.');
-      else if (err instanceof ApiError && err.status === 503) setError('Sunucuda kimlik doğrulama yapılandırılmamış.');
-      else if (err instanceof ApiError && err.status === 422) setError('Girilen değerler geçersiz.');
+      if (err instanceof ApiError && err.status === 401) setError('Wrong user ID or password.');
+      else if (err instanceof ApiError && err.status === 503) setError('Authentication is not configured on the server.');
+      else if (err instanceof ApiError && err.status === 422) setError('The values entered are invalid.');
       else setError(describeError(err).title);
     } finally {
       setBusy(false);
@@ -96,29 +96,29 @@ export function LoginDialog({ open, onClose }: LoginDialogProps) {
     <Dialog
       open={open}
       onClose={onClose}
-      title="Oturum aç"
+      title="Sign in"
       footer={
         <>
           {onClose && (
             <Button variant="ghost" onClick={onClose}>
-              Vazgeç
+              Cancel
             </Button>
           )}
           <Button variant="primary" type="submit" form="shell-login" loading={busy} icon="lock">
-            Giriş yap
+            Sign in
           </Button>
         </>
       }
     >
       <p className="text-muted text-sm">
         {onClose
-          ? 'Rolünüze göre işlem yapabilmek için oturum açın (Astronot, Ekip sağlık sorumlusu veya Yer ekibi).'
-          : 'Bu sunucu oturum açmayı zorunlu tutuyor. Devam etmek için kimliğinizi girin.'}
+          ? 'Sign in to act according to your role (Crew member, Crew health officer or Ground team).'
+          : 'This server requires sign-in. Enter your ID to continue.'}
       </p>
       {demoRoles.length > 0 && (
         <div className="shell-demo-login" role="group" aria-labelledby="shell-demo-login-t">
           <p id="shell-demo-login-t" className="shell-demo-login__title">
-            Demo girişi <span className="text-muted">· tek tıkla, parola gerekmez</span>
+            Demo sign-in <span className="text-muted">· one click, no password needed</span>
           </p>
           <div className="shell-demo-login__btns">
             {demoRoles.map((r) => (
@@ -130,17 +130,17 @@ export function LoginDialog({ open, onClose }: LoginDialogProps) {
                 loading={demoBusy === r.role}
                 disabled={demoBusy !== null || busy}
                 onClick={() => void demoLogin(r.role)}
-                title={`${r.user_id} olarak oturum aç`}
+                title={`Sign in as ${r.user_id}`}
               >
                 {DEMO_ROLE_LABEL[r.role] ?? r.label_tr ?? roleLabel(r.role)}
               </Button>
             ))}
           </div>
-          <p className="shell-demo-login__note text-muted">Demo kullanıcıları yalnız bu sunucuda demo girişi açıkken vardır.</p>
+          <p className="shell-demo-login__note text-muted">Demo users exist only while demo sign-in is enabled on this server.</p>
         </div>
       )}
       <form id="shell-login" className="shell-login" onSubmit={submit} noValidate>
-        <Field label="Kullanıcı kimliği">
+        <Field label="User ID">
           <Input
             name="username"
             autoComplete="username"
@@ -152,7 +152,7 @@ export function LoginDialog({ open, onClose }: LoginDialogProps) {
             autoFocus
           />
         </Field>
-        <Field label="Parola" error={error ?? undefined}>
+        <Field label="Password" error={error ?? undefined}>
           <Input
             name="password"
             type="password"

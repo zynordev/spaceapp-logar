@@ -10,23 +10,23 @@ import { Icon } from '../../ui';
 
 type Range = 'raw' | '7d' | '30d';
 const RANGES: { key: Range; label: string }[] = [
-  { key: 'raw', label: 'Son ölçümler' },
-  { key: '7d', label: '7 gün' },
-  { key: '30d', label: '30 gün' },
+  { key: 'raw', label: 'Recent readings' },
+  { key: '7d', label: '7 days' },
+  { key: '30d', label: '30 days' },
 ];
 const HOUR = 3600_000;
 const DAY = 24 * HOUR;
 
 function Legend({ trend, threshold, markers, suspect, fault }: { trend: boolean; threshold: boolean; markers: boolean; suspect: boolean; fault: boolean }) {
   return (
-    <ul className="vt-legend" aria-label="Grafik açıklaması">
-      <li><svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" className="vt-lg-line" /></svg>{trend ? 'Ortalama' : 'Ölçüm'}</li>
-      {trend && <li><svg width="22" height="10" aria-hidden="true"><rect width="22" height="10" className="vt-lg-band" /></svg>En düşük–en yüksek</li>}
-      {!trend && suspect && <li><svg width="22" height="10" aria-hidden="true"><rect x="7" y="1" width="7" height="7" transform="rotate(45 10.5 4.5)" className="vt-lg-suspect" /></svg>Şüpheli veri</li>}
-      {!trend && fault && <li><span aria-hidden="true" className="vt-lg-fault"><Icon name="x" size={14} /></span>Sensör arızası</li>}
-      <li><svg width="22" height="10" aria-hidden="true"><rect width="22" height="10" className="vt-lg-gap" /></svg>Veri boşluğu</li>
-      {threshold && <li><svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" className="vt-lg-thr" /></svg>Kural eşiği</li>}
-      {markers && <li><span aria-hidden="true" className="vt-lg-open"><Icon name="alert" size={14} /></span>Alarm açıldı <span aria-hidden="true" className="vt-lg-res"><Icon name="check" size={14} /></span>kapandı</li>}
+    <ul className="vt-legend" aria-label="Chart legend">
+      <li><svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" className="vt-lg-line" /></svg>{trend ? 'Average' : 'Reading'}</li>
+      {trend && <li><svg width="22" height="10" aria-hidden="true"><rect width="22" height="10" className="vt-lg-band" /></svg>Lowest–highest</li>}
+      {!trend && suspect && <li><svg width="22" height="10" aria-hidden="true"><rect x="7" y="1" width="7" height="7" transform="rotate(45 10.5 4.5)" className="vt-lg-suspect" /></svg>Suspect data</li>}
+      {!trend && fault && <li><span aria-hidden="true" className="vt-lg-fault"><Icon name="x" size={14} /></span>Sensor fault</li>}
+      <li><svg width="22" height="10" aria-hidden="true"><rect width="22" height="10" className="vt-lg-gap" /></svg>Data gap</li>
+      {threshold && <li><svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" className="vt-lg-thr" /></svg>Rule threshold</li>}
+      {markers && <li><span aria-hidden="true" className="vt-lg-open"><Icon name="alert" size={14} /></span>Alarm opened <span aria-hidden="true" className="vt-lg-res"><Icon name="check" size={14} /></span>closed</li>}
     </ul>
   );
 }
@@ -69,8 +69,8 @@ export function ChartSection({
     if (!ruleIds.has(a.rule_id)) continue;
     const o = toMs(a.opened_at);
     const r = toMs(a.resolved_at);
-    if (o != null) markers.push({ t: o, kind: 'open', label: 'Alarm açıldı' });
-    if (r != null) markers.push({ t: r, kind: 'res', label: 'Alarm kapandı' });
+    if (o != null) markers.push({ t: o, kind: 'open', label: 'Alarm opened' });
+    if (r != null) markers.push({ t: r, kind: 'res', label: 'Alarm closed' });
   }
 
   const trendUnavailable = range !== 'raw' && trend.error != null && !trend.data;
@@ -100,7 +100,7 @@ export function ChartSection({
       <TimeChart key={`${def.metric}-raw`} mode="raw" label={def.label} unit={unit} points={points} threshold={threshold} markers={markers} />
     );
   } else if (raw.error) {
-    body = <p className="vt-empty">Ölçümler alınamadı. Bağlantı geri geldiğinde grafik yenilenecek.</p>;
+    body = <p className="vt-empty">Readings could not be loaded. The chart will refresh when the connection returns.</p>;
   } else {
     body = <div className="vt-chart-skel"><Skeleton lines={1} height={240} /></div>;
   }
@@ -112,15 +112,15 @@ export function ChartSection({
           <h3 id="vt-chart-title" className="vt-h3">{def.label} <span className="vt-muted">({unit})</span></h3>
           <p className="vt-muted vt-small">
             {threshold && rule
-              ? `Eşik: ${rule.title} · ${cmpSymbol(threshold.comparison)} ${fmtAuto(threshold.value)} ${unit}`
+              ? `Threshold: ${rule.title} · ${cmpSymbol(threshold.comparison)} ${fmtAuto(threshold.value)} ${unit}`
               : def.metric === 'HRV_RMSSD'
-                ? 'Yalnızca veri — bu ölçüm için kural veya eşik yok.'
+                ? 'Data only — this measurement has no rule or threshold.'
                 : rule
-                  ? `${rule.title}: eşik bu eksende çizilemez (${cmpSymbol(rule.comparison)} ${fmtAuto(rule.threshold)} ${displayUnit(rule.unit)}).`
-                  : 'Bu ölçüm için etkin kural yok — “kural yok” normal demek değildir.'}
+                  ? `${rule.title}: the threshold cannot be drawn on this axis (${cmpSymbol(rule.comparison)} ${fmtAuto(rule.threshold)} ${displayUnit(rule.unit)}).`
+                  : 'No active rule for this measurement — “no rule” does not mean normal.'}
           </p>
         </div>
-        <div className="vt-seg" role="radiogroup" aria-label="Zaman aralığı">
+        <div className="vt-seg" role="radiogroup" aria-label="Time range">
           {RANGES.map((r) => (
             <button
               key={r.key}
@@ -139,19 +139,19 @@ export function ChartSection({
         <p className="vt-note" role="status">
           <span aria-hidden="true"><Icon name="info" size={14} /></span>
           {trend.error?.notFound
-            ? 'Uzun dönem eğilim servisi bu sunucuda henüz yok; son ölçümler gösteriliyor.'
-            : 'Uzun dönem eğilim şu an alınamadı; son ölçümler gösteriliyor.'}
+            ? 'The long-term trend service is not on this server yet; showing recent readings.'
+            : 'The long-term trend cannot be loaded right now; showing recent readings.'}
         </p>
       )}
       {useTrend && trend.data!.buckets.every((b) => !b.count) && (
-        <p className="vt-note" role="status"><span aria-hidden="true"><Icon name="question" size={14} /></span>Bu aralıkta özetlenecek ölçüm yok.</p>
+        <p className="vt-note" role="status"><span aria-hidden="true"><Icon name="question" size={14} /></span>No readings to summarise in this range.</p>
       )}
       <Legend trend={useTrend} threshold={!!threshold} markers={markers.length > 0} suspect={hasSuspect} fault={hasFault} />
       {body}
       <p className="vt-muted vt-small vt-chart-hint">
         {useTrend
-          ? `${range === '7d' ? 'Saatlik' : 'Günlük'} özet: çizgi ortalama, bant en düşük–en yüksek değer.`
-          : `Son ${points.length} ölçüm. Üzerine gelin, dokunun veya odaklanıp ok tuşlarını kullanın.`}
+          ? `${range === '7d' ? 'Hourly' : 'Daily'} summary: line shows the average, band shows the lowest–highest value.`
+          : `Last ${points.length} readings. Hover, tap, or focus and use the arrow keys.`}
       </p>
     </section>
   );

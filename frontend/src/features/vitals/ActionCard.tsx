@@ -28,16 +28,16 @@ function ReassessCounter({ at, every }: { at: string; every: number | null }) {
     <div className={`vt-reassess${due ? ' is-due' : ''}`}>
       <span className="vt-reassess-icon" aria-hidden="true"><Icon name="clock" size={14} /></span>
       <div>
-        <div className="vt-reassess-label">{due ? 'Yeniden değerlendirme zamanı geldi' : 'Yeniden değerlendirmeye'}</div>
+        <div className="vt-reassess-label">{due ? 'Re-assessment time reached' : 'Re-assess at'}</div>
         <div className="vt-reassess-sub">
           {due
-            ? `${fmtDateTime(at)} itibarıyla ölçümleri ve belirtileri tekrar kontrol et.`
+            ? `Re-check measurements and symptoms as of ${fmtDateTime(at)}.`
             : `${fmtClock(at)}${every ? ` · her ${every} dk` : ''}`}
         </div>
       </div>
       <span className="vt-reassess-clock" aria-hidden={!due}>{clock}</span>
       {/* Screen readers get a calm, minute-resolution text instead of a ticking clock. */}
-      <span className="vt-sr">{due ? 'Süre doldu.' : `${fmtDuration(left)} kaldı.`}</span>
+      <span className="vt-sr">{due ? 'Time is up.' : `${fmtDuration(left)} left.`}</span>
     </div>
   );
 }
@@ -72,10 +72,10 @@ export function ActionCardView({
     } catch (e) {
       const ae = e instanceof ApiError ? e : null;
       setErr(
-        ae?.network ? 'Sunucuya ulaşılamıyor; adım kaydedilmedi.'
-          : ae?.status === 409 ? 'Alarm kapanmış; adım artık kaydedilemez.'
-            : ae?.status === 422 && !crewId ? 'Adımı kaydetmek için ekip üyesi seçin.'
-              : `Adım kaydedilemedi (${ae?.message ?? String(e)}).`,
+        ae?.network ? 'Cannot reach the server; the step was not saved.'
+          : ae?.status === 409 ? 'The alarm is closed; the step can no longer be saved.'
+            : ae?.status === 422 && !crewId ? 'Select a crew member to save the step.'
+              : `Step could not be saved (${ae?.message ?? String(e)}).`,
       );
     } finally {
       setBusy(null);
@@ -94,8 +94,8 @@ export function ActionCardView({
       {card.reason_tr && <p className="vt-ac-reason">{card.reason_tr}</p>}
 
       {situation && situation.facts_tr.length > 0 && (
-        <div className="vt-ac-situation" role="group" aria-label="Şu anki durum">
-          <h4><span className="vt-live-dot" aria-hidden="true" />Şu an ne oluyor?</h4>
+        <div className="vt-ac-situation" role="group" aria-label="Current status">
+          <h4><span className="vt-live-dot" aria-hidden="true" />What is happening now?</h4>
           <ul>{situation.facts_tr.map((f, i) => <li key={i}>{f}</li>)}</ul>
         </div>
       )}
@@ -105,14 +105,14 @@ export function ActionCardView({
       <EarthResponseLine er={situation?.earth_response} />
 
       {card.requires_mission_procedure && (
-        <p className="vt-callout vt-callout-proc"><span aria-hidden="true"><Icon name="flag" size={14} /></span>Görev prosedürü önceliklidir.</p>
+        <p className="vt-callout vt-callout-proc"><span aria-hidden="true"><Icon name="flag" size={14} /></span>The mission procedure takes priority.</p>
       )}
 
       {steps.length > 0 && (
         <div className="vt-ac-steps-wrap">
           <div className="vt-ac-steps-head">
-            <h4>Yapılması gerekenler:</h4>
-            <span className="vt-progress" aria-label={`${doneCount} / ${steps.length} adım tamamlandı`}>
+            <h4>Steps to take:</h4>
+            <span className="vt-progress" aria-label={`${doneCount} / ${steps.length} steps completed`}>
               <span className="vt-progress-bar"><span style={{ width: `${(doneCount / steps.length) * 100}%` }} /></span>
               <span className="vt-small">{doneCount}/{steps.length}</span>
             </span>
@@ -129,8 +129,8 @@ export function ActionCardView({
                     {st.why_tr && <div className="vt-step-why"><b>Neden:</b> {st.why_tr}</div>}
                     {done && (
                       <div className="vt-step-done">
-                        <span className="vt-sr">Tamamlandı. </span>
-                        Yapıldı{d ? ` — ${fmtDateTime(d.done_at)} (${d.crew_member_id})` : ''}
+                        <span className="vt-sr">Completed. </span>
+                        Done{d ? ` — ${fmtDateTime(d.done_at)} (${d.crew_member_id})` : ''}
                       </div>
                     )}
                   </div>
@@ -140,10 +140,10 @@ export function ActionCardView({
                       className="vt-btn vt-btn-sm"
                       disabled={busy != null}
                       aria-busy={busy === st.key}
-                      aria-label={`Adımı yaptım olarak işaretle: ${st.text_tr || st.key}`}
+                      aria-label={`Mark step as done: ${st.text_tr || st.key}`}
                       onClick={() => markDone(st.key)}
                     >
-                      {busy === st.key ? 'Kaydediliyor…' : 'Yaptım'}
+                      {busy === st.key ? 'Saving…' : 'Done'}
                     </button>
                   )}
                 </li>
@@ -151,20 +151,20 @@ export function ActionCardView({
             })}
           </ol>
           {err && <p className="vt-inline-err" role="alert">{err}</p>}
-          {readOnly && <p className="vt-muted vt-small">Bu kart açık bir alarma bağlı değil; adımlar bilgi amaçlıdır.</p>}
+          {readOnly && <p className="vt-muted vt-small">This card is not linked to an open alarm; the steps are for information only.</p>}
         </div>
       )}
 
       <div className="vt-ac-conds">
         {card.escalate_if_tr?.length > 0 && (
           <div className="vt-ac-cond vt-ac-escalate">
-            <h4><span aria-hidden="true"><Icon name="alert" size={14} /></span> Seviyenin yükseldiği acil durumlar</h4>
+            <h4><span aria-hidden="true"><Icon name="alert" size={14} /></span> Emergencies that raise the level</h4>
             <ul>{card.escalate_if_tr.map((x, i) => <li key={i}>{x}</li>)}</ul>
           </div>
         )}
         {card.closes_when_tr && (
           <div className="vt-ac-cond vt-ac-closes">
-            <h4><span aria-hidden="true"><Icon name="check" size={14} /></span> Acil durum ne zaman sona erer?</h4>
+            <h4><span aria-hidden="true"><Icon name="check" size={14} /></span> When does the emergency end?</h4>
             <p>{card.closes_when_tr}</p>
           </div>
         )}
@@ -172,13 +172,13 @@ export function ActionCardView({
 
       {card.considerations_tr?.length > 0 && (
         <details className="vt-ac-considerations">
-          <summary>Olası açıklamalar <span className="vt-muted">(teşhis değildir)</span></summary>
+          <summary>Possible explanations <span className="vt-muted">(not a diagnosis)</span></summary>
           <ul>{card.considerations_tr.map((x, i) => <li key={i}>{x}</li>)}</ul>
         </details>
       )}
 
       {card.allows_automatic_vehicle_command === false && (
-        <p className="vt-callout vt-callout-info"><span aria-hidden="true"><Icon name="info" size={14} /></span>Yazılım araç/ekipman komutu vermez.</p>
+        <p className="vt-callout vt-callout-info"><span aria-hidden="true"><Icon name="info" size={14} /></span>The software issues no tool or equipment commands.</p>
       )}
       {card.footer_note_tr && <p className="vt-ac-footer">{card.footer_note_tr}</p>}
       {card.references?.length > 0 && (

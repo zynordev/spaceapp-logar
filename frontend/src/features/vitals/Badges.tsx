@@ -36,14 +36,14 @@ export function ValidationBadge({ v }: { v: string | null | undefined }) {
   if (!v) return null;
   if (v === 'APPROVED') {
     return (
-      <span className="vt-badge vt-val-approved" title="Eşik ve kart kaynağıyla doğrulanmış">
-        <span className="vt-bi" aria-hidden="true"><Icon name="check" size={12} /></span>Doğrulanmış
+      <span className="vt-badge vt-val-approved" title="Verified against the threshold and card source">
+        <span className="vt-bi" aria-hidden="true"><Icon name="check" size={12} /></span>Verified
       </span>
     );
   }
   if (v.startsWith('DEMO')) {
     return (
-      <span className="vt-badge vt-val-demo" title="DEMO eşik — uçuş tıbbı uzmanı doğrulaması bekliyor">
+      <span className="vt-badge vt-val-demo" title="DEMO threshold — awaiting flight medicine expert validation">
         <span className="vt-bi" aria-hidden="true"><Icon name="flask" size={12} /></span>DEMO
       </span>
     );

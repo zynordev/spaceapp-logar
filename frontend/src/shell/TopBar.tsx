@@ -55,12 +55,12 @@ export function TopBar({ missions, auth, onLogin, onLogout }: TopBarProps) {
         <Logo />
         <div className="shell-brand__text">
           <span className="shell-brand__name">SpaceApp Logar</span>
-          <span className="shell-brand__sub">Astronot Sağlık Karar Desteği</span>
+          <span className="shell-brand__sub">Crew Health Decision Support</span>
         </div>
       </div>
 
-      <div className="shell-controls" role="group" aria-label="Görev seçimi">
-        <Control label="Görev" htmlFor="shell-mission">
+      <div className="shell-controls" role="group" aria-label="Mission selection">
+        <Control label="Mission" htmlFor="shell-mission">
           <Select
             id="shell-mission"
             value={missionId ?? ''}
@@ -70,17 +70,17 @@ export function TopBar({ missions, auth, onLogin, onLogout }: TopBarProps) {
               if (m) selectMission(m);
             }}
           >
-            {!list.length && !showOrphan && <option value="">{missions.loading ? 'Yükleniyor…' : 'Görev yok'}</option>}
+            {!list.length && !showOrphan && <option value="">{missions.loading ? 'Loading…' : 'No missions'}</option>}
             {showOrphan && <option value={missionId}>{missionId}</option>}
             {list.map((m) => (
               <option key={m.mission_id} value={m.mission_id} title={m.mission_id}>
-                {(m.scenario_id || 'görev') + ' · ' + formatDateTime(m.last_observed_at)}
+                {(m.scenario_id || 'mission') + ' · ' + formatDateTime(m.last_observed_at)}
               </option>
             ))}
           </Select>
         </Control>
 
-        <Control label="Astronot" htmlFor="shell-crew">
+        <Control label="Crew member" htmlFor="shell-crew">
           <Select
             id="shell-crew"
             value={crewId ?? ''}
@@ -96,7 +96,7 @@ export function TopBar({ missions, auth, onLogin, onLogout }: TopBarProps) {
           </Select>
         </Control>
 
-        <Control label="Ortam (kabin)" htmlFor="shell-env">
+        <Control label="Environment (cabin)" htmlFor="shell-env">
           <Select
             id="shell-env"
             value={envId ?? ''}
@@ -113,7 +113,7 @@ export function TopBar({ missions, auth, onLogin, onLogout }: TopBarProps) {
         </Control>
 
         <div className="shell-demo" id="shell-demo-anchor">
-          <FeatureBoundary name="Demo senaryosu" compact>
+          <FeatureBoundary name="Demo scenario" compact>
             <Suspense fallback={<Skeleton height={40} className="shell-demo__skeleton" />}>
               <DemoScenarioControl />
             </Suspense>
@@ -149,19 +149,19 @@ function UserChip({ auth, onLogin, onLogout }: { auth: AuthInfo; onLogin: () => 
           <span className="shell-user__role">{roleLabel(user.role)}</span>
         </span>
         <Button size="sm" variant="ghost" icon="logout" onClick={onLogout}>
-          Çıkış
+          Sign out
         </Button>
       </div>
     );
   }
   return (
     <div className="shell-user">
-      <Chip tone="neutral" icon="user" title="Oturum açılmadı: demo modunda anonim kullanıcı">
-        Demo kullanıcı
+      <Chip tone="neutral" icon="user" title="Not signed in: anonymous user in demo mode">
+        Demo user
       </Chip>
       {auth.authConfigured !== false && (
         <Button size="sm" variant="secondary" icon="lock" onClick={onLogin}>
-          Giriş
+          Sign in
         </Button>
       )}
     </div>

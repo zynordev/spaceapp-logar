@@ -20,7 +20,7 @@ export class FeatureBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error(`[${this.props.name}] panel hatası`, error, info.componentStack);
+    console.error(`[${this.props.name}] panel error`, error, info.componentStack);
   }
 
   render() {
@@ -31,9 +31,9 @@ export class FeatureBoundary extends Component<Props, State> {
         <Icon name="warning" size={18} />
         <div>
           <p className="shell-crash__title">
-            {this.props.name}: {chunk ? 'bileşen yüklenemedi' : 'bu bölüm görüntülenemedi'}
+            {this.props.name}: {chunk ? 'component could not be loaded' : 'this section could not be displayed'}
           </p>
-          {!this.props.compact && <p className="shell-crash__detail">Diğer bölümler çalışmaya devam ediyor.</p>}
+          {!this.props.compact && <p className="shell-crash__detail">Other sections keep working.</p>}
         </div>
         <Button
           size="sm"

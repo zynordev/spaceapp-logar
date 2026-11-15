@@ -14,7 +14,7 @@ import './shell/shell.css';
 
 function PanelSkeleton({ title, height }: { title: string; height: number }) {
   return (
-    <div className="shell-skeleton" style={{ minHeight: height }} aria-busy="true" aria-label={`${title} yükleniyor`}>
+    <div className="shell-skeleton" style={{ minHeight: height }} aria-busy="true" aria-label={`${title} loading`}>
       <Skeleton height={20} className="shell-skeleton__title" />
       <Skeleton height={Math.max(40, height - 90)} />
     </div>
@@ -94,7 +94,7 @@ export default function App() {
       };
   const logout = () => {
     useApp.getState().setToken(null);
-    toast('Oturum kapatıldı.');
+    toast('Signed out.');
   };
 
   // Ground crew lands on the ground tab unless they picked one.
@@ -113,7 +113,7 @@ export default function App() {
   return (
     <>
       <a className="skip-link" href="#main">
-        Ana içeriğe geç
+        Skip to main content
       </a>
       <TopBar missions={missions} auth={auth} onLogin={() => setLoginOpen(true)} onLogout={logout} />
       <DisclaimerBand />
@@ -123,33 +123,33 @@ export default function App() {
         {waiting ? (
           missions.error ? (
             missions.error.network || offline ? (
-              <EmptyState icon="offline" title="Sunucuya ulaşılamıyor">
-                Sunucu yanıt verince veriler otomatik yüklenecek.
+              <EmptyState icon="offline" title="Cannot reach the server">
+                Data loads automatically once the server responds.
               </EmptyState>
             ) : (
-              <ErrorNote error={missions.error} what="Görev listesi" />
+              <ErrorNote error={missions.error} what="Mission list" />
             )
           ) : (
-            <PanelSkeleton title="Gösterge paneli" height={180} />
+            <PanelSkeleton title="Dashboard" height={180} />
           )
         ) : noMissions ? (
           <EmptyState
             icon="satellite"
-            title="Henüz görev verisi yok"
+            title="No mission data yet"
             action={
               <Button variant="primary" onClick={() => document.querySelector<HTMLElement>('#shell-demo-anchor select, #shell-demo-anchor button')?.focus()}>
-                Demo senaryosu seçin
+                Choose a demo scenario
               </Button>
             }
           >
-            Üst şeritteki <strong>Demo senaryosu</strong> denetiminden bir senaryo çalıştırın; ölçümler, kurallar ve alarmlar
-            burada görünecek.
+            Run a scenario from the <strong>Demo scenario</strong> control in the top bar; measurements, rules and alerts
+            will appear here.
           </EmptyState>
         ) : (
           <>
-            <section className="hud-screens" aria-label="Görev ekranı" data-tour="hud">
-              <FeatureBoundary name="Görev ekranı">
-                <Suspense fallback={<PanelSkeleton title="Görev ekranı" height={600} />}>
+            <section className="hud-screens" aria-label="Mission screen" data-tour="hud">
+              <FeatureBoundary name="Mission screen">
+                <Suspense fallback={<PanelSkeleton title="Mission screen" height={600} />}>
                   <MissionScreens
                     scenarioId={missions.current?.scenario_id ?? null}
                     crewIds={missions.current?.crew_member_ids ?? (crewId ? [crewId] : [])}
@@ -162,18 +162,18 @@ export default function App() {
             <section id="details" className="shell-details" aria-labelledby="details-title" tabIndex={-1}>
               <div className="shell-details__head">
                 <h2 id="details-title" className="shell-details__title">
-                  Ayrıntılar
+                  Details
                 </h2>
-                <p className="shell-details__sub">Kurallar ve “Neden?”, alarm ve eylem kartı, veri girişi, yer istasyonu.</p>
+                <p className="shell-details__sub">Rules and “Why?”, alarms and action card, data entry, ground station.</p>
               </div>
               <Tabs
-                label="Bölümler"
+                label="Sections"
                 value={activeTab}
                 onChange={(id) => setTab(id as DetailTab)}
                 tabs={[
-                  { id: 'rules', label: 'Kurallar ve alarmlar' },
-                  { id: 'inputs', label: 'Veri girişi' },
-                  { id: 'ground', label: 'Yer istasyonu' },
+                  { id: 'rules', label: 'Rules and alarms' },
+                  { id: 'inputs', label: 'Data entry' },
+                  { id: 'ground', label: 'Ground station' },
                 ]}
               >
                 {activeTab === 'rules' ? (
@@ -181,12 +181,12 @@ export default function App() {
                     <Slot name="Alarmlar" height={560} className="shell-grid__alerts">
                       <AlertsPanel />
                     </Slot>
-                    <Slot name="Ölçümler ve kurallar" height={420} className="shell-grid__vitals">
+                    <Slot name="Measurements and rules" height={420} className="shell-grid__vitals">
                       <VitalsPanel />
                     </Slot>
                   </div>
                 ) : activeTab === 'inputs' ? (
-                  <Slot name="Veri girişi" height={360}>
+                  <Slot name="Data entry" height={360}>
                     <InputsPanel />
                   </Slot>
                 ) : (
@@ -201,8 +201,8 @@ export default function App() {
       </main>
 
       <footer className="shell-footer">
-        SpaceApp Logar · NASA Space Apps 2026 prototipi · Açıklanabilir karar-destek; yazılım araç/ekipman komutu vermez,
-        tıbbi teşhis veya tedavi yerine geçmez.
+        SpaceApp Logar · NASA Space Apps 2026 prototype · Explainable decision support; the software issues no tool or equipment commands
+        and does not replace medical diagnosis or treatment.
       </footer>
 
       <ToastHost />

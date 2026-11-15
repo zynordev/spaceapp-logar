@@ -2,7 +2,7 @@ import { useApp } from '../lib/store';
 import { Icon } from '../ui';
 
 export const DISCLAIMER =
-  "Prototip karar-destek aracıdır. Teşhis koymaz, tedavi önermez. 'DEMO' etiketli eşikler uzman doğrulaması bekliyor.";
+  "Prototype decision-support tool. It does not diagnose or recommend treatment. 'DEMO'-labelled thresholds await expert validation.";
 
 /** Always visible; never dismissable. */
 export function DisclaimerBand() {
@@ -21,7 +21,7 @@ export function OfflineBanner() {
     <div className="shell-offline" role="alert">
       <Icon name="offline" size={18} />
       <span>
-        <strong>Sunucuya ulaşılamıyor.</strong> Son bilinen veriler gösteriliyor; otomatik yeniden deneniyor.
+        <strong>Cannot reach the server.</strong> Showing the last known data; retrying automatically.
       </span>
     </div>
   );
