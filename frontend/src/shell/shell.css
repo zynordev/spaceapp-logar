@@ -349,3 +349,14 @@
 .shell-user__avatar { border-radius: 0; }
 .shell-console { margin-left: auto; flex: none; }
 .shell-console + .shell-user { margin-left: var(--sp-2); }
+
+/* Presentation looks (?look=clean | ?look=bare), see main.tsx. */
+[data-look] .shell-demo,
+[data-look] .shell-user { display: none !important; }
+[data-look='bare'] .shell-disclaimer,
+[data-look='bare'] .ui-src,
+[data-look='bare'] .ui-chip--demo,
+[data-look='bare'] .lgi-chip--demo,
+[data-look='bare'] .dz-nav__demo,
+[data-look='bare'] .dz-main__demo,
+[data-look='bare'] .b3d-mode { display: none !important; }

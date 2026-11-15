@@ -49,6 +49,15 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
+// Presentation look, for comparing side by side (local test):
+//   ?look=clean  hides the demo controls in the top bar (scenario picker, RUN,
+//                DETAILS, demo user / sign in);
+//   ?look=bare   also hides the DEMO / SYNTHETIC tags and the prototype banner.
+{
+  const look = new URLSearchParams(window.location.search).get('look');
+  if (look === 'clean' || look === 'bare') document.documentElement.dataset.look = look;
+}
+
 // Jury link: the CO₂ + headache scenario tour starts by itself as soon as the
 // page opens, with auto-advance on. `?autoplay=0` opens the app without it;
 // the tour's close button or Esc stops it.
