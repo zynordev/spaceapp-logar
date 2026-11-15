@@ -1,11 +1,9 @@
 import os
-from pathlib import Path
 from typing import Literal
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from spaceapp_logar.api.alerts import router as alerts_router
@@ -20,10 +18,9 @@ from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.red_flags import router as red_flags_router
 from spaceapp_logar.api.status import router as status_router
 from spaceapp_logar.auth import current_user
+from spaceapp_logar.dashboard import UI_DIST, DashboardFiles
 from spaceapp_logar.db import session as db_session
 from spaceapp_logar.observability import REQUEST_ID_HEADER, install_observability
-
-WEB_DIR = Path(__file__).parent / "web"
 
 
 class SchemaHealth(BaseModel):
@@ -118,9 +115,6 @@ def open_dashboard() -> RedirectResponse:
     return RedirectResponse(url="/ui/")
 
 
-# Offline dashboard: plain static files, no CDN or build step.
-app.mount(
-    "/ui",
-    StaticFiles(directory=WEB_DIR, html=True, check_dir=False),
-    name="ui",
-)
+# Offline dashboard: the React build in frontend/dist (no CDN). Without a
+# build, /ui/ shows a built-in page explaining `npm ci && npm run build`.
+app.mount("/ui", DashboardFiles(UI_DIST), name="ui")

@@ -164,3 +164,5 @@ def test_root_redirects_to_dashboard(api_client: tuple[TestClient, Engine]) -> N
     assert response.headers["location"] == "/ui/"
     assert page.status_code == 200
     assert "SpaceApp Logar" in page.text
+    # Built React app (frontend/dist) or the built-in "npm run build" page.
+    assert 'id="root"' in page.text or "npm run build" in page.text

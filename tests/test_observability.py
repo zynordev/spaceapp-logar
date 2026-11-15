@@ -130,4 +130,7 @@ def test_cors_exposes_request_id_header() -> None:
 
 
 def test_dashboard_still_loads() -> None:
-    assert client.get("/ui/").status_code == 200
+    page = client.get("/ui/")
+    assert page.status_code == 200
+    assert page.headers["content-type"].startswith("text/html")
+    assert "SpaceApp Logar" in page.text

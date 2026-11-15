@@ -60,7 +60,9 @@ export function ErrorNote({ error, what, onRetry, compact }: ErrorNoteProps) {
  */
 export function notifyError(error: unknown, what?: string) {
   const d = describeError(error, what);
-  toast.error(d.detail && !(error instanceof ApiError && error.forbidden) ? `${d.title} — ${d.detail}` : d.title);
+  // 403 on a write is already toasted by api(); identical text is de-duplicated.
+  if (error instanceof ApiError && error.forbidden) toast.error(FORBIDDEN_MESSAGE);
+  else toast.error(d.detail ? `${d.title} — ${d.detail}` : d.title);
   return d;
 }
 
