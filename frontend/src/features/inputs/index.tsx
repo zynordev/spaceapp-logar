@@ -1,10 +1,97 @@
-// STUB — owned by the UI-inputs track. Keep these export names and signatures.
-// Check-in, activity, routines + streaks, manual lab entry, red flags, labs + OSDR.
+// UI-inputs track: check-in, activity, routines + streaks, manual lab entry,
+// red flags, labs + OSDR import, demo scenario runner.
+// Public API (used by the shell): InputsPanel, DemoScenarioControl — no props;
+// mission/crew come from useApp().
+import { useRef, useState, type KeyboardEvent } from 'react';
+import { useApp } from '../../lib/store';
+import { ActivitySection } from './Activity';
+import { CheckInSection } from './CheckIn';
+import { DemoScenarioPicker } from './DemoScenario';
+import { LabsSection } from './Labs';
+import { RedFlagsSection } from './RedFlags';
+import { RoutinesSection } from './Routines';
+import { MOCK } from './shared';
+import './inputs.css';
+
+type TabKey = 'checkin' | 'activity' | 'routines' | 'labs' | 'redflag';
+const TABS: { key: TabKey; label: string; icon: string }[] = [
+  { key: 'checkin', label: 'Öznel durum', icon: '☺' },
+  { key: 'activity', label: 'Aktivite', icon: '⏱' },
+  { key: 'routines', label: 'Rutinler', icon: '✓' },
+  { key: 'labs', label: 'Laboratuvar', icon: '⚗' },
+  { key: 'redflag', label: 'Kırmızı bayrak', icon: '⚠' },
+];
+
 export function InputsPanel() {
-  return <section aria-label="Veri girişi">Veri girişi (yapılıyor)</section>;
+  const missionId = useApp((s) => s.missionId);
+  const crewId = useApp((s) => s.crewId);
+  const [tab, setTab] = useState<TabKey>('checkin');
+  const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    const i = TABS.findIndex((t) => t.key === tab);
+    let next = -1;
+    if (e.key === 'ArrowRight') next = (i + 1) % TABS.length;
+    else if (e.key === 'ArrowLeft') next = (i - 1 + TABS.length) % TABS.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = TABS.length - 1;
+    if (next < 0) return;
+    e.preventDefault();
+    const k = TABS[next].key;
+    setTab(k);
+    refs.current[k]?.focus();
+  };
+
+  return (
+    <section className="lgi lgi-panel" aria-labelledby="lgi-panel-h">
+      <header className="lgi-panel__head">
+        <h2 id="lgi-panel-h" className="lgi-panel__title">Veri girişi</h2>
+        <span className="lgi-muted">
+          {missionId && crewId ? <>Görev <b>{missionId}</b> · Ekip üyesi <b>{crewId}</b></> : 'Görev seçilmedi'}
+        </span>
+        {MOCK && <span className="lgi-chip">?mock=1 önizleme</span>}
+      </header>
+      <div className="lgi-tabs" role="tablist" aria-label="Veri girişi bölümleri" onKeyDown={onKey}>
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            ref={(el) => { refs.current[t.key] = el; }}
+            type="button"
+            role="tab"
+            id={`lgi-tab-${t.key}`}
+            aria-selected={tab === t.key}
+            aria-controls={`lgi-tabpanel-${t.key}`}
+            tabIndex={tab === t.key ? 0 : -1}
+            className={`lgi-tab${tab === t.key ? ' is-on' : ''}${t.key === 'redflag' ? ' lgi-tab--crit' : ''}`}
+            onClick={() => setTab(t.key)}
+          >
+            <span className="lgi-tab__icon" aria-hidden="true">{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {TABS.map((t) => (
+        <div
+          key={t.key}
+          role="tabpanel"
+          id={`lgi-tabpanel-${t.key}`}
+          aria-labelledby={`lgi-tab-${t.key}`}
+          hidden={tab !== t.key}
+          tabIndex={0}
+          className="lgi-tabpanel"
+        >
+          {t.key === 'checkin' && <CheckInSection />}
+          {t.key === 'activity' && <ActivitySection />}
+          {t.key === 'routines' && <RoutinesSection />}
+          {t.key === 'labs' && <LabsSection />}
+          {t.key === 'redflag' && <RedFlagsSection />}
+        </div>
+      ))}
+    </section>
+  );
 }
 
 /** Demo scenario runner; the shell places it in the top bar / demo drawer. */
 export function DemoScenarioControl() {
-  return <span>Demo (yapılıyor)</span>;
+  return <DemoScenarioPicker />;
 }
