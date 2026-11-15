@@ -147,7 +147,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
   co2: [
     {
       id: 'cabin-co2',
-      beat: '0–4 sn',
+      beat: '0–4 s',
       title: 'Cabin CO₂ is rising',
       caption: 'The synthetic scenario raises the cabin CO₂ partial pressure. The CO₂ column in the top strip shows the value, the status and the source of the threshold.',
       honest: SYNTHETIC,
@@ -159,7 +159,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'body-cabin',
-      beat: '0–4 sn',
+      beat: '0–4 s',
       title: 'Cabin region on the 3D map',
       caption: 'The crew card opens the astronaut’s 3D body model. The cabin environment region is marked; on the right, the same astronaut’s vital findings and the recorded ECG strip remain.',
       honest: SYNTHETIC,
@@ -171,7 +171,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'body-head',
-      beat: '0–4 sn',
+      beat: '0–4 s',
       title: 'Astronaut reports a headache',
       caption: 'The subjective report is linked to the same rule: the head region lights up too. The system shows both findings together.',
       honest: DECISION_SUPPORT,
@@ -183,7 +183,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'action-card',
-      beat: '4–10 sn',
+      beat: '4–10 s',
       title: 'Action card: what should I do, and why?',
       caption: 'Pre-written steps, the reason for each step and a re-assessment timer. The CO₂ threshold comes from NASA-STD-3001 (STANDARD).',
       honest: 'Other thresholds are DEMO (evidence class F): awaiting expert validation. The software issues no tool or equipment commands.',
@@ -195,7 +195,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'escalation',
-      beat: '10–17 sn',
+      beat: '10–17 s',
       title: 'Automatic escalation to the flight surgeon',
       caption: 'As soon as a Warning or Critical alarm opens, a priority notification for the flight surgeon is created automatically; nobody presses a button.',
       honest: 'The notification goes to Earth in the link window; the ship keeps working without waiting.',
@@ -207,7 +207,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'routing',
-      beat: '10–17 sn',
+      beat: '10–17 s',
       title: 'Routing to the right team',
       caption: 'CO₂ and cabin atmosphere data go to the life support team packet; health data goes to the flight surgeon.',
       route: 'app',
@@ -217,7 +217,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'packet',
-      beat: '10–17 sn',
+      beat: '10–17 s',
       title: 'Signed packet',
       caption: 'Packet contents are summarised with sha256; if a key is set on the server, they are signed with HMAC-SHA256. Earth checks the digest when acknowledging.',
       honest: 'Integrity and source verification — not encryption.',
@@ -233,7 +233,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'console',
-      beat: '17–24 sn',
+      beat: '17–24 s',
       title: 'Earth sees it late',
       caption: 'The ground control console sees the same events with the light delay. The counter shows when the signal will reach Earth.',
       honest: 'Delay simulation: data arrives from the server instantly; only this screen animates the delay.',
@@ -244,7 +244,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'ack',
-      beat: '24–30 sn',
+      beat: '24–30 s',
       title: 'Ground team acknowledges',
       caption: 'When the flight surgeon packet arrives, the ground team acknowledges it (ack). The tour presses the acknowledge button on behalf of the ground team.',
       honest: 'When signed in, only the ground team (GROUND) role can give the acknowledgement.',
@@ -255,7 +255,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'ack-back',
-      beat: '24–30 sn',
+      beat: '24–30 s',
       title: 'Acknowledgement returns to the ship',
       caption: 'The acknowledgement travels back to the ship with the same delay. The ship keeps working with its own decision support in the meantime.',
       honest: DECISION_SUPPORT + ' Delay simulation.',
@@ -268,7 +268,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
   redflag: [
     {
       id: 'rf-report',
-      beat: '0–4 sn',
+      beat: '0–4 s',
       title: 'Chest pain report',
       caption: 'While measurements are normal, the astronaut reports chest pain (red flag). The torso region is marked.',
       honest: SYNTHETIC,
@@ -280,7 +280,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'rf-critical',
-      beat: '4–10 sn',
+      beat: '4–10 s',
       title: 'Immediately CRITICAL',
       caption: 'A red flag does not wait for an average: on the crew card the overall status becomes Critical at once, and the emergency line shows the open alarm. Normal measurements do not rule out a serious event.',
       honest: DECISION_SUPPORT,
@@ -291,7 +291,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'rf-card',
-      beat: '10–17 sn',
+      beat: '10–17 s',
       title: 'Emergency action card',
       caption: 'The card puts the mission procedure first. The alarm does not close by itself when measurements return; the team reviews and closes it.',
       honest: 'No diagnosis is made and no medication or dose is recommended.',
@@ -303,7 +303,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'rf-escalation',
-      beat: '17–24 sn',
+      beat: '17–24 s',
       title: 'CRITICAL notification to the flight surgeon',
       caption: 'A Critical alarm creates the priority notification for the flight surgeon automatically; nobody presses a button.',
       route: 'app',
@@ -314,7 +314,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     },
     {
       id: 'rf-console',
-      beat: '24–30 sn',
+      beat: '24–30 s',
       title: 'Earth learns with a delay',
       caption: 'The ground team sees the notification only when the signal arrives. If the delay is long, the first decision rests with the health officer on board.',
       honest: 'Delay simulation — display only.',

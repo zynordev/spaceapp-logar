@@ -6,9 +6,9 @@ import './styles/base.css';
 import App from './App';
 import { useTour } from './features/tour/store';
 
-// "#/yer" opens the full-screen ground mission-control console instead of the app.
+// "#/ground" (old: "#/yer") opens the full-screen ground mission-control console instead of the app.
 const GroundConsoleApp = lazy(() => import('./features/console/GroundConsoleApp').then((m) => ({ default: m.GroundConsoleApp })));
-const isConsole = () => window.location.hash.startsWith('#/yer');
+const isConsole = () => /^#\/(ground|yer)/.test(window.location.hash);
 // Guided jury tour overlay: lives above both views so it survives the route change.
 const TourHost = lazy(() => import('./features/tour/TourHost').then((m) => ({ default: m.TourHost })));
 

@@ -52,7 +52,7 @@ export function MetricTile({
   const pending = !targetMissing && !data && !error;
   const att = top ? attInfo(top.health_attention) : null;
   const noRule = !top;
-  const ariaLabel = `${def.label}: ${last ? `${fmtAuto(last.value)} ${unit}` : 'veri yok'}. ${
+  const ariaLabel = `${def.label}: ${last ? `${fmtAuto(last.value)} ${unit}` : 'no data'}. ${
     att ? att.label : 'No rule'
   }. Switch the chart to this measurement.`;
 

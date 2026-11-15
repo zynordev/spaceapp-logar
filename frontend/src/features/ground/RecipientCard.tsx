@@ -122,7 +122,7 @@ export function RecipientCard(props: {
           <dd className={pending ? 'gp-hot' : undefined}>{pending ?? '—'}</dd>
         </div>
         <div>
-          <dt>Son onay</dt>
+          <dt>Last acknowledgement</dt>
           <dd className="gp-small">
             {status?.last_ack_at ? (
               <>

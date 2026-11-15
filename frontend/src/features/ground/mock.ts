@@ -31,7 +31,7 @@ export const MOCK_MISSION_ID = 'mock-mars-transit';
 const LABELS: Record<Recipient, string> = {
   FLIGHT_SURGEON: 'Flight surgeon',
   LIFE_SUPPORT: 'Life support',
-  RADIATION: 'Radyasyon',
+  RADIATION: 'Radiation',
   MISSION_CONTROL: 'Mission control',
 };
 
@@ -71,7 +71,7 @@ function s(): MockState {
       id: 'esc-0001',
       mission_id: MOCK_MISSION_ID,
       alert_id: 'alert-red-flag-0001',
-      crew_member_id: 'crew-ayse',
+      crew_member_id: 'crew-01',
       priority: 'CRITICAL',
       status: 'PENDING',
       created_at: minutesAgo(7),
@@ -83,7 +83,7 @@ function s(): MockState {
       id: 'esc-0002',
       mission_id: MOCK_MISSION_ID,
       alert_id: 'alert-spo2-0002',
-      crew_member_id: 'crew-mert',
+      crew_member_id: 'crew-02',
       priority: 'ALERT',
       status: 'PENDING',
       created_at: minutesAgo(23),
@@ -160,7 +160,7 @@ const ITEM_TEMPLATES: Record<Recipient, Omit<PacketItem, 'id' | 'occurred_at'>[]
   LIFE_SUPPORT: [
     { kind: 'ALERT', summary_tr: 'Cabin CO₂ above nominal limit (lab module)', data: { rule_id: 'ENV_CO2_NOMINAL_V1' } },
     { kind: 'RULE_EVALUATION', summary_tr: 'Cabin O₂ partial pressure — Normal', data: { rule_id: 'ENV_CABIN_ATMOSPHERE_V1' } },
-    { kind: 'TREND', summary_tr: 'Kabin CO₂ saatlik ortalama 3,1 mmHg', data: { metric: 'CO2' } },
+    { kind: 'TREND', summary_tr: 'Cabin CO₂ hourly average 3.1 mmHg', data: { metric: 'CO2' } },
     { kind: 'TREND', summary_tr: 'Cabin pressure 101.2 kPa stable', data: { metric: 'CABIN_PRESSURE' } },
   ],
   RADIATION: [
@@ -249,7 +249,7 @@ export const MOCK_COVERAGE: CoverageRead = (() => {
   const hazards = [
     {
       key: 'RADIATION',
-      title_tr: 'Uzay radyasyonu',
+      title_tr: 'Space radiation',
       risks: [
         r('acute_radiation', 'Acute high exposure (solar particle event)', 'RULE', ['Radiation dose rate'], [['ENV_RADIATION_V1', 'Radiation dose rate and cumulative dose']], 'Sudden rise relative to the module baseline.'),
         r('cumulative_radiation', 'Cumulative dose', 'RULE', ['Radiation dose rate (total over time)'], [['ENV_RADIATION_V1', 'Radiation dose rate and cumulative dose']], 'No long-term risk prediction is made.'),
@@ -259,8 +259,8 @@ export const MOCK_COVERAGE: CoverageRead = (() => {
       key: 'ISOLATION',
       title_tr: 'Isolation and confinement',
       risks: [
-        r('sleep_circadian', 'Sleep loss and circadian disruption', 'RULE', ['Sleep duration', 'Fatigue (subjective)'], [['BEHAV_SLEEP_V1', 'Uyku ve yorgunluk']], 'Sleep quality is not measured.'),
-        r('behavioral_health', 'Behavioural health and mood', 'RULE', ['Mood distress (subjective)'], [['BEHAV_SLEEP_V1', 'Uyku ve yorgunluk']], 'No separate mood rule.'),
+        r('sleep_circadian', 'Sleep loss and circadian disruption', 'RULE', ['Sleep duration', 'Fatigue (subjective)'], [['BEHAV_SLEEP_V1', 'Sleep and fatigue']], 'Sleep quality is not measured.'),
+        r('behavioral_health', 'Behavioural health and mood', 'RULE', ['Mood distress (subjective)'], [['BEHAV_SLEEP_V1', 'Sleep and fatigue']], 'No separate mood rule.'),
         r('team_performance', 'Crew cohesion and performance', 'GAP', [], [], 'Not measured.'),
       ],
     },

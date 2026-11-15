@@ -32,7 +32,7 @@ function ReassessCounter({ at, every }: { at: string; every: number | null }) {
         <div className="vt-reassess-sub">
           {due
             ? `Re-check measurements and symptoms as of ${fmtDateTime(at)}.`
-            : `${fmtClock(at)}${every ? ` · her ${every} dk` : ''}`}
+            : `${fmtClock(at)}${every ? ` · every ${every} min` : ''}`}
         </div>
       </div>
       <span className="vt-reassess-clock" aria-hidden={!due}>{clock}</span>
@@ -87,7 +87,7 @@ export function ActionCardView({
       <div className="vt-ac-top">
         <AttBadge att={card.attention} size="lg" />
         <ThresholdSource r={card} />
-        {since != null && <span className="vt-muted vt-small">Bu seviyede {fmtDuration(now - since)}</span>}
+        {since != null && <span className="vt-muted vt-small">At this level for {fmtDuration(now - since)}</span>}
       </div>
       {context && <p className="vt-muted vt-small">{context}</p>}
       <h3 id={`ac-${card.card_id}`} className="vt-ac-title">{card.title_tr || card.title_key}</h3>
@@ -183,7 +183,7 @@ export function ActionCardView({
       {card.footer_note_tr && <p className="vt-ac-footer">{card.footer_note_tr}</p>}
       {card.references?.length > 0 && (
         <p className="vt-ac-refs">
-          Kaynak:{' '}
+          Source:{' '}
           {card.references.map((r, i) => {
             const u = safeUrl(r.uri);
             return (
@@ -195,7 +195,7 @@ export function ActionCardView({
           })}
         </p>
       )}
-      <p className="vt-ac-meta vt-mono">Kart: {card.card_id} v{card.version}</p>
+      <p className="vt-ac-meta vt-mono">Card: {card.card_id} v{card.version}</p>
     </article>
   );
 }

@@ -155,7 +155,7 @@ export function TimeChart(props: Props) {
   const announce = active
     ? active.kind === 'bucket'
       ? `${fmtDateTime(active.start)}: average ${fmtAuto(active.v)} ${unit}, lowest ${fmtAuto(active.lo)}, highest ${fmtAuto(active.hi)}, ${active.count} readings.`
-      : `${fmtDateTime(active.t, true)}: ${fmtAuto(active.v)} ${unit}, veri ${QUALITY[active.quality]?.label ?? active.quality}.`
+      : `${fmtDateTime(active.t, true)}: ${fmtAuto(active.v)} ${unit}, data ${QUALITY[active.quality]?.label ?? active.quality}.`
     : '';
 
   const ax = active ? X(active.t) : 0;
@@ -169,7 +169,7 @@ export function TimeChart(props: Props) {
       className="vt-chart"
       tabIndex={0}
       role="group"
-      aria-roledescription="grafik"
+      aria-roledescription="chart"
       aria-label={summary}
       onKeyDown={onKey}
       onBlur={() => setHover(null)}
@@ -298,7 +298,7 @@ export function TimeChart(props: Props) {
               <div className="vt-tip-sub">
                 <Icon name={QUALITY[active.quality]?.icon ?? 'question'} size={12} /> Data: {QUALITY[active.quality]?.label ?? active.quality}
               </div>
-              {active.activity && <div className="vt-tip-sub">Aktivite: {ACTIVITY[active.activity] ?? active.activity}</div>}
+              {active.activity && <div className="vt-tip-sub">Activity: {ACTIVITY[active.activity] ?? active.activity}</div>}
             </>
           )}
         </div>

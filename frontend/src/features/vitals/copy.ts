@@ -28,7 +28,7 @@ export function attInfo(att: string | null | undefined): LevelInfo {
 export const QUALITY: Record<string, { label: string; icon: IconName; cls: string }> = {
   VALID: { label: 'Valid', icon: 'check', cls: 'valid' },
   SUSPECT: { label: 'Suspect', icon: 'warning', cls: 'suspect' },
-  MISSING: { label: 'Eksik', icon: 'question', cls: 'missing' },
+  MISSING: { label: 'Missing', icon: 'question', cls: 'missing' },
   FAULT: { label: 'Fault', icon: 'x', cls: 'fault' },
 };
 
@@ -47,16 +47,16 @@ export const cmpSymbol = (c: string | null | undefined) => (c ? COMPARISON[c] ??
 export const LEVEL_COMPARISONS = new Set(['<', '>', '<=', '>=', 'LT', 'GT', 'LTE', 'GTE']);
 
 export const TIME_SCALE: Record<string, string> = {
-  acute: 'Akut',
-  subacute: 'Alt akut',
-  chronic: 'Kronik',
+  acute: 'Acute',
+  subacute: 'Subacute',
+  chronic: 'Chronic',
 };
 
 export const ACTIVITY: Record<string, string> = {
-  REST: 'Dinlenme',
+  REST: 'Rest',
   LIGHT: 'Light activity',
-  EXERCISE: 'Egzersiz',
-  SLEEP: 'Uyku',
+  EXERCISE: 'Exercise',
+  SLEEP: 'Sleep',
 };
 
 export const BASELINE: Record<string, { label: string; cls: string; note: string }> = {
@@ -77,12 +77,12 @@ export const RULE_TITLES: Record<string, string> = {
   ENV_CO2_NOMINAL_V1: 'Cabin CO₂ nominal limit',
   ENV_CABIN_ATMOSPHERE_V1: 'Cabin O₂ partial pressure',
   ENV_RADIATION_V1: 'Radiation dose rate and cumulative dose',
-  BEHAV_SLEEP_V1: 'Uyku borcu ve yorgunluk',
+  BEHAV_SLEEP_V1: 'Sleep debt and fatigue',
   SENS_MOTION_SICKNESS_V1: 'Motion sickness pattern',
   SANS_VISION_SYMPTOM_V1: 'Vision change (SANS monitoring)',
   VITAL_SPO2_SUSTAINED_V1: 'Sustained low SpO₂',
   VITAL_TEMP_TREND_V1: 'Body temperature trend',
-  MULTI_CARDIO_RESP_V1: 'Dinlenme kalp + solunum + belirti',
+  MULTI_CARDIO_RESP_V1: 'Resting heart + breathing + symptoms',
   RED_FLAG_SYMPTOM_V1: 'Red flag symptom',
   DATA_HR_JUMP_V1: 'Heart rate sensor quality',
 };
@@ -146,11 +146,11 @@ export const FALLBACK_METRICS = [
   { metric: 'SPO2', label: 'SpO₂', unit: '%', target_type: 'CREW_MEMBER', category: 'vital' },
   { metric: 'RESPIRATION_RATE', label: 'Respiration rate', unit: 'breaths/min', target_type: 'CREW_MEMBER', category: 'vital' },
   { metric: 'BODY_TEMPERATURE', label: 'Body temperature', unit: '°C', target_type: 'CREW_MEMBER', category: 'vital' },
-  { metric: 'SYSTOLIC_BP', label: 'Sistolik tansiyon', unit: 'mmHg', target_type: 'CREW_MEMBER', category: 'vital' },
-  { metric: 'DIASTOLIC_BP', label: 'Diyastolik tansiyon', unit: 'mmHg', target_type: 'CREW_MEMBER', category: 'vital' },
+  { metric: 'SYSTOLIC_BP', label: 'Systolic blood pressure', unit: 'mmHg', target_type: 'CREW_MEMBER', category: 'vital' },
+  { metric: 'DIASTOLIC_BP', label: 'Diastolic blood pressure', unit: 'mmHg', target_type: 'CREW_MEMBER', category: 'vital' },
   { metric: 'SLEEP_DURATION', label: 'Sleep duration', unit: 'h', target_type: 'CREW_MEMBER', category: 'vital' },
-  { metric: 'CABIN_CO2_PARTIAL_PRESSURE', label: 'Kabin CO₂', unit: 'mmHg', target_type: 'ENVIRONMENT', category: 'environment' },
-  { metric: 'CABIN_O2_FRACTION', label: 'Kabin O₂', unit: '%', target_type: 'ENVIRONMENT', category: 'environment' },
+  { metric: 'CABIN_CO2_PARTIAL_PRESSURE', label: 'Cabin CO₂', unit: 'mmHg', target_type: 'ENVIRONMENT', category: 'environment' },
+  { metric: 'CABIN_O2_FRACTION', label: 'Cabin O₂', unit: '%', target_type: 'ENVIRONMENT', category: 'environment' },
   { metric: 'CABIN_PRESSURE', label: 'Cabin pressure', unit: 'kPa', target_type: 'ENVIRONMENT', category: 'environment' },
   { metric: 'RADIATION_DOSE_RATE', label: 'Radiation dose rate', unit: 'uSv/h', target_type: 'ENVIRONMENT', category: 'environment' },
 ] as const;

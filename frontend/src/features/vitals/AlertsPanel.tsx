@@ -233,7 +233,7 @@ export function AlertsPanel() {
           )}
           {resolvedList.length > 0 && (
             <details className="vt-resolved">
-              <summary>Kapanan alarmlar ({resolvedList.length})</summary>
+              <summary>Closed alarms ({resolvedList.length})</summary>
               <ul className="vt-alerts">{resolvedList.slice(0, 30).map((a) => <AlertRow key={a.id} {...rowProps(a)} />)}</ul>
             </details>
           )}

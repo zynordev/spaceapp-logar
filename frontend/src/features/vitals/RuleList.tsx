@@ -68,8 +68,8 @@ function WhyPanel({ rule, def, metricLabel }: { rule: RuleStatus; def: MetricDef
         <dd>{isNum(rule.observed_value) ? `${fmtAuto(rule.observed_value)} ${unit}` : '—'}</dd>
         <dt>Threshold</dt>
         <dd>{isNum(rule.threshold) ? `${cmpSymbol(rule.comparison)} ${fmtAuto(rule.threshold)} ${unit}` : '—'}</dd>
-        <dt>Pencere</dt>
-        <dd>{fmtNum(rule.window_minutes, 0)} dk · {TIME_SCALE[rule.time_scale] ?? rule.time_scale}</dd>
+        <dt>Window</dt>
+        <dd>{fmtNum(rule.window_minutes, 0)} min · {TIME_SCALE[rule.time_scale] ?? rule.time_scale}</dd>
         <dt>Evidence</dt>
         <dd>{def ? <EvidenceCounts rule={rule} def={def} /> : <span className="vt-muted">This rule uses inputs other than numeric measurements</span>}</dd>
         <dt>Personal baseline</dt>
@@ -82,7 +82,7 @@ function WhyPanel({ rule, def, metricLabel }: { rule: RuleStatus; def: MetricDef
               </span>
               <span>
                 {isNum(bl.value) ? `${fmtAuto(bl.value)} ${unit}` : '—'} · {bl.sample_count ?? 0} samples
-                {bl.profile_version ? ` · profil v${bl.profile_version}` : ''}
+                {bl.profile_version ? ` · profile v${bl.profile_version}` : ''}
               </span>
               {blInfo && <span className="vt-muted vt-small">{blInfo.note}</span>}
             </span>
@@ -92,7 +92,7 @@ function WhyPanel({ rule, def, metricLabel }: { rule: RuleStatus; def: MetricDef
         </dd>
         <dt>Assessment</dt>
         <dd>{fmtDateTime(rule.evaluated_at, true)} · {relTime(rule.evaluated_at)}</dd>
-        <dt>Kaynak</dt>
+        <dt>Source</dt>
         <dd>
           {src ? <a href={src} target="_blank" rel="noopener noreferrer">{rule.source || src}</a> : rule.source || '—'}
           {rule.evidence_level ? <span className="vt-muted"> · evidence class {rule.evidence_level}</span> : null}
@@ -107,7 +107,7 @@ function WhyPanel({ rule, def, metricLabel }: { rule: RuleStatus; def: MetricDef
         <div className="vt-info">
           <h4>Why does this measurement matter?</h4>
           <p>{info.why}</p>
-          <h4>Ne zaman dikkat?</h4>
+          <h4>When does it need attention?</h4>
           <p>{info.watch}{GENERIC_NEXT}</p>
         </div>
       )}

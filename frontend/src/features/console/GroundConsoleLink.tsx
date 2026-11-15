@@ -4,7 +4,7 @@
 import { Icon } from '../../ui';
 import './console-link.css';
 
-export const GROUND_CONSOLE_HASH = '#/yer';
+export const GROUND_CONSOLE_HASH = '#/ground';
 
 export interface GroundConsoleLinkProps {
   /** Icon-only (the text becomes the accessible name + tooltip). */

@@ -47,7 +47,7 @@ export function relTime(iso: string | number | null | undefined, now = Date.now(
   const t = typeof iso === 'number' ? iso : toMs(iso);
   if (t == null) return '';
   const s = Math.round((now - t) / 1000);
-  if (s < -60) return 'gelecekte';
+  if (s < -60) return 'in the future';
   if (s < 60) return 'just now';
   if (s < 3600) return `${Math.round(s / 60)} min ago`;
   if (s < 86400) return `${Math.round(s / 3600)} h ago`;
@@ -56,10 +56,10 @@ export function relTime(iso: string | number | null | undefined, now = Date.now(
 
 export function fmtDuration(ms: number): string {
   const totalMin = Math.max(0, Math.ceil(ms / 60000));
-  if (totalMin < 60) return `${totalMin} dk`;
+  if (totalMin < 60) return `${totalMin} min`;
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  return m ? `${h} sa ${m} dk` : `${h} sa`;
+  return m ? `${h} h ${m} min` : `${h} h`;
 }
 
 /** Only http(s) links are rendered as links; anything else stays text. */

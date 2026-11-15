@@ -55,7 +55,7 @@ export function RedFlagsSection() {
       id="lgi-redflag"
       title="Red flag"
       hint="If any of these symptoms is present, select it and report. A report opens a CRITICAL alarm immediately: no averaging, time window or sensor confirmation is awaited. This is not a diagnosis."
-      badge={<span className="lgi-chip lgi-chip--crit"><Icon name="warning" size={14} />{' '}Acil</span>}
+      badge={<span className="lgi-chip lgi-chip--crit"><Icon name="warning" size={14} />{' '}Emergency</span>}
     >
       {!missionId || !crewId ? <NeedSelection /> : (
         <>
@@ -111,7 +111,7 @@ export function RedFlagsSection() {
               </div>
               <div className="lgi-actions">
                 <button type="button" className="lgi-btn lgi-btn--danger" onClick={send} disabled={busy} aria-busy={busy} autoFocus>
-                  {busy ? 'Bildiriliyor…' : 'Evet, acil bildir'}
+                  {busy ? 'Reporting…' : 'Yes, report emergency'}
                 </button>
                 <button type="button" className="lgi-btn" onClick={() => setConfirming(false)} disabled={busy}>Cancel</button>
               </div>

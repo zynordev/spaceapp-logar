@@ -8,7 +8,7 @@ import { Button, Dialog, Field, Input, describeError, roleLabel, toast } from '.
 import type { AuthMeRead, DemoRoleRead, TokenRead } from './types';
 
 const DEMO_ROLE_LABEL: Record<string, string> = {
-  ASTRONAUT: 'Astronot',
+  ASTRONAUT: 'Astronaut',
   CREW_MEDICAL_OFFICER: 'Flight surgeon / Crew health officer',
   GROUND: 'Ground team',
 };

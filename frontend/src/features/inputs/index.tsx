@@ -17,9 +17,9 @@ import './inputs.css';
 type TabKey = 'checkin' | 'activity' | 'routines' | 'labs' | 'redflag';
 const TABS: { key: TabKey; label: string; icon: IconName }[] = [
   { key: 'checkin', label: 'Subjective state', icon: 'smile' },
-  { key: 'activity', label: 'Aktivite', icon: 'clock' },
-  { key: 'routines', label: 'Rutinler', icon: 'check' },
-  { key: 'labs', label: 'Laboratuvar', icon: 'flask' },
+  { key: 'activity', label: 'Activity', icon: 'clock' },
+  { key: 'routines', label: 'Routines', icon: 'check' },
+  { key: 'labs', label: 'Laboratory', icon: 'flask' },
   { key: 'redflag', label: 'Red flag', icon: 'warning' },
 ];
 

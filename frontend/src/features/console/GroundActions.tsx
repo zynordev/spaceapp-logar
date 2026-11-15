@@ -244,14 +244,14 @@ export function PacketPanel({
             />
             <span className="console-recipient__name">{r.label_tr}</span>
             <span className="console-recipient__meta">
-              bekleyen <span className="console-num">{r.pending_items}</span>
+              pending <span className="console-num">{r.pending_items}</span>
             </span>
           </label>
         ))}
         {recipients === null && <p className="console-muted">Loading recipient list…</p>}
       </div>
       {current && (
-        <p className="console-muted">Son onay: {current.last_ack_at ? formatDateTime(current.last_ack_at, true) : 'none yet'}</p>
+        <p className="console-muted">Last acknowledgement: {current.last_ack_at ? formatDateTime(current.last_ack_at, true) : 'none yet'}</p>
       )}
 
       <div className="console-packet__actions">

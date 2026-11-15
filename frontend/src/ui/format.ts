@@ -37,7 +37,7 @@ export function formatTime(v: string | number | Date | null | undefined): string
   return d ? d.toLocaleTimeString(TR, { hour: '2-digit', minute: '2-digit' }) : '—';
 }
 
-/** "3 dk önce", "2 sa sonra", "az önce". */
+/** "3 min ago", "in 2 h", "just now". */
 export function formatRelative(v: string | number | Date | null | undefined, now = Date.now()): string {
   const d = toDate(v);
   if (!d) return '—';
@@ -58,15 +58,15 @@ export function formatRelative(v: string | number | Date | null | undefined, now
   return 'now';
 }
 
-/** Seconds -> "1 sa 5 dk" / "4 dk" / "30 sn". */
+/** Seconds -> "1 h 5 min" / "4 min" / "30 s". */
 export function formatDuration(seconds: number | null | undefined): string {
   if (seconds === null || seconds === undefined || !Number.isFinite(seconds)) return '—';
   const s = Math.max(0, Math.round(seconds));
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
-  if (h) return m ? `${h} sa ${m} dk` : `${h} sa`;
-  if (m) return `${m} dk`;
-  return `${s} sn`;
+  if (h) return m ? `${h} h ${m} min` : `${h} h`;
+  if (m) return `${m} min`;
+  return `${s} s`;
 }
 
 /** Locale number with up to `digits` decimals; "—" for null/NaN. */

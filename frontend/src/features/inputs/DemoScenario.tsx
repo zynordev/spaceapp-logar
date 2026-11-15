@@ -7,7 +7,7 @@ import { Icon } from '../../ui';
 import { InlineMsg, useAction } from './shared';
 import type { DemoRunRead, DemoScenarioRead } from './types';
 
-const TIME_SCALE: Record<string, string> = { acute: 'Akut', subacute: 'Alt akut' };
+const TIME_SCALE: Record<string, string> = { acute: 'Acute', subacute: 'Subacute' };
 
 export function DemoScenarioPicker() {
   const uid = useId();
@@ -77,14 +77,14 @@ export function DemoScenarioPicker() {
       {current && (
         <p className="lgi-demo__line">
           <span className="lgi-chip">{TIME_SCALE[current.time_scale] ?? current.time_scale}</span>{' '}
-          <span className="lgi-muted">{current.duration_minutes} dk sentetik veri · </span>
+          <span className="lgi-muted">{current.duration_minutes} min of synthetic data · </span>
           <span className="lgi-demo__desc">{current.description}</span>
         </p>
       )}
       <div id={`${uid}-info`} hidden={!open || !current} className="lgi-demo__info">
         {current && (
           <>
-            <strong>Beklenen:</strong>
+            <strong>Expected:</strong>
             <ul>{(result?.scenario_id === current.scenario_id ? result.summary : current.expected).map((t) => <li key={t}>{t}</li>)}</ul>
           </>
         )}

@@ -19,7 +19,7 @@ export function describeError(error: unknown, what?: string): { title: string; d
     if (error.status === 503) return { title: `${subject}The server is not ready right now`, detail: error.message };
     return { title: `${subject}Request failed (HTTP ${error.status})`, detail: error.message };
   }
-  return { title: `${subject}Beklenmeyen hata`, detail: error instanceof Error ? error.message : String(error) };
+  return { title: `${subject}Unexpected error`, detail: error instanceof Error ? error.message : String(error) };
 }
 
 export interface ErrorNoteProps {

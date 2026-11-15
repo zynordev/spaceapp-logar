@@ -1,15 +1,15 @@
 // Turkish labels and formatting helpers for the ground panel (pure functions).
 import type { Coverage, EscalationPriority, PacketItemKind, Recipient } from './types';
 
-/** "12 dk 30 sn", "45 sn", "1 sa 2 dk". */
+/** "12 min 30 s", "45 s", "1 h 2 min". */
 export function formatDuration(totalSeconds: number): string {
   const s = Math.max(0, Math.round(totalSeconds));
-  if (s < 60) return `${s} sn`;
+  if (s < 60) return `${s} s`;
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-  if (h > 0) return m > 0 ? `${h} sa ${m} dk` : `${h} sa`;
-  return sec > 0 ? `${m} dk ${sec} sn` : `${m} dk`;
+  if (h > 0) return m > 0 ? `${h} h ${m} min` : `${h} h`;
+  return sec > 0 ? `${m} min ${sec} s` : `${m} min`;
 }
 
 const DATE_FMT = new Intl.DateTimeFormat('en-GB', {
@@ -33,7 +33,7 @@ export function formatAgo(iso: string | null | undefined, now = Date.now()): str
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return '';
   const diff = Math.round((now - t) / 1000);
-  if (diff < 0) return 'gelecekte';
+  if (diff < 0) return 'in the future';
   if (diff < 60) return 'just now';
   return `${formatDuration(diff - (diff % 60))} ago`;
 }
@@ -63,7 +63,7 @@ export const RECIPIENT_INFO: Record<Recipient, RecipientInfo> = {
     icon: 'wind',
   },
   RADIATION: {
-    label: 'Radyasyon ekibi',
+    label: 'Radiation team',
     routed: 'Dose-rate events and cumulative dose trend',
     icon: 'radiation',
   },
@@ -82,7 +82,7 @@ export const KIND_LABEL: Record<PacketItemKind, string> = {
   ALERT: 'Warning',
   RULE_EVALUATION: 'Rule evaluation',
   CHECK_IN: 'Subjective report',
-  LAB_RESULT: 'Laboratuvar',
+  LAB_RESULT: 'Laboratory',
   RED_FLAG: 'Red flag',
   TREND: 'Trend',
   ESCALATION: 'Priority notification',
@@ -104,7 +104,7 @@ export const COVERAGE_INFO: Record<Coverage, { label: string; icon: IconName; le
     legend: 'Decision support rule active (not a diagnosis).',
   },
   DATA_ONLY: {
-    label: 'Sadece veri',
+    label: 'Data only',
     icon: 'eye',
     legend: 'Data is collected and shown; no validated threshold or rule.',
   },

@@ -63,7 +63,7 @@ export function Timeline({ side, title, subtitle, status, events, allEvents, ack
       {events.length === 0 ? (
         <EmptyState compact icon={side === 'ship' ? 'check' : 'hourglass'} title={empty} />
       ) : (
-        <ol className="console-tl" tabIndex={0} aria-label={`${title} olay listesi`}>
+        <ol className="console-tl" tabIndex={0} aria-label={`${title} event list`}>
           {events.map((ev) => {
             const w = whenText(ev, side);
             const incoming = side === 'ship' ? ev.dir === 'up' : ev.dir === 'down';

@@ -13,7 +13,7 @@ import type {
 } from './types';
 
 const STATE_META: Record<RoutineState, { label: string; icon: IconName }> = {
-  OVERDUE: { label: 'Gecikti', icon: 'bell' },
+  OVERDUE: { label: 'Overdue', icon: 'bell' },
   DUE: { label: 'Due now', icon: 'dot' },
   UPCOMING: { label: 'Upcoming', icon: 'circle' },
 };
@@ -89,7 +89,7 @@ export function RoutinesSection() {
   return (
     <Section
       id="lgi-routines"
-      title="Rutinler"
+      title="Routines"
       hint="Daily habits and periodic tests. The streak counter is for motivation only; it is not a health assessment. It contains no medication reminders."
       badge={<span className="lgi-chip lgi-chip--demo" title="Sample plan not validated by flight medicine">DEMO plan</span>}
     >
@@ -115,7 +115,7 @@ export function RoutinesSection() {
           {sorted.length > 0 && (
             <>
               <p className="lgi-muted" aria-live="polite">
-                {pending ? `${pending} rutin bekliyor.` : 'Bekleyen rutin yok.'}
+                {pending ? `${pending} routine(s) pending.` : 'No routines pending.'}
               </p>
               <ul className="lgi-routines">
                 {sorted.map((r) => {
@@ -138,7 +138,7 @@ export function RoutinesSection() {
                         <span className="lgi-muted">
                           {r.state === 'UPCOMING' ? 'Next: ' : 'Target time: '}
                           <time dateTime={r.next_due_at} title={fmtDateTime(r.next_due_at)}>{relTime(r.next_due_at, now)}</time>
-                          {r.last_completed_at && <> · son: {relTime(r.last_completed_at, now)}</>}
+                          {r.last_completed_at && <> · last: {relTime(r.last_completed_at, now)}</>}
                         </span>
                       </div>
                       <button
@@ -167,11 +167,11 @@ function Streak({ current, best, pulse }: { current: number; best: number; pulse
   return (
     <span
       className={`lgi-streak${pulse ? ' is-pulse' : ''}`}
-      aria-label={`Seri ${current}, en iyi ${best}`}
+      aria-label={`Streak ${current}, best ${best}`}
       title="Consecutive on-time completions"
     >
       <span aria-hidden="true"><Icon name="flame" size={14} />{' '}{current}</span>
-      <span className="lgi-streak__best" aria-hidden="true">en iyi {best}</span>
+      <span className="lgi-streak__best" aria-hidden="true">best {best}</span>
     </span>
   );
 }

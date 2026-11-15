@@ -122,7 +122,7 @@ export function toMs(iso: string | null | undefined): number | null {
   return Number.isFinite(t) ? t : null;
 }
 
-/** "5 dk önce", "2 sa sonra", "şimdi". */
+/** "5 min ago", "in 2 h", "now". */
 export function relTime(iso: string | null | undefined, now = Date.now()): string {
   const t = toMs(iso);
   if (t === null) return '—';
@@ -131,11 +131,11 @@ export function relTime(iso: string | null | undefined, now = Date.now()): strin
   const min = Math.round(abs / 60000);
   if (min < 1) return 'now';
   let txt: string;
-  if (min < 60) txt = `${min} dk`;
+  if (min < 60) txt = `${min} min`;
   else if (min < 48 * 60) {
     const h = Math.floor(min / 60);
     const m = min % 60;
-    txt = m && h < 10 ? `${h} sa ${m} dk` : `${h} sa`;
+    txt = m && h < 10 ? `${h} h ${m} min` : `${h} h`;
   } else txt = `${Math.round(min / 1440)} d`;
   return diff < 0 ? `${txt} ago` : `in ${txt}`;
 }

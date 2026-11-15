@@ -117,7 +117,7 @@ function Panel({
 
 /** Solid status bar with the level word (dark ink on the bar colour). */
 function StatusBar({ level }: { level: string | null }) {
-  if (!level) return <span className="hud-bar hud-bar--none">KURAL YOK</span>;
+  if (!level) return <span className="hud-bar hud-bar--none">NO RULE</span>;
   const m = attentionMeta(level);
   return (
     <span className={`hud-bar hud-bar--${m.level.toLowerCase()}`} title={m.description}>
@@ -248,12 +248,12 @@ interface LabPanelLite {
 }
 
 const SYMPTOM_TR: Record<string, string> = {
-  fatigue: 'Yorgunluk',
+  fatigue: 'Fatigue',
   dizziness: 'Dizziness',
   nausea: 'Nausea',
   headache: 'Headache',
   pain: 'Pain',
-  mood_distress: 'Ruh hali',
+  mood_distress: 'Mood',
   vision_change: 'Vision',
   back_pain: 'Back pain',
   congestion: 'Congestion',
@@ -339,7 +339,7 @@ function CrewCard({
         topKey = k;
       }
     }
-    psych = topKey ? `${SYMPTOM_TR[topKey]} ${topVal}/4 · ${relTime(ci.observed_at, now)}` : `belirti yok · ${relTime(ci.observed_at, now)}`;
+    psych = topKey ? `${SYMPTOM_TR[topKey]} ${topVal}/4 · ${relTime(ci.observed_at, now)}` : `no symptoms · ${relTime(ci.observed_at, now)}`;
   }
   const labRes = labs.data?.results ?? [];
   const outRef = labRes.filter((r) => r.position_vs_reference !== 'WITHIN').length;
@@ -374,14 +374,14 @@ function CrewCard({
           onClick={onToggle}
         >
           <span aria-hidden="true">{initials(crewId)}</span>
-          <small aria-hidden="true">{open ? 'KAPAT' : '3D MODEL'}</small>
+          <small aria-hidden="true">{open ? 'CLOSE' : '3D MODEL'}</small>
         </button>
         <div className="hud-crew__info">
           <div className="hud-crew__row">
             <span className="hud-crew__label">
               EMERGENCY
               <br />
-              DURUM:
+              CONDITIONS:
             </span>
             <button type="button" className={`hud-crew__emergency${urgent.length ? ' is-active' : ''}`} onClick={() => onOpen('rules')}>
               {urgent.length
@@ -393,24 +393,24 @@ function CrewCard({
           </div>
           <div className="hud-crew__row hud-crew__row--health">
             <span className="hud-crew__label">
-              GENEL
+              OVERALL
               <br />
               HEALTH:
             </span>
             <RuleRing normal={normal} total={crewRules.length} level={data?.overall_attention ?? 'UNKNOWN'} />
             <ul className="hud-crew__list">
               <li>
-                <span>›Fizyolojik</span>
+                <span>›Physiologic</span>
                 <b className={physio ? `t-${physio.health_attention.toLowerCase()}` : undefined}>
                   {physio ? attentionMeta(physio.health_attention).label : 'No rule'}
                 </b>
               </li>
               <li>
-                <span>›Psikolojik</span>
+                <span>›Psychological</span>
                 <b>{psych}</b>
               </li>
               <li>
-                <span>›Kan</span>
+                <span>›Blood</span>
                 <b>{blood}</b>
                 {labSrcs.length > 0 && (
                   <span className="hud-crew__src">
@@ -477,12 +477,12 @@ function MissionStrip({ scenarioId, onOpen }: { scenarioId: string | null; onOpe
         LIGHT DELAY <b>{delay == null ? 'n/a' : `${fmtAuto(delay)} s`}</b>
       </span>
       <span className="hud-mission__item">
-        YER{' '}
+        GROUND{' '}
         {pending == null ? (
           <b>{sync.error ? 'not loaded' : '—'}</b>
         ) : (
           <button type="button" className="hud-link" onClick={() => onOpen('ground')}>
-            {pending} bekliyor{esc ? ` · ${esc} eskalasyon` : ''}
+            {pending} pending{esc ? ` · ${esc} escalations` : ''}
           </button>
         )}
       </span>
@@ -538,7 +538,7 @@ export function HudOverlay({ scenarioId, crewIds = [], onOpen, bodyOpen = false,
 
       <div className="hud__vitals">
         {bodyOpen && (
-        <section className="hud-vitals" data-tour="vitals" aria-label={`Vital bulgular · ${crewId ?? ''}`}>
+        <section className="hud-vitals" data-tour="vitals" aria-label={`Vital signs · ${crewId ?? ''}`}>
           <ul className="hud-cols hud-cols--grid">
             {pick(metrics, VITAL_ORDER).map((m) => (
               <MetricColumn

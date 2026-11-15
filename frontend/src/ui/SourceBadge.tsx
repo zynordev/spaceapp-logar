@@ -51,7 +51,7 @@ export function SourceBadge({ kind, detail, size = 'sm', title, className, ...re
     <span
       {...rest}
       className={`ui-src ui-src--${kind.toLowerCase()} ui-src--${size}${className ? ` ${className}` : ''}`}
-      title={title ?? (detail ? `${m.title} Kaynak: ${detail}.` : m.title)}
+      title={title ?? (detail ? `${m.title} Source: ${detail}.` : m.title)}
     >
       <Icon name={m.icon} size={size === 'xs' ? 10 : 12} />
       <span className="ui-src__label">{m.label}</span>

@@ -15,7 +15,7 @@ import type {
 } from './types';
 
 export const LAB_LABELS: Record<LabAnalyte, string> = {
-  GLUCOSE: 'Glukoz', SODIUM: 'Sodyum', POTASSIUM: 'Potasyum', CREATININE: 'Kreatinin',
+  GLUCOSE: 'Glucose', SODIUM: 'Sodium', POTASSIUM: 'Potassium', CREATININE: 'Creatinine',
   WBC: 'White blood cells', HEMOGLOBIN: 'Hemoglobin', PLATELETS: 'Platelets', ALT: 'ALT', AST: 'AST',
 };
 const ANALYTES = Object.keys(LAB_LABELS) as LabAnalyte[];
@@ -108,8 +108,8 @@ export function LabsSection() {
         source_type: 'MANUAL',
         source_id: SOURCE_ID,
       }),
-      (res) => ({ kind: 'ok', text: `${LAB_LABELS[res.analyte] ?? res.analyte} kaydedildi: ${fmtNum(res.value)} ${unitText(res.unit)} (${fmtDateTime(res.sampled_at)}).` }),
-      'kaydedilemedi',
+      (res) => ({ kind: 'ok', text: `${LAB_LABELS[res.analyte] ?? res.analyte} saved: ${fmtNum(res.value)} ${unitText(res.unit)} (${fmtDateTime(res.sampled_at)}).` }),
+      'could not be saved',
     );
     if (r) setValue('');
   };
@@ -134,7 +134,7 @@ export function LabsSection() {
   return (
     <Section
       id="lgi-labs"
-      title="Laboratuvar"
+      title="Laboratory"
       hint="Enter the periodic lab value from the report. Copy the reference range from the report too; the software does not set thresholds."
     >
       <div className="lgi-actions lgi-actions--top">
@@ -175,7 +175,7 @@ export function LabsSection() {
               </div>
               <Segmented<LabUnit>
                 name="lgi-lab-unit"
-                legend={<span id="lgi-lab-unit-legend">Birim</span>}
+                legend={<span id="lgi-lab-unit-legend">Unit</span>}
                 value={unit}
                 onChange={setUnit}
                 compact
@@ -197,7 +197,7 @@ export function LabsSection() {
             </fieldset>
             <Segmented<SamplePhase>
               name="lgi-lab-phase"
-              legend="Faz"
+              legend="Phase"
               value={phase}
               onChange={setPhase}
               compact
@@ -216,7 +216,7 @@ export function LabsSection() {
             )}
             <div className="lgi-actions">
               <button type="submit" className="lgi-btn lgi-btn--primary" disabled={entry.busy} aria-busy={entry.busy}>
-                {entry.busy ? 'Kaydediliyor…' : 'Lab sonucunu kaydet'}
+                {entry.busy ? 'Saving…' : 'Save lab result'}
               </button>
             </div>
             <InlineMsg msg={entry.msg} />

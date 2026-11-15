@@ -65,7 +65,7 @@ function box(x: number, y: number, w: number, h: number): CSSProperties {
 
 /** Solid status bar with the level word. */
 function Bar({ level, text, className = '' }: { level: string | null; text?: string; className?: string }) {
-  if (!level) return <span className={`dz-bar dz-bar--none ${className}`}>{text ?? 'KURAL YOK'}</span>;
+  if (!level) return <span className={`dz-bar dz-bar--none ${className}`}>{text ?? 'NO RULE'}</span>;
   const m = attentionMeta(level);
   return (
     <span className={`dz-bar dz-bar--${m.level.toLowerCase()} ${className}`} title={m.description}>
@@ -148,7 +148,7 @@ function useCrewData(crewId: string | null) {
 }
 
 const SYMPTOM_TR: Record<string, string> = {
-  fatigue: 'Yorgunluk',
+  fatigue: 'Fatigue',
   dizziness: 'Dizziness',
   nausea: 'Nausea',
   headache: 'Headache',
@@ -257,7 +257,7 @@ const ROOM_COLS: { key: string; metric: string | null; label: ReactNode; unit: s
 function sourceLine(top: RuleStatus | null, own: boolean): { text: string; demo: boolean } | null {
   if (!top) return null;
   const thr = own && Number.isFinite(top.threshold) ? `${cmpSymbol(top.comparison)}${fmtAuto(top.threshold)}` : 'related rule';
-  if (top.validation_status === 'APPROVED') return { text: `${(top.source || 'KAYNAKLI').split(/[ ,(]/)[0]} // ${thr} ${own ? 'OK' : ''}`.trim(), demo: false };
+  if (top.validation_status === 'APPROVED') return { text: `${(top.source || 'SOURCED').split(/[ ,(]/)[0]} // ${thr} ${own ? 'OK' : ''}`.trim(), demo: false };
   if (top.validation_status?.startsWith('DEMO')) return { text: `DEMO THRESHOLD // ${thr}`, demo: true };
   return { text: thr, demo: false };
 }
@@ -475,7 +475,7 @@ function PersonCol({
   const last2 = lastPoint(s2.data?.points);
   const top = def ? worst([...rulesForMetric(rules, def.metric), ...(dia ? rulesForMetric(rules, dia.metric) : [])]) : null;
   const value = last ? (dia ? `${fmtAuto(last.value)}/${last2 ? fmtAuto(last2.value) : '—'}` : fmtAuto(last.value)) : '—';
-  const unit = def ? (col.metric === 'RESPIRATION_RATE' ? 'nefes/dk' : col.metric === 'SLEEP_DURATION' ? 'saat' : displayUnit(def.unit)) : '';
+  const unit = def ? (col.metric === 'RESPIRATION_RATE' ? 'breaths/min' : col.metric === 'SLEEP_DURATION' ? 'h' : displayUnit(def.unit)) : '';
   const demo = !!top?.validation_status?.startsWith('DEMO');
   let caption = '';
   if (col.metric === 'HEART_RATE') caption = `SENSOR Q: ${last ? (last.reported_quality === 'VALID' ? 'OK' : last.reported_quality) : '—'}`;
@@ -517,7 +517,7 @@ const BODY_ROWS: { region: string; fallback: string }[] = [
   { region: 'eyes', fallback: 'Eyes' },
   { region: 'inner_ear', fallback: 'Balance' },
   { region: 'head', fallback: 'Head/Sleep' },
-  { region: 'heart', fallback: 'Kalp' },
+  { region: 'heart', fallback: 'Heart' },
   { region: 'lungs', fallback: 'Lungs' },
   { region: 'torso', fallback: 'Torso/Stomach' },
   { region: 'musculoskeletal', fallback: 'Muscle/Bones' },
@@ -618,7 +618,7 @@ function PersonScreen({
       </section>
 
       <section className="dz-card" style={box(736, 20, 1154, 262)} aria-label="Person general data" data-tour="vitals">
-        <h2 className="dz-strip">GENERAL DATAS OF PERSON</h2>
+        <h2 className="dz-strip">GENERAL DATA OF PERSON</h2>
         {PERSON_COLS.map((col, i) => {
           const cx = x;
           x += col.w;
@@ -657,7 +657,7 @@ function PersonScreen({
       <section className="dz-card dz-bodypanel" style={box(736, 420, 404, 646)} aria-label="Body model" />
 
       <section className="dz-card" style={box(1168, 420, 722, 646)} aria-label="Person subjective data">
-        <h2 className="dz-strip">SUBJECTIVE DATAS OF PERSON</h2>
+        <h2 className="dz-strip">SUBJECTIVE DATA OF PERSON</h2>
         <ul className="dz-subj">
           {redFlags.map((a) => (
             <li key={a.id} className="t-critical">
@@ -710,11 +710,12 @@ function useFit(ref: RefObject<HTMLDivElement | null>) {
 export function MissionScreens({ scenarioId, crewIds = [], onOpen }: MissionScreensProps) {
   const fitRef = useRef<HTMLDivElement>(null);
   const size = useFit(fitRef);
-  // `?ekran=pencere|kisi` opens a screen directly (demos, screenshots).
+  // `?screen=crew|person` opens a screen directly (demos, screenshots); the old `?ekran=pencere|kisi` still works.
   const [screen, setScreen] = useState<Screen>(() => {
     try {
-      const q = new URLSearchParams(window.location.search).get('ekran');
-      return q === 'kisi' ? 'person' : q === 'pencere' ? 'crew' : 'overview';
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('screen') ?? params.get('ekran');
+      return q === 'person' || q === 'kisi' ? 'person' : q === 'crew' || q === 'pencere' ? 'crew' : 'overview';
     } catch {
       return 'overview';
     }
@@ -756,7 +757,7 @@ export function MissionScreens({ scenarioId, crewIds = [], onOpen }: MissionScre
   return (
     <div className="dz-fit" ref={fitRef} data-screen={screen}>
       {screen === 'person' && crewId && (
-        <nav className="dz-nav" aria-label="Ekran">
+        <nav className="dz-nav" aria-label="Screen">
           <button type="button" onClick={() => setScreen('overview')}>
             ‹ OVERVIEW
           </button>
@@ -773,7 +774,7 @@ export function MissionScreens({ scenarioId, crewIds = [], onOpen }: MissionScre
               <CrewCard key={c} crewId={c} top={CARD_TOPS[i]} alerts={alerts.data ?? []} onClick={() => openCrew(c)} open={screen !== 'overview' && crewId === c} />
             ))}
             <RoomPanel rules={rules} onOpenMetric={openMetric} scenarioId={scenarioId} />
-            <section className="dz-card dz-main" style={box(652, 364, 1246, 702)} aria-label="Ana panel" data-tour={screen === 'overview' ? 'scene' : undefined}>
+            <section className="dz-card dz-main" style={box(652, 364, 1246, 702)} aria-label="Main panel" data-tour={screen === 'overview' ? 'scene' : undefined}>
               <MissionSpaceView active={screen === 'overview'} onOpenGround={() => onOpen('ground')} />
               {scenarioId && <span className="dz-main__demo">SYNTHETIC DATA · {scenarioId}</span>}
             </section>
@@ -782,7 +783,7 @@ export function MissionScreens({ scenarioId, crewIds = [], onOpen }: MissionScre
       </div>
       {screen === 'crew' && crewId && (
         <>
-          <button type="button" className="dz-backdrop" aria-label="Pencereyi kapat" onClick={() => setScreen('overview')} />
+          <button type="button" className="dz-backdrop" aria-label="Close window" onClick={() => setScreen('overview')} />
           <div className="dz-stage dz-stage--top" style={{ transform: `translateX(${ox}px) scale(${s})` }}>
             <CrewWindow crewId={crewId} onPerson={() => setScreen('person')} />
           </div>

@@ -12,7 +12,7 @@ import {
 import type { ActivityCurrentRead, ActivityRead, ActivityState } from './types';
 
 export const ACTIVITY_LABELS: Record<ActivityState, { label: string; icon: IconName; sub: string }> = {
-  EXERCISE: { label: 'Egzersiz', icon: 'run', sub: 'Antrenman' },
+  EXERCISE: { label: 'Exercise', icon: 'run', sub: 'Training' },
   LIGHT: { label: 'Light work', icon: 'wrench', sub: 'Tasks, maintenance' },
   REST: { label: 'Rest', icon: 'chair', sub: 'Awake, calm' },
   SLEEP: { label: 'Sleep', icon: 'moon', sub: 'Sleep period' },
@@ -105,8 +105,8 @@ export function ActivitySection() {
     }
     await run(
       () => api<ActivityRead>('POST', `/v1/activities/${encodeURIComponent(a.id)}/end`, {}),
-      () => ({ kind: 'ok', text: 'Aktivite bitirildi.' }),
-      'aktivite bitirilemedi',
+      () => ({ kind: 'ok', text: 'Activity ended.' }),
+      'the activity could not be ended',
     );
   };
 
@@ -117,7 +117,7 @@ export function ActivitySection() {
   return (
     <Section
       id="lgi-activity"
-      title="Aktivite"
+      title="Activity"
       hint="Why it matters: rest rules use only data from periods declared as “rest”; a high heart rate during exercise does not raise a false alarm."
       badge={MOCK ? <span className="lgi-chip">Preview data</span> : null}
     >
@@ -162,7 +162,7 @@ export function ActivitySection() {
               value={custom !== '' ? null : minutes}
               onChange={(v) => { setMinutes(v); setCustom(''); }}
               compact
-              options={PRESETS.map((m) => ({ value: m, label: `${m}`, sub: 'dk', aria: `${m} dakika` }))}
+              options={PRESETS.map((m) => ({ value: m, label: `${m}`, sub: 'min', aria: `${m} minutes` }))}
             />
             <div className="lgi-field lgi-field--inline">
               <label htmlFor="lgi-act-custom">Custom duration (5–240 min)</label>

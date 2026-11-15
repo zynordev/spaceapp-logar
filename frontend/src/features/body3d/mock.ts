@@ -27,7 +27,7 @@ export function buildMockBodyMap(crewId: string | null, missionId: string | null
       ],
       metrics: ['SLEEP_DURATION'],
       latest_values: [
-        { metric: 'SLEEP_DURATION', label: 'Sleep duration', value: 6.1, unit: 'saat', observed_at: ago(26 * 60, now) },
+        { metric: 'SLEEP_DURATION', label: 'Sleep duration', value: 6.1, unit: 'h', observed_at: ago(26 * 60, now) },
       ],
       open_alert_ids: [],
     },
@@ -119,7 +119,7 @@ export function buildMockBodyMap(crewId: string | null, missionId: string | null
       ],
       metrics: ['SPO2', 'RESPIRATION_RATE'],
       latest_values: [
-        { metric: 'SPO2', label: 'Kan oksijeni', value: 93, unit: '%', observed_at: ago(1, now) },
+        { metric: 'SPO2', label: 'Blood oxygen', value: 93, unit: '%', observed_at: ago(1, now) },
         { metric: 'RESPIRATION_RATE', label: 'Breathing rate', value: 24, unit: '/min', observed_at: ago(1, now) },
       ],
       open_alert_ids: [],
@@ -137,7 +137,7 @@ export function buildMockBodyMap(crewId: string | null, missionId: string | null
     },
     {
       region: 'musculoskeletal',
-      label_tr: 'Kas-iskelet',
+      label_tr: 'Musculoskeletal',
       description_tr: 'Bone loss and muscle strength. Weekly grip strength and body mass measurements.',
       attention: 'UNKNOWN',
       coverage: 'DATA_ONLY',
@@ -179,7 +179,7 @@ export function buildMockBodyMap(crewId: string | null, missionId: string | null
       rules: [
         {
           rule_id: 'ENV_CO2_NOMINAL_V1',
-          title: 'Kabin CO₂ seviyesi',
+          title: 'Cabin CO₂ level',
           health_attention: 'CRITICAL',
           data_quality: 'VALID',
           explanation: 'CO₂ has been 8.2 mmHg for 15 minutes — above the critical threshold. Check ventilation and notify the ground team.',

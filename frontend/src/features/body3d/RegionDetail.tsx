@@ -10,9 +10,9 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short
 const numFmt = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 
 export function formatWhen(iso: string | null | undefined): string {
-  if (!iso) return 'zaman bilinmiyor';
+  if (!iso) return 'time unknown';
   const t = Date.parse(iso);
-  if (Number.isNaN(t)) return 'zaman bilinmiyor';
+  if (Number.isNaN(t)) return 'time unknown';
   const mins = Math.round((Date.now() - t) / 60_000);
   let rel: string;
   if (mins < 1) rel = 'just now';
@@ -84,8 +84,8 @@ export function RegionDetail({ region, onClose }: { region: BodyRegionRead | nul
         </p>
       )}
 
-      <section className={`b3d-cov cov-${region.coverage.toLowerCase()}`} aria-label="Kapsam">
-        <h4>Kapsam: {cov.label}</h4>
+      <section className={`b3d-cov cov-${region.coverage.toLowerCase()}`} aria-label="Coverage">
+        <h4>Coverage: {cov.label}</h4>
         <p>{cov.text}</p>
       </section>
 

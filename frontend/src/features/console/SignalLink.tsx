@@ -71,7 +71,7 @@ export function SignalLink({ inTransit, delaySeconds, compression, reducedMotion
 
       <div className="console-queue">
         <h3 className="console-queue__title">
-          <Icon name="clock" size={16} /> Yolda <span className="console-num">{inTransit.length}</span>
+          <Icon name="clock" size={16} /> In transit <span className="console-num">{inTransit.length}</span>
         </h3>
         {inTransit.length === 0 ? (
           <p className="console-muted">No items in transit right now.</p>
@@ -94,7 +94,7 @@ export function SignalLink({ inTransit, delaySeconds, compression, reducedMotion
                 <span
                   className="console-queue__bar"
                   role="progressbar"
-                  aria-label={`${KIND_TEXT[e.kind]} ilerleme`}
+                  aria-label={`${KIND_TEXT[e.kind]} progress`}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={Math.round(e.transit.progress * 100)}

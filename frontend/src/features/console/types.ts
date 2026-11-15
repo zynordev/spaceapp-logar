@@ -95,7 +95,7 @@ export const KIND_LABEL: Record<PacketItemKind, string> = {
   ALERT: 'Alarm',
   RULE_EVALUATION: 'Rule evaluation',
   CHECK_IN: 'Subjective report',
-  LAB_RESULT: 'Laboratuvar sonucu',
+  LAB_RESULT: 'Lab result',
   RED_FLAG: 'Red flag report',
   TREND: 'Hourly summary',
   ESCALATION: 'Flight surgeon notification',

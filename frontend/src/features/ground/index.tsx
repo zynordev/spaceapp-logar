@@ -14,7 +14,7 @@ import { errorText, useSource } from './useGround';
 import './ground.css';
 
 const ROLE_TR: Record<string, string> = {
-  ASTRONAUT: 'Astronot',
+  ASTRONAUT: 'Astronaut',
   CREW_MEDICAL_OFFICER: 'Crew medical officer',
   GROUND: 'Ground team',
 };

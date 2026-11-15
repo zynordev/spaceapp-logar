@@ -65,7 +65,7 @@ class SceneBoundary extends Component<{ onError: () => void; children: ReactNode
 }
 
 const MODE_TAG = {
-  live: { text: 'CANLI', cls: 'is-live' },
+  live: { text: 'LIVE', cls: 'is-live' },
   demo: { text: 'DEMO', cls: 'is-demo' },
   neutral: { text: 'NEUTRAL', cls: 'is-neutral' },
 } as const;
@@ -246,7 +246,7 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
               Front
             </button>
             <button type="button" onClick={() => setView((v) => ({ kind: 'back', n: v.n + 1 }))} disabled={!use3d}>
-              Arkadan
+              Back
             </button>
             <button
               type="button"
@@ -258,15 +258,15 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
               Reset
             </button>
             <button type="button" aria-pressed={!use3d} onClick={toggle2d} disabled={!webgl || failed}>
-              2B
+              2D
             </button>
           </div>
           {use3d && (
-            <div className="b3d-bar__group" role="group" aria-label="Katmanlar">
+            <div className="b3d-bar__group" role="group" aria-label="Layers">
               {(
                 [
-                  ['skin', 'Deri'],
-                  ['organs', 'Organlar'],
+                  ['skin', 'Skin'],
+                  ['organs', 'Organs'],
                   ['skeleton', 'Skeleton'],
                 ] as const
               ).map(([key, label]) => (
@@ -287,7 +287,7 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
                   value={layers.skinOpacity}
                   disabled={!layers.skin}
                   onChange={(e) => setLayers((l) => ({ ...l, skinOpacity: Number(e.target.value) }))}
-                  aria-valuetext={`%${Math.round(layers.skinOpacity * 100)} opak`}
+                  aria-valuetext={`${Math.round(layers.skinOpacity * 100)}% opaque`}
                 />
               </label>
             </div>
@@ -310,7 +310,7 @@ export function BodyMapPanel({ bare = false, interactive = true }: BodyMapPanelP
       </div>
       <p className="b3d-attrib">
         {modelKind === 'procedural' && use3d ? 'Simplified model · ' : ''}
-        3D anatomi: BodyParts3D, © The Database Center for Life Science, CC BY 4.0
+        3D anatomy: BodyParts3D, © The Database Center for Life Science, CC BY 4.0
       </p>
 
       <span className="b3d-sr" aria-live="polite">

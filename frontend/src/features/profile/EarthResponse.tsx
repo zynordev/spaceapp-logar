@@ -19,7 +19,7 @@ export function EarthResponseLine({ er }: { er: EarthResponse | null | undefined
         {er.act_within_minutes != null && (
           <>
             {' '}
-            · action window <strong className="prof-num">{er.act_within_minutes} dk</strong>
+            · action window <strong className="prof-num">{er.act_within_minutes} min</strong>
           </>
         )}{' '}
         → {decision}

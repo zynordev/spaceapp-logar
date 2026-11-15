@@ -55,7 +55,7 @@ export function ToastHost() {
   const items = useToasts((s) => s.items);
   const dismiss = useToasts((s) => s.dismiss);
   return (
-    <div className="ui-toasts" role="region" aria-label="Bildirimler">
+    <div className="ui-toasts" role="region" aria-label="Notifications">
       {/* polite live region for info/success, assertive for errors */}
       <div aria-live="polite" className="ui-toasts__stack">
         {items
@@ -80,7 +80,7 @@ function ToastView({ item, onClose }: { item: ToastItem; onClose: () => void }) 
     <div className={`ui-toast ui-toast--${item.tone}`}>
       <Icon name={ICON[item.tone]} size={18} />
       <p className="ui-toast__msg">{item.message}</p>
-      <button type="button" className="ui-toast__close" onClick={onClose} aria-label="Bildirimi kapat">
+      <button type="button" className="ui-toast__close" onClick={onClose} aria-label="Close notification">
         <Icon name="x" size={16} />
       </button>
     </div>

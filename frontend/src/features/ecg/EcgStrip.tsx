@@ -324,7 +324,7 @@ export function EcgStrip({ height, compact = false, className }: EcgStripProps) 
             onClick={() => setPaused((p) => !p)}
             aria-pressed={paused}
           >
-            {paused ? 'Oynat' : 'Durdur'}
+            {paused ? 'Play' : 'Pause'}
           </Button>
         )}
       </div>
@@ -367,7 +367,7 @@ export function EcgStrip({ height, compact = false, className }: EcgStripProps) 
       <p className="ecg-strip__meta">
         {rec && <span className="ecg-strip__scale">{scaleText}</span>}
         <a href={ECG_ATTRIBUTION_URL} target="_blank" rel="noopener">
-          Kaynak ve lisans (ODC-By 1.0)
+          Source and licence (ODC-By 1.0)
         </a>
       </p>
     </figure>

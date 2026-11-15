@@ -34,7 +34,7 @@ const PAD = 6;
 
 /** Bring the target just below the sticky chrome (top bar + bands). */
 function scrollToTarget(el: HTMLElement, reduced: boolean) {
-  const chrome = window.location.hash.startsWith('#/yer')
+  const chrome = /^#\/(ground|yer)/.test(window.location.hash)
     ? 0
     : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chrome-h')) || 0;
   const r = el.getBoundingClientRect();
@@ -90,8 +90,8 @@ export function TourHost() {
     setBox(null);
     setNote(null);
     setReady(false);
-    const onConsole = window.location.hash.startsWith('#/yer');
-    if (def.route === 'console' && !onConsole) window.location.hash = '#/yer';
+    const onConsole = /^#\/(ground|yer)/.test(window.location.hash);
+    if (def.route === 'console' && !onConsole) window.location.hash = '#/ground';
     if (def.route === 'app' && onConsole) window.location.hash = '#/';
     if (def.tab) requestDetailTab(def.tab);
 
@@ -278,7 +278,7 @@ export function TourHost() {
       >
         <header className="tour__head">
           <span className="tour__kicker">
-            <Icon name="play" size={12} /> Senaryo turu · {title}
+            <Icon name="play" size={12} /> Scenario tour · {title}
           </span>
           {phase === 'running' && (
             <span className="tour__count" aria-label={`Step ${step + 1} / ${steps.length}`}>
@@ -286,7 +286,7 @@ export function TourHost() {
               {def && <span className="tour__beat"> · {def.beat}</span>}
             </span>
           )}
-          <button type="button" className="tour__close" onClick={stop} aria-label="Turu kapat (Esc)">
+          <button type="button" className="tour__close" onClick={stop} aria-label="Close tour (Esc)">
             <Icon name="x" size={16} />
           </button>
         </header>
@@ -350,7 +350,7 @@ export function TourHost() {
               </button>
               <label className="tour__auto">
                 <input type="checkbox" checked={auto} onChange={(e) => useTour.getState().setAuto(e.target.checked)} />
-                Otomatik ilerle
+                Auto-advance
               </label>
               <span className="tour__keys" aria-hidden="true">
                 ← → · Esc

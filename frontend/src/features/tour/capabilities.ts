@@ -26,7 +26,7 @@ export const CAPABILITIES: Capability[] = [
   { name: 'Red flag notification', state: 'works', note: 'A reported symptom opens a CRITICAL alert and an emergency card without waiting for a threshold.' },
   { name: 'Automatic escalation to the flight surgeon', state: 'works', note: 'Created automatically, once per Warning or Critical alert.' },
   { name: 'Packet and acknowledgement to the ground team', state: 'works', note: 'A packet per recipient (flight surgeon, life support, radiation, mission control); sha256 digest, and an HMAC-SHA256 signature if the server has a key. No encryption.' },
-  { name: 'Earth link and light delay', state: 'sim', note: 'The delay is only animated on the ground console (#/yer); there is no real space communication or DTN.' },
+  { name: 'Earth link and light delay', state: 'sim', note: 'The delay is only animated on the ground console (#/ground); there is no real space communication or DTN.' },
   { name: 'Mission profile (ISS / Moon / Mars)', state: 'works', note: 'One-way delay and escalation owner come from the server. If the server has no endpoint, the selector appears disabled.' },
   { name: 'Role-based sign-in', state: 'works', note: 'Optional signed token (Astronaut / Crew medical officer / Ground team). Demo sign-in is visible only when it is explicitly enabled on the server.' },
   { name: 'Offline operation', state: 'works', note: 'Local server and SQLite on board; not dependent on Earth. When the connection drops, the interface shows the last known data, labelled as such.' },

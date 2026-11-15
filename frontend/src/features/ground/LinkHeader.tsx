@@ -13,12 +13,12 @@ const STATE_INFO: Record<LinkState, { label: string; icon: IconName; detail: str
     detail: 'The system runs autonomously on board; packets go to the ground teams during the link window.',
   },
   LOCAL: {
-    label: 'Yerel demo',
+    label: 'Local demo',
     icon: 'offline',
     detail: 'Earth link is not simulated; packets can be prepared and downloaded manually.',
   },
   NO_SERVICE: {
-    label: 'Senkronizasyon servisi yok',
+    label: 'No sync service',
     icon: 'offline',
     detail: '/v1/sync is not on this server yet. To preview, add ?mock=1 to the address.',
   },

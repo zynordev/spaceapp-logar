@@ -30,7 +30,7 @@ export function Escalations(props: {
         </h3>
         {items && (
           <span className={`gp-count ${pending > 0 ? 'gp-count--hot' : ''}`}>
-            {pending > 0 ? `${pending} bekliyor` : 'Bekleyen yok'}
+            {pending > 0 ? `${pending} pending` : 'None pending'}
           </span>
         )}
       </header>
@@ -73,7 +73,7 @@ export function Escalations(props: {
                   <span className="gp-muted"> ({formatAgo(e.created_at)})</span>
                   {acked && e.acked_at && (
                     <>
-                      {' · onay '}
+                      {' · acknowledged '}
                       <time dateTime={e.acked_at}>{formatTime(e.acked_at)}</time>
                     </>
                   )}

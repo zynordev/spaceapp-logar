@@ -76,7 +76,7 @@ export const useTour = create<TourState>((set, get) => ({
     const seq = ++runSeq;
     set({ tour: id, step: 0, phase: 'preparing', error: null, missionId: null });
     // The tour begins on the ship screen.
-    if (window.location.hash.startsWith('#/yer')) window.location.hash = '#/';
+    if (/^#\/(ground|yer)/.test(window.location.hash)) window.location.hash = '#/';
     try {
       const scenarioId = TOUR_SCENARIO[id].scenarioId;
       const r =

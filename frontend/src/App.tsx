@@ -178,7 +178,7 @@ export default function App() {
               >
                 {activeTab === 'rules' ? (
                   <div className="shell-grid">
-                    <Slot name="Alarmlar" height={560} className="shell-grid__alerts">
+                    <Slot name="Alarms" height={560} className="shell-grid__alerts">
                       <AlertsPanel />
                     </Slot>
                     <Slot name="Measurements and rules" height={420} className="shell-grid__vitals">

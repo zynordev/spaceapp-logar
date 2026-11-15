@@ -14,7 +14,7 @@ export interface Preset {
 }
 
 // One-way light time. Mars varies with orbital geometry; the rounded presets
-// follow the brief (en yakın ~4 dk, ortalama ~12,5 dk, en uzak ~24 dk).
+// follow the brief (en yakın ~4 min, ortalama ~12,5 min, en uzak ~24 min).
 export const PRESETS: Preset[] = [
   { id: 'leo', label: 'Earth orbit', seconds: 0, hint: '≈ 0 s' },
   { id: 'moon', label: 'Moon', seconds: 1.3, hint: '≈ 1.3 s' },
@@ -84,18 +84,18 @@ export function resolveDelay(settings: DelaySettings, serverSeconds: number | nu
 
 const nf1 = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 });
 
-/** 0 -> "0 sn", 1.3 -> "1,3 sn", 750 -> "12 dk 30 sn", 3600 -> "1 sa". */
+/** 0 -> "0 s", 1.3 -> "1,3 s", 750 -> "12 min 30 s", 3600 -> "1 h". */
 export function formatDelay(seconds: number | null | undefined): string {
   if (seconds === null || seconds === undefined || !Number.isFinite(seconds)) return '—';
-  if (seconds < 60) return `${nf1.format(seconds)} sn`;
+  if (seconds < 60) return `${nf1.format(seconds)} s`;
   const s = Math.round(seconds);
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const r = s % 60;
   const parts: string[] = [];
-  if (h) parts.push(`${h} sa`);
-  if (m) parts.push(`${m} dk`);
-  if (r) parts.push(`${r} sn`);
+  if (h) parts.push(`${h} h`);
+  if (m) parts.push(`${m} min`);
+  if (r) parts.push(`${r} s`);
   return parts.join(' ');
 }
 

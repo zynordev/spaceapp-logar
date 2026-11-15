@@ -336,8 +336,8 @@ export function GroundConsoleApp() {
 
             {(alertsQ.error || escQ.error) && (
               <div className="console-errors">
-                {alertsQ.error && <ErrorNote error={alertsQ.error} what="Alarmlar" compact />}
-                {escQ.error && <ErrorNote error={escQ.error} what="Bildirimler" compact />}
+                {alertsQ.error && <ErrorNote error={alertsQ.error} what="Alarms" compact />}
+                {escQ.error && <ErrorNote error={escQ.error} what="Notifications" compact />}
               </div>
             )}
 
@@ -348,8 +348,8 @@ export function GroundConsoleApp() {
                 subtitle="The decision support system flagged these events instantly."
                 status={
                   <div className="console-state">
-                    <span className="console-state__label">Gemideki genel durum</span>
-                    {shipAttention ? <AttentionBadge level={toAttention(shipAttention)} /> : <AttentionBadge level="UNKNOWN">Bilinmiyor</AttentionBadge>}
+                    <span className="console-state__label">Overall status on board</span>
+                    {shipAttention ? <AttentionBadge level={toAttention(shipAttention)} /> : <AttentionBadge level="UNKNOWN">Unknown</AttentionBadge>}
                     <span className="console-muted">{crewId ?? '—'}</span>
                   </div>
                 }

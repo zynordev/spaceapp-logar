@@ -54,7 +54,7 @@ export function CheckInSection() {
         source_id: SOURCE_ID,
       }),
       (r) => ({ kind: 'ok', text: `Saved (${fmtDateTime(r.observed_at)}). Subjective entries are context only; they do not raise an alarm on their own.` }),
-      'kaydedilemedi',
+      'could not be saved',
     );
   };
 
@@ -87,7 +87,7 @@ export function CheckInSection() {
             </div>
             <div className="lgi-actions">
               <button type="submit" className="lgi-btn lgi-btn--primary" disabled={busy} aria-busy={busy}>
-                {busy ? 'Kaydediliyor…' : 'Durumu kaydet'}
+                {busy ? 'Saving…' : 'Save status'}
               </button>
               <button type="button" className="lgi-btn" onClick={() => setScores(ZERO)} disabled={busy}>
                 Set all to “None”
