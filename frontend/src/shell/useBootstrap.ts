@@ -2,7 +2,7 @@
 // automatic first mission/crew/environment selection (like the old panel).
 import { useEffect } from 'react';
 import { usePolling, type ApiError } from '../lib/api';
-import { useApp } from '../lib/store';
+import { useApp, type AuthUser, type Role } from '../lib/store';
 import type { AuthConfigRead, AuthMeRead, MissionRead } from './types';
 
 export interface AuthInfo {
@@ -10,6 +10,18 @@ export interface AuthInfo {
   authRequired: boolean | null;
   /** false = server has no auth secret: hide the login button. */
   authConfigured: boolean | null;
+}
+
+/** Display-only decode of the token claims {sub, role} (the server verifies it). */
+function userFromToken(token: string): AuthUser | null {
+  try {
+    const part = token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    const claims = JSON.parse(atob(part + '='.repeat((4 - (part.length % 4)) % 4)));
+    if (typeof claims.sub !== 'string') return null;
+    return { user_id: claims.sub, role: (claims.role as Role) ?? null, anonymous: false };
+  } catch {
+    return null;
+  }
 }
 
 export function useAuthBootstrap(): AuthInfo {
@@ -20,8 +32,10 @@ export function useAuthBootstrap(): AuthInfo {
 
   useEffect(() => {
     if (me.data) setUser(me.data);
-    else if (me.error && (me.error.notFound || me.error.status === 401)) setUser(null);
-  }, [me.data, me.error, setUser]);
+    else if (me.error?.status === 401) setUser(null);
+    // Server without /v1/auth/me: show the identity carried by our own token.
+    else if (me.error?.notFound) setUser(token ? userFromToken(token) : null);
+  }, [me.data, me.error, token, setUser]);
 
   // Logged out: drop the previous user immediately (me refetches as anonymous).
   useEffect(() => {

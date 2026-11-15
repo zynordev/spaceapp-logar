@@ -21,7 +21,12 @@ export function Dialog({ open, title, onClose, children, footer, width = 420 }: 
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
-    if (open && !d.open) d.showModal();
+    if (open && !d.open) {
+      d.showModal();
+      // React's autoFocus doesn't render the attribute, so showModal() would
+      // focus the close button: move focus to the first form control instead.
+      d.querySelector<HTMLElement>('.ui-dialog__body input, .ui-dialog__body select, .ui-dialog__body textarea')?.focus();
+    }
     if (!open && d.open) d.close();
   }, [open]);
 

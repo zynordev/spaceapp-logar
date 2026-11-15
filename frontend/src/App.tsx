@@ -121,8 +121,8 @@ export default function App() {
                 value={activeTab}
                 onChange={(id) => setTab(id as 'inputs' | 'ground')}
                 tabs={[
-                  { id: 'inputs', label: 'Veri girişi ve rutinler' },
-                  { id: 'ground', label: 'Yer istasyonu ve senkron' },
+                  { id: 'inputs', label: 'Veri girişi' },
+                  { id: 'ground', label: 'Yer istasyonu' },
                 ]}
               >
                 {activeTab === 'inputs' ? (
