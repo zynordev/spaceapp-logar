@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from spaceapp_logar.api.alerts import router as alerts_router
 from spaceapp_logar.api.auth import router as auth_router
+from spaceapp_logar.api.body_map import router as body_map_router
 from spaceapp_logar.api.check_ins import router as check_ins_router
 from spaceapp_logar.api.coverage import router as coverage_router
 from spaceapp_logar.api.demo import router as demo_router
@@ -86,6 +87,7 @@ app.include_router(auth_router)
 # offline dashboard and demo scenarios keep working; see spaceapp_logar.auth.
 AUTHENTICATED = [Depends(current_user)]
 app.include_router(alerts_router, dependencies=AUTHENTICATED)
+app.include_router(body_map_router, dependencies=AUTHENTICATED)
 app.include_router(check_ins_router, dependencies=AUTHENTICATED)
 app.include_router(coverage_router, dependencies=AUTHENTICATED)
 app.include_router(demo_router, dependencies=AUTHENTICATED)
