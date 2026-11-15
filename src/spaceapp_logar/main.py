@@ -22,6 +22,7 @@ from spaceapp_logar.api.observations import router as observations_router
 from spaceapp_logar.api.red_flags import router as red_flags_router
 from spaceapp_logar.api.routines import router as routines_router
 from spaceapp_logar.api.status import router as status_router
+from spaceapp_logar.api.sync import router as sync_router
 from spaceapp_logar.auth import current_user
 from spaceapp_logar.db import session as db_session
 from spaceapp_logar.observability import REQUEST_ID_HEADER, install_observability
@@ -101,6 +102,7 @@ app.include_router(observations_router, dependencies=AUTHENTICATED)
 app.include_router(red_flags_router, dependencies=AUTHENTICATED)
 app.include_router(routines_router, dependencies=AUTHENTICATED)
 app.include_router(status_router, dependencies=AUTHENTICATED)
+app.include_router(sync_router, dependencies=AUTHENTICATED)
 
 
 @app.get("/health", response_model=ServiceHealth, tags=["operations"])

@@ -602,3 +602,62 @@ class RoutineCompletion(Base):
     completed_at: Mapped[datetime] = mapped_column(UTCDateTime())
     source_type: Mapped[str] = mapped_column(String(32), default="MANUAL")
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+
+
+class GroundSyncAck(Base):
+    """Append-only: a ground team confirmed receipt of a sync packet.
+
+    The latest ``until`` per mission and recipient is that team's cursor.
+    """
+
+    __tablename__ = "ground_sync_acks"
+    __table_args__ = (
+        CheckConstraint(
+            "recipient IN ('FLIGHT_SURGEON', 'LIFE_SUPPORT', 'RADIATION', "
+            "'MISSION_CONTROL')",
+            name="ck_ground_sync_acks_recipient",
+        ),
+        Index("ix_ground_sync_acks_lookup", "mission_id", "recipient", "until"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    recipient: Mapped[str] = mapped_column(String(32))
+    packet_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True))
+    sha256: Mapped[str] = mapped_column(String(64))
+    until: Mapped[datetime] = mapped_column(UTCDateTime())
+    acked_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+    acked_by: Mapped[str] = mapped_column(String(100))
+
+
+class GroundEscalation(Base):
+    """Priority packet created once when an ALERT/CRITICAL alert opens."""
+
+    __tablename__ = "ground_escalations"
+    __table_args__ = (
+        CheckConstraint(
+            "priority IN ('ALERT', 'CRITICAL')",
+            name="ck_ground_escalations_priority",
+        ),
+        CheckConstraint(
+            "status IN ('PENDING', 'ACKED')",
+            name="ck_ground_escalations_status",
+        ),
+        Index("uq_ground_escalations_alert", "alert_id", unique=True),
+        Index("ix_ground_escalations_lookup", "mission_id", "status", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    mission_id: Mapped[str] = mapped_column(String(100))
+    alert_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("alert_events.id", ondelete="RESTRICT"),
+    )
+    crew_member_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    priority: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(16))
+    summary_tr: Mapped[str] = mapped_column(String(500))
+    packet: Mapped[dict] = mapped_column(JSON)
+    packet_sha256: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utc_now)
+    acked_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
