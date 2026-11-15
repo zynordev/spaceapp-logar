@@ -149,39 +149,27 @@
 .shell-main > .shell-skeleton { margin: var(--sp-5); }
 
 /* ------------------------------------------------------------- HUD stage
- * Three columns, nothing overlaps: vitals + cabin | 3D body | status,
- * alerts, clock. Fills the viewport below the top bar. */
+ * Design team reference: crew cards on the left, cabin conditions across
+ * the top right, one big panel below (3D body + vital signs). Nothing
+ * overlaps. Fills the viewport below the top bar. */
 .hud {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr) 320px;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(400px, 32%) minmax(0, 1fr) minmax(400px, 470px);
+  grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
-    'left scene right'
-    'left cabin right';
-  gap: var(--sp-3);
+    'left room  room'
+    'left scene vitals';
+  gap: var(--sp-3) var(--sp-3);
   height: calc(100vh - var(--chrome-h, 96px));
   height: calc(100dvh - var(--chrome-h, 96px));
-  min-height: 640px;
+  min-height: 680px;
   padding: var(--sp-3);
-  border-bottom: 1px solid var(--line);
   background: var(--bg);
 }
 .hud__overlay { display: contents; }
 .hud__overlay > .shell-crash { grid-column: 1 / -1; }
-.hud__scene {
-  grid-area: scene;
-  position: relative;
-  min-width: 0;
-  min-height: 0;
-  border: 1px solid var(--line-strong);
-  background:
-    radial-gradient(ellipse 45% 55% at 50% 50%, var(--scene-top) 0%, transparent 100%),
-    var(--scene-bottom);
-}
-.hud__scene > .shell-slot { position: absolute; inset: 0; }
-.hud__scene > .shell-slot > * { flex: 1; min-height: 0; height: 100%; }
-.hud__scene .shell-skeleton { background: transparent; border: 0; }
-.hud__left, .hud__right {
+.hud__left {
+  grid-area: left;
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
@@ -189,25 +177,48 @@
   overflow: auto;
   scrollbar-width: thin;
 }
-.hud__left { grid-area: left; }
-.hud__cabin { grid-area: cabin; min-width: 0; }
-.hud__right { grid-area: right; }
+.hud__left > .hud-mission { margin-top: auto; }
+.hud__room { grid-area: room; min-width: 0; }
+/* scene + vitals read as one big panel */
+.hud__scene {
+  grid-area: scene;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+}
+.hud__vitals {
+  grid-area: vitals;
+  min-height: 0;
+  margin-left: calc(-1 * var(--sp-3));
+  border-left: 2px solid var(--rule);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  overflow: hidden;
+  background: var(--surface);
+}
+.hud__scene > .shell-slot { position: absolute; inset: 0; }
+.hud__scene > .shell-slot > * { flex: 1; min-height: 0; height: 100%; }
+.hud__scene .shell-skeleton { background: transparent; border: 0; }
 
 @media (max-width: 1280px) {
-  .hud { grid-template-columns: 288px minmax(0, 1fr) 288px; }
+  .hud { grid-template-columns: minmax(360px, 30%) minmax(0, 1fr) 420px; }
 }
 @media (max-width: 1100px), (max-height: 640px) {
   .hud {
     height: auto;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: auto;
-    grid-template-areas: 'scene scene' 'cabin cabin' 'left right';
+    grid-template-areas: 'room room' 'scene scene' 'vitals vitals' 'left left';
   }
-  .hud__scene { height: 60vh; min-height: 460px; }
-  .hud__left, .hud__right { overflow: visible; }
+  .hud__scene { height: 60vh; min-height: 460px; border-radius: var(--radius-lg); }
+  .hud__vitals { margin-left: 0; border-left: 0; border-radius: var(--radius-lg); }
+  .hud__left { overflow: visible; }
 }
 @media (max-width: 720px) {
-  .hud { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'scene' 'right' 'cabin' 'left'; padding: var(--sp-2); }
+  .hud { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'left' 'room' 'scene' 'vitals'; padding: var(--sp-2); }
+  .hud-cols:not(.hud-cols--grid) { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ------------------------------------------------------------- Details */

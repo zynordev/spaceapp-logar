@@ -69,6 +69,7 @@ export default function App() {
   const user = useApp((s) => s.user);
   const loginRequired = useApp((s) => s.loginRequired);
   const missionId = useApp((s) => s.missionId);
+  const crewId = useApp((s) => s.crewId);
   const offline = useApp((s) => s.offline);
   const [loginOpen, setLoginOpen] = useState(false);
   const [tab, setTab] = useState<DetailTab | null>(null);
@@ -148,7 +149,11 @@ export default function App() {
               <div className="hud__overlay">
                 <FeatureBoundary name="Görev ekranı">
                   <Suspense fallback={null}>
-                    <HudOverlay scenarioId={missions.current?.scenario_id ?? null} onOpen={openDetails} />
+                    <HudOverlay
+                      scenarioId={missions.current?.scenario_id ?? null}
+                      crewIds={missions.current?.crew_member_ids ?? (crewId ? [crewId] : [])}
+                      onOpen={openDetails}
+                    />
                   </Suspense>
                 </FeatureBoundary>
               </div>

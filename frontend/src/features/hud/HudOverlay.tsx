@@ -1,15 +1,17 @@
-// Mission screen side columns (left: vitals, right: status / cabin / alerts /
-// clock). Plain panels with table rows: one line per measurement, nothing
-// floats over the 3D body. Every number comes from the API; missing data is
-// "—" with a reason, never a made-up value.
+// Mission screen, built to the design team's hand-made layout:
+//   left   crew cards (one per crew member in the mission) + mission card
+//   top    cabin conditions: one column per measured metric
+//   main   3D body (shell) + vital-sign columns and the recorded ECG strip
+// Every number comes from the API. Missing data is "—" with a reason; no
+// photos or names of real people, no invented health score.
 import { useEffect, useState, type ReactNode } from 'react';
 import { qs, usePolling } from '../../lib/api';
 import { useApp } from '../../lib/store';
-import { ATTENTION_ORDER, AttentionBadge, Icon, attentionClass, attentionMeta, type IconName } from '../../ui';
-import { displayUnit } from '../vitals/copy';
+import { Icon, attentionMeta, type IconName } from '../../ui';
+import { cmpSymbol, displayUnit } from '../vitals/copy';
 import { rulesForMetric, targetFor, useAlerts, useCrewStatus, useMetrics, useSeries, useVitalsUi, worst } from '../vitals/data';
 import { fmtAuto, fmtClock, relTime, toMs } from '../vitals/format';
-import type { MeasurementPoint, MetricDef, RuleStatus } from '../vitals/types';
+import type { AlertRead, CrewStatus, MeasurementPoint, MetricDef, RuleStatus } from '../vitals/types';
 import { EcgStrip } from '../ecg';
 // From the file, not the folder index: the console stays its own lazy chunk.
 import { GroundConsoleLink } from '../console/GroundConsoleLink';
@@ -18,6 +20,8 @@ export type DetailTab = 'rules' | 'inputs' | 'ground';
 
 export interface HudOverlayProps {
   scenarioId: string | null;
+  /** Crew members of the selected mission (from GET /v1/missions). */
+  crewIds: string[];
   /** Scroll to the detail section and open the given tab. */
   onOpen: (tab: DetailTab) => void;
 }
@@ -31,22 +35,19 @@ const ICONS: Record<string, IconName> = {
   BODY_TEMPERATURE: 'thermometer',
   SYSTOLIC_BP: 'gauge',
   CABIN_CO2_PARTIAL_PRESSURE: 'wind',
-  CABIN_O2_FRACTION: 'droplet',
+  CABIN_O2_FRACTION: 'circle',
   CABIN_PRESSURE: 'gauge',
   RADIATION_DOSE_RATE: 'radiation',
 };
 
-const SHORT: Record<string, string> = {
-  SYSTOLIC_BP: 'Tansiyon',
-  CABIN_CO2_PARTIAL_PRESSURE: 'CO₂',
-  CABIN_O2_FRACTION: 'O₂',
-  CABIN_PRESSURE: 'Basınç',
-  RADIATION_DOSE_RATE: 'Radyasyon',
+/** Column titles: the API metric keys, wrapped where the reference wraps. */
+const KEY_LABEL: Record<string, string> = {
+  CABIN_CO2_PARTIAL_PRESSURE: 'CABIN_CO2_​PARTIAL_PRESSURE',
+  SYSTOLIC_BP: 'BLOOD_PRESSURE',
 };
 
-// Acute vitals only; HRV and sleep stay in the detail section.
 const VITAL_ORDER = ['HEART_RATE', 'SPO2', 'BODY_TEMPERATURE', 'RESPIRATION_RATE', 'SYSTOLIC_BP'];
-const ENV_ORDER = ['CABIN_CO2_PARTIAL_PRESSURE', 'CABIN_O2_FRACTION', 'CABIN_PRESSURE', 'RADIATION_DOSE_RATE'];
+const ENV_ORDER = ['CABIN_PRESSURE', 'CABIN_O2_FRACTION', 'CABIN_CO2_PARTIAL_PRESSURE', 'RADIATION_DOSE_RATE'];
 
 function useNow(ms: number) {
   const [now, setNow] = useState(() => Date.now());
@@ -67,9 +68,11 @@ function pick(list: MetricDef[], order: string[]): MetricDef[] {
   return order.map((m) => list.find((d) => d.metric === m)).filter((d): d is MetricDef => !!d);
 }
 
-/* ------------------------------------------------------------------ panel */
+const upperTr = (s: string) => s.toLocaleUpperCase('tr-TR');
 
-function Panel({ title, id, aside, children, className }: { title: string; id: string; aside?: ReactNode; children: ReactNode; className?: string }) {
+/* --------------------------------------------------------------- pieces */
+
+function Panel({ title, id, aside, children, className }: { title: ReactNode; id: string; aside?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={`hud-panel${className ? ` ${className}` : ''}`} aria-labelledby={id}>
       <header className="hud-panel__head">
@@ -78,26 +81,36 @@ function Panel({ title, id, aside, children, className }: { title: string; id: s
         </h2>
         {aside}
       </header>
-      {children}
+      <div className="hud-panel__body">{children}</div>
     </section>
   );
 }
 
-/* -------------------------------------------------------------- metric row */
+/** Solid status bar with the level word (dark ink on the bar colour). */
+function StatusBar({ level }: { level: string | null }) {
+  if (!level) return <span className="hud-bar hud-bar--none">KURAL YOK</span>;
+  const m = attentionMeta(level);
+  return (
+    <span className={`hud-bar hud-bar--${m.level.toLowerCase()}`} title={m.description}>
+      {upperTr(m.label)}
+    </span>
+  );
+}
 
-function MetricRow({
+/* ---------------------------------------------------------- metric column */
+
+function MetricColumn({
   def,
   pair = null,
   rules,
   onOpen,
-  below,
+  compact = false,
 }: {
   def: MetricDef;
   pair?: MetricDef | null;
   rules: RuleStatus[];
   onOpen: (m: string) => void;
-  /** Rendered under the row, outside the button (e.g. the recorded ECG strip). */
-  below?: ReactNode;
+  compact?: boolean;
 }) {
   const crewId = useApp((s) => s.crewId);
   const envId = useApp((s) => s.environmentTargetId);
@@ -113,52 +126,73 @@ function MetricRow({
   const pending = !!target && !series.data && !series.error;
   const observed = toMs(last?.observed_at);
   const stale = observed != null && now - observed > STALE_MS;
-  const demo = !!top?.validation_status?.startsWith('DEMO');
   const value = last ? (pair ? `${fmtAuto(last.value)}/${lastPair ? fmtAuto(lastPair.value) : '—'}` : fmtAuto(last.value)) : '—';
   const reason = !target ? 'Hedef seçilmedi' : series.error ? 'Alınamadı' : 'Veri yok';
-  const flagged = level && level !== 'NORMAL' && level !== 'UNKNOWN';
+  const approved = top?.validation_status === 'APPROVED';
+  const demo = !!top?.validation_status?.startsWith('DEMO');
+  // Only show a threshold on the metric the rule is measured on; a related
+  // rule (e.g. ppO2 shown under cabin pressure) gets its name instead.
+  const own = !!top && (top.metric === def.metric || (!!pair && top.metric === pair.metric));
+  const thr = top && own && Number.isFinite(top.threshold) ? `${cmpSymbol(top.comparison)} ${fmtAuto(top.threshold)} ${displayUnit(top.unit)}` : top ? 'ilişkili' : '';
+  const source = approved
+    ? `${(top?.source || 'KAYNAKLI').split(/[ ,(]/)[0]} // ${thr}`
+    : demo
+      ? `${compact ? 'DEMO' : 'DEMO EŞİK'} // ${thr}`
+      : top
+        ? thr
+        : 'EŞİK YOK';
 
   return (
-    <li>
+    <li className={`hud-col${compact ? ' hud-col--compact' : ''}`}>
       <button
         type="button"
-        className={`hud-row${level ? ` ${attentionClass(level)}` : ''}${flagged ? ' is-flagged' : ''}${!last ? ' is-empty' : ''}`}
+        className="hud-col__btn"
         onClick={() => onOpen(def.metric)}
-        aria-label={`${def.label}: ${last ? `${value} ${unit}` : reason}. ${level ? attentionMeta(level).label : 'Kural yok'}. Ayrıntıyı aç.`}
+        aria-label={`${def.label}: ${last ? `${value} ${unit}` : reason}. ${level ? attentionMeta(level).label : 'Kural yok'}.${last ? ` Ölçüm ${fmtClock(last.observed_at)}.` : ''} Ayrıntıyı aç.`}
+        title={last ? `Son ölçüm ${fmtClock(last.observed_at)} · ${relTime(last.observed_at, now)}` : undefined}
       >
-        <span className="hud-row__name">
-          <Icon name={ICONS[def.metric] ?? 'pulse'} size={16} />
-          {SHORT[def.metric] ?? def.label}
+        <span className="hud-col__key" title={def.label}>
+          {KEY_LABEL[def.metric] ?? def.metric}
         </span>
-        <span className="hud-row__value">
+        <span className={`hud-col__value${!last ? ' is-empty' : ''}`}>
           {pending ? '…' : value}
-          {last && <small>{unit}</small>}
+          {compact && last && <small className="hud-col__unit-inline">{unit}</small>}
         </span>
-        <span className="hud-row__state">
-          {level ? <AttentionBadge level={level} size="sm" /> : <span className="hud-tag">Kural yok</span>}
+        {(!compact || !last) && <span className="hud-col__unit">{last ? unit : reason}</span>}
+        <StatusBar level={level} />
+        <span className={`hud-col__src${demo ? ' is-demo' : ''}`} title={top?.source || undefined}>
+          {source}
         </span>
-        <span className={`hud-row__meta${stale ? ' is-stale' : ''}`} title={stale ? 'Son ölçüm 10 dakikadan eski' : undefined}>
-          {last ? `${fmtClock(last.observed_at)} · ${relTime(last.observed_at, now)}` : reason}
-          {demo && (
-            <span className="hud-row__demo" title="DEMO eşik: uçuş tıbbı uzmanı doğrulaması bekliyor">
-              {' '}
-              · DEMO
-            </span>
-          )}
-          {top?.validation_status === 'APPROVED' && (
-            <span className="hud-row__src" title={top.source ? `Eşik kaynağı: ${top.source}` : undefined}>
-              {' '}
-              · Kaynaklı
-            </span>
-          )}
-        </span>
+        {!compact && (
+          <span className={`hud-col__time${stale ? ' is-stale' : ''}`}>{last ? `${fmtClock(last.observed_at)} · ${relTime(last.observed_at, now)}` : ' '}</span>
+        )}
+        {!compact && <Icon name={ICONS[def.metric] ?? 'pulse'} size={30} className="hud-col__icon" />}
       </button>
-      {below}
     </li>
   );
 }
 
-/* ------------------------------------------------------------ status panel */
+/* --------------------------------------------------------------- crew card */
+
+interface CheckInLite {
+  observed_at: string;
+  [k: string]: number | string | null;
+}
+interface LabPanelLite {
+  results: { position_vs_reference: 'BELOW' | 'WITHIN' | 'ABOVE'; sampled_at: string }[];
+}
+
+const SYMPTOM_TR: Record<string, string> = {
+  fatigue: 'Yorgunluk',
+  dizziness: 'Baş dönmesi',
+  nausea: 'Bulantı',
+  headache: 'Baş ağrısı',
+  pain: 'Ağrı',
+  mood_distress: 'Ruh hali',
+  vision_change: 'Görme',
+  back_pain: 'Sırt ağrısı',
+  congestion: 'Tıkanıklık',
+};
 
 function initials(id: string): string {
   const letters = id.replace(/[^A-Za-z]/g, '').slice(0, 1).toUpperCase();
@@ -166,115 +200,150 @@ function initials(id: string): string {
   return (letters + digits || id.slice(0, 2)).toUpperCase();
 }
 
-function StatusPanel({ scenarioId, onOpen }: { scenarioId: string | null; onOpen: (tab: DetailTab) => void }) {
-  const status = useCrewStatus();
-  const crewId = useApp((s) => s.crewId);
-  const offline = useApp((s) => s.offline);
+/** White disc with an arc: share of this crew member's rules that are NORMAL. */
+function RuleRing({ normal, total, level }: { normal: number; total: number; level: string }) {
+  const pct = total ? Math.round((normal / total) * 100) : null;
+  const r = 22;
+  const c = 2 * Math.PI * r;
+  const m = attentionMeta(level);
+  return (
+    <span
+      className={`hud-ring hud-ring--${m.level.toLowerCase()}`}
+      role="img"
+      aria-label={total ? `${total} kuralın ${normal} tanesi normal (%${pct}). Genel durum: ${m.label}.` : 'Değerlendirilmiş kural yok.'}
+      title={total ? `${normal}/${total} kural normal · genel durum: ${m.label}` : 'Değerlendirilmiş kural yok'}
+    >
+      <svg viewBox="0 0 56 56" width="56" height="56" aria-hidden="true">
+        <circle cx="28" cy="28" r="27" className="hud-ring__disc" />
+        <circle cx="28" cy="28" r={r} className="hud-ring__track" />
+        {pct !== null && (
+          <circle cx="28" cy="28" r={r} className="hud-ring__arc" strokeDasharray={`${(c * pct) / 100} ${c}`} transform="rotate(-90 28 28)" />
+        )}
+      </svg>
+      <span className="hud-ring__num" aria-hidden="true">
+        {pct === null ? '—' : pct}
+        {pct !== null && <sup>%</sup>}
+      </span>
+    </span>
+  );
+}
+
+function CrewCard({ crewId, envId, alerts, onOpen }: { crewId: string; envId: string | null; alerts: AlertRead[]; onOpen: (tab: DetailTab) => void }) {
+  const missionId = useApp((s) => s.missionId);
+  const setSelection = useApp((s) => s.setSelection);
+  const selectedCrew = useApp((s) => s.crewId);
   const now = useNow(30_000);
+  const base = missionId ? `/v1/crew/${encodeURIComponent(crewId)}` : null;
+  const status = usePolling<CrewStatus & { latest_check_in?: CheckInLite | null }>(
+    base ? `${base}/status${qs({ mission_id: missionId, environment_target_id: envId })}` : null,
+    10_000,
+  );
+  const labs = usePolling<LabPanelLite>(base ? `${base}/lab-results${qs({ mission_id: missionId })}` : null, 60_000);
   const data = status.data;
-  const meta = attentionMeta(data?.overall_attention);
-  const counts = new Map<string, number>();
-  for (const r of data?.rules ?? []) counts.set(r.health_attention, (counts.get(r.health_attention) ?? 0) + 1);
-  const generated = toMs(data?.generated_at);
-  const stale = offline || (generated != null && now - generated > STALE_MS);
-  const activity = (data as { current_activity?: { state: string; message_tr: string } | null } | null)?.current_activity;
+  const crewRules = (data?.rules ?? []).filter((r) => r.target_id === crewId);
+  const normal = crewRules.filter((r) => r.health_attention === 'NORMAL').length;
+  const overall = attentionMeta(data?.overall_attention);
+  const physio = worst(crewRules.filter((r) => !r.rule_id.startsWith('RED_FLAG')));
+
+  const mine = alerts.filter((a) => a.target_id === crewId && a.status !== 'RESOLVED');
+  const urgent = mine
+    .filter((a) => a.health_attention === 'ALERT' || a.health_attention === 'CRITICAL')
+    .sort((a, b) => attentionMeta(b.health_attention).rank - attentionMeta(a.health_attention).rank);
+  const watching = mine.filter((a) => a.health_attention === 'WATCH').length;
+
+  const ci = data?.latest_check_in ?? null;
+  let psych = 'Öznel kayıt yok';
+  if (ci) {
+    let topKey: string | null = null;
+    let topVal = 0;
+    for (const [k, v] of Object.entries(ci)) {
+      if (typeof v === 'number' && k in SYMPTOM_TR && v > topVal) {
+        topVal = v;
+        topKey = k;
+      }
+    }
+    psych = topKey ? `${SYMPTOM_TR[topKey]} ${topVal}/4 · ${relTime(ci.observed_at, now)}` : `belirti yok · ${relTime(ci.observed_at, now)}`;
+  }
+  const labRes = labs.data?.results ?? [];
+  const outRef = labRes.filter((r) => r.position_vs_reference !== 'WITHIN').length;
+  const blood = labs.data ? (labRes.length ? `${labRes.length} sonuç · ${outRef} referans dışı` : 'Lab sonucu yok') : labs.error ? 'Alınamadı' : '…';
+  const isSelected = selectedCrew === crewId;
 
   return (
     <Panel
-      title="Genel durum"
-      id="hud-status-title"
-      className={`hud-status ${attentionClass(meta.level)}`}
+      title={upperTr(crewId)}
+      id={`hud-crew-${crewId}`}
+      className={`hud-crewcard att-${overall.level.toLowerCase()}${isSelected ? ' is-selected' : ''}`}
       aside={
-        <span className="hud-crew">
-          <span className="hud-avatar" aria-hidden="true">
-            {crewId ? initials(crewId) : '—'}
-          </span>
-          <span className="mono">{crewId ?? '—'}</span>
-        </span>
+        !isSelected ? (
+          <button type="button" className="hud-link" onClick={() => setSelection({ crewId })}>
+            Seç
+          </button>
+        ) : undefined
       }
     >
-      {!data ? (
-        <p className="hud-status__desc">{status.error ? `Durum alınamadı. ${status.error.network ? 'Sunucuya ulaşılamıyor.' : status.error.message}` : 'Yükleniyor…'}</p>
-      ) : (
-        <>
-          <p className="hud-status__level" aria-live="polite">
-            <Icon name={meta.icon} size={28} />
-            <span>{meta.label}</span>
-          </p>
-          <p className="hud-status__desc">{meta.description}</p>
-          {counts.size > 0 && (
-            <ul className="hud-status__counts" aria-label="Kural dağılımı">
-              {ATTENTION_ORDER.filter((l) => counts.get(l)).map((l) => (
-                <li key={l}>
-                  <AttentionBadge level={l} size="sm">
-                    {attentionMeta(l).label} {counts.get(l)}
-                  </AttentionBadge>
-                </li>
-              ))}
+      <div className="hud-crew">
+        <div className="hud-crew__photo" aria-hidden="true">
+          <span>{initials(crewId)}</span>
+        </div>
+        <div className="hud-crew__info">
+          <div className="hud-crew__row">
+            <span className="hud-crew__label">
+              ACİL
+              <br />
+              DURUM:
+            </span>
+            <button type="button" className={`hud-crew__emergency${urgent.length ? ' is-active' : ''}`} onClick={() => onOpen('rules')}>
+              {urgent.length
+                ? `${upperTr(urgent[0].action_card?.title_tr ?? urgent[0].rule_id)}${urgent.length > 1 ? ` (+${urgent.length - 1})` : ''}`
+                : watching
+                  ? `ACİL DURUM YOK. ${watching} İZLEME ALARMI.`
+                  : 'AÇIK ACİL DURUM YOK.'}
+            </button>
+          </div>
+          <div className="hud-crew__row hud-crew__row--health">
+            <span className="hud-crew__label">
+              GENEL
+              <br />
+              SAĞLIK:
+            </span>
+            <RuleRing normal={normal} total={crewRules.length} level={data?.overall_attention ?? 'UNKNOWN'} />
+            <ul className="hud-crew__list">
+              <li>
+                <span>›Fizyolojik</span>
+                <b className={physio ? `t-${physio.health_attention.toLowerCase()}` : undefined}>
+                  {physio ? attentionMeta(physio.health_attention).label : 'Kural yok'}
+                </b>
+              </li>
+              <li>
+                <span>›Psikolojik</span>
+                <b>{psych}</b>
+              </li>
+              <li>
+                <span>›Kan</span>
+                <b>{blood}</b>
+              </li>
             </ul>
-          )}
-          {activity && activity.state !== 'NONE' && <p className="hud-status__meta">{activity.message_tr}</p>}
-          <p className="hud-status__meta">
-            Değerlendirme {fmtClock(data.generated_at)} · {relTime(data.generated_at, now)}
-            {stale && (offline ? ' · son bilinen veri' : ' · eski veri')}
+          </div>
+          <p className="hud-crew__resume">
+            <span>Sağlık özeti:</span>{' '}
+            {data ? (
+              <>
+                <b className={`t-${overall.level.toLowerCase()}`}>{upperTr(overall.label)}</b> — {overall.description}
+              </>
+            ) : status.error ? (
+              'durum alınamadı'
+            ) : (
+              '…'
+            )}
           </p>
-        </>
-      )}
-      <div className="hud-status__foot">
-        {scenarioId && <span className="hud-tag hud-tag--demo">Sentetik veri · {scenarioId}</span>}
-        <button type="button" className="hud-link" onClick={() => onOpen('rules')}>
-          Kurallar ve “Neden?”
-        </button>
+        </div>
       </div>
     </Panel>
   );
 }
 
-/* ------------------------------------------------------------ alerts panel */
-
-function AlertsPanel({ onOpen }: { onOpen: (tab: DetailTab) => void }) {
-  const { data, error } = useAlerts();
-  const setActiveAlert = useVitalsUi((s) => s.setActiveAlert);
-  const open = (data ?? []).filter((a) => a.status !== 'RESOLVED');
-  const sorted = [...open].sort((a, b) => attentionMeta(b.health_attention).rank - attentionMeta(a.health_attention).rank);
-  const unacked = open.filter((a) => a.status === 'OPEN').length;
-
-  return (
-    <Panel
-      title="Açık alarmlar"
-      id="hud-alerts-title"
-      aside={<span className="hud-panel__count">{data ? open.length : '—'}</span>}
-    >
-      {!data ? (
-        <p className="hud-empty">{error ? 'Alarmlar alınamadı' : 'Yükleniyor…'}</p>
-      ) : sorted.length === 0 ? (
-        <p className="hud-empty">Açık alarm yok.</p>
-      ) : (
-        <ul className="hud-rows">
-          {sorted.slice(0, 3).map((a) => (
-            <li key={a.id}>
-              <button
-                type="button"
-                className="hud-alert"
-                onClick={() => {
-                  setActiveAlert(a.id);
-                  onOpen('rules');
-                }}
-              >
-                <AttentionBadge level={a.health_attention} size="sm" />
-                <span className="hud-alert__title">{a.action_card?.title_tr ?? a.rule_id}</span>
-                <span className="hud-alert__state">{a.status === 'OPEN' ? 'Görülmedi' : 'Görüldü'}</span>
-              </button>
-            </li>
-          ))}
-          {unacked > 0 && sorted.length > 3 && <li className="hud-empty">+{sorted.length - 3} alarm daha</li>}
-        </ul>
-      )}
-    </Panel>
-  );
-}
-
-/* ------------------------------------------------------------- clock panel */
+/* ------------------------------------------------------------- mission card */
 
 interface SyncStatusLite {
   link_delay_seconds: number | null;
@@ -282,67 +351,67 @@ interface SyncStatusLite {
   pending_escalations: number;
 }
 
-function ClockPanel({ onOpen }: { onOpen: (tab: DetailTab) => void }) {
+function MissionCard({ scenarioId, onOpen }: { scenarioId: string | null; onOpen: (tab: DetailTab) => void }) {
   const missionId = useApp((s) => s.missionId);
   const now = useNow(1000);
   const sync = usePolling<SyncStatusLite>(missionId ? `/v1/sync/status${qs({ mission_id: missionId })}` : null, 30_000);
   const d = new Date(now);
-  const hh = String(d.getUTCHours()).padStart(2, '0');
-  const mm = String(d.getUTCMinutes()).padStart(2, '0');
-  const ss = String(d.getUTCSeconds()).padStart(2, '0');
+  const p2 = (n: number) => String(n).padStart(2, '0');
   const delay = sync.data?.link_delay_seconds;
   const pending = sync.data ? sync.data.recipients.reduce((n, r) => n + r.pending_items, 0) : null;
 
   return (
     <Panel
-      title="Görev saati"
-      id="hud-clock-title"
-      aside={
-        <span className="hud-clock">
-          <time dateTime={d.toISOString()}>
-            {hh}:{mm}:{ss}
-          </time>{' '}
-          UTC
-        </span>
-      }
+      title="GÖREV"
+      id="hud-mission-title"
+      className="hud-mission"
+      aside={scenarioId ? <span className="hud-tag" title="Bu görevdeki ölçümler sentetik demo verisidir">SENTETİK · {scenarioId}</span> : undefined}
     >
-      <dl className="hud-kv">
-        <div>
-          <dt>Işık gecikmesi</dt>
-          <dd>{delay == null ? <span className="hud-muted">tanımsız</span> : `${fmtAuto(delay)} sn`}</dd>
-        </div>
-        <div>
-          <dt>Yer senkronu</dt>
-          <dd>
-            {pending == null ? (
-              <span className="hud-muted">{sync.error ? 'alınamadı' : '—'}</span>
-            ) : (
-              <button type="button" className="hud-link" onClick={() => onOpen('ground')}>
-                {pending} öğe bekliyor
-              </button>
-            )}
-          </dd>
-        </div>
-        {sync.data && sync.data.pending_escalations > 0 && (
+      <div className="hud-mission__body">
+        <p className="hud-mission__clock">
+          <time dateTime={d.toISOString()}>
+            {p2(d.getUTCHours())}:{p2(d.getUTCMinutes())}:{p2(d.getUTCSeconds())}
+          </time>
+          <small>UTC</small>
+        </p>
+        <dl className="hud-kv">
           <div>
-            <dt>Eskalasyon</dt>
-            <dd className="hud-warn-text">{sync.data.pending_escalations} bekliyor</dd>
+            <dt>IŞIK GECİKMESİ</dt>
+            <dd>{delay == null ? 'tanımsız' : `${fmtAuto(delay)} sn`}</dd>
           </div>
-        )}
-      </dl>
-      <div className="hud-console">
+          <div>
+            <dt>YER SENKRONU</dt>
+            <dd>
+              {pending == null ? (
+                sync.error ? 'alınamadı' : '—'
+              ) : (
+                <button type="button" className="hud-link" onClick={() => onOpen('ground')}>
+                  {pending} öğe bekliyor
+                </button>
+              )}
+            </dd>
+          </div>
+          {sync.data && sync.data.pending_escalations > 0 && (
+            <div>
+              <dt>ESKALASYON</dt>
+              <dd className="t-alert">{sync.data.pending_escalations} bekliyor</dd>
+            </div>
+          )}
+        </dl>
         <GroundConsoleLink />
       </div>
     </Panel>
   );
 }
 
-/* ----------------------------------------------------------------- columns */
+/* ------------------------------------------------------------------ export */
 
-export function HudOverlay({ scenarioId, onOpen }: HudOverlayProps) {
+export function HudOverlay({ scenarioId, crewIds, onOpen }: HudOverlayProps) {
   const status = useCrewStatus();
   const metrics = useMetrics();
+  const alerts = useAlerts();
   const select = useVitalsUi((s) => s.select);
+  const envId = useApp((s) => s.environmentTargetId);
   const rules = status.data?.rules ?? [];
   const dia = metrics.find((d) => d.metric === 'DIASTOLIC_BP') ?? null;
   const openMetric = (metric: string) => {
@@ -353,41 +422,34 @@ export function HudOverlay({ scenarioId, onOpen }: HudOverlayProps) {
   return (
     <>
       <div className="hud__left">
-        <Panel title="Vital bulgular" id="hud-vitals-title">
-          <ul className="hud-rows">
-            {pick(metrics, VITAL_ORDER).map((m) => (
-              <MetricRow
-                key={m.metric}
-                def={m}
-                pair={m.metric === 'SYSTOLIC_BP' ? dia : null}
-                rules={rules}
-                onOpen={openMetric}
-                below={
-                  m.metric === 'HEART_RATE' ? (
-                    // Recorded sample, not the source of the number above (see ecg/README).
-                    <div className="hud-ecg">
-                      <EcgStrip compact height={56} />
-                    </div>
-                  ) : undefined
-                }
-              />
-            ))}
-          </ul>
-        </Panel>
+        {crewIds.map((c) => (
+          <CrewCard key={c} crewId={c} envId={envId} alerts={alerts.data ?? []} onOpen={onOpen} />
+        ))}
+        <MissionCard scenarioId={scenarioId} onOpen={onOpen} />
       </div>
-      <div className="hud__cabin">
-        <Panel title="Kabin ortamı" id="hud-cabin-title">
-          <ul className="hud-rows hud-rows--strip">
+
+      <div className="hud__room">
+        <Panel title="KABİN ORTAMI" id="hud-room-title" aside={envId ? <span className="hud-tag">{envId}</span> : undefined}>
+          <ul className="hud-cols">
             {pick(metrics, ENV_ORDER).map((m) => (
-              <MetricRow key={m.metric} def={m} rules={rules} onOpen={openMetric} />
+              <MetricColumn key={m.metric} def={m} rules={rules} onOpen={openMetric} />
             ))}
           </ul>
         </Panel>
       </div>
-      <div className="hud__right">
-        <StatusPanel scenarioId={scenarioId} onOpen={onOpen} />
-        <AlertsPanel onOpen={onOpen} />
-        <ClockPanel onOpen={onOpen} />
+
+      <div className="hud__vitals">
+        <section className="hud-vitals" aria-label="Vital bulgular">
+          <ul className="hud-cols hud-cols--grid">
+            {pick(metrics, VITAL_ORDER).map((m) => (
+              <MetricColumn key={m.metric} def={m} pair={m.metric === 'SYSTOLIC_BP' ? dia : null} rules={rules} onOpen={openMetric} compact />
+            ))}
+          </ul>
+          {/* Recorded sample with its own label; not the source of HEART_RATE above. */}
+          <div className="hud-ecg">
+            <EcgStrip compact height={48} />
+          </div>
+        </section>
       </div>
     </>
   );

@@ -1,73 +1,80 @@
 /* SpaceApp Logar design tokens (owned by UI-shell).
- * Dark adaptation of the "Verdana Health" system: slate navy surfaces, one
- * sage accent for interaction, neutral data ink, minimal 2–4px corners, flat
- * cards with 1px hairlines and no glow. Every text colour meets WCAG AA
- * (>= 4.5:1) on --bg and --surface. Features: use these variables, never raw
- * hex. Attention colours are ALWAYS paired with an icon and a text label. */
+ * Follows the design team's hand-made mission screen: teal page, dark teal
+ * panels with a lighter teal header strip and rounded corners, condensed
+ * titles (Oswald), monospace labels (Fira Code), solid status bars with dark
+ * text. Colours sampled from the reference. Every text colour meets WCAG AA
+ * (>= 4.5:1) on its background. Attention colours are ALWAYS paired with a
+ * word (and an icon where there is room). */
 :root {
   color-scheme: dark;
 
-  /* Surfaces (Verdana navy -> raised slate) */
-  --bg: #0f172a;            /* Verdana primary navy */
-  --bg-2: #0c1322;
-  --surface: #111827;       /* cards */
-  --surface-2: #162032;     /* inset rows, inputs */
-  --surface-3: #1e293b;     /* hover, selected */
-  --line: #1e293b;          /* hairline */
-  --line-strong: #334155;
+  /* Surfaces */
+  --bg: #015f5d;            /* page teal */
+  --bg-2: #013f3d;          /* inset rows */
+  --surface: #004341;       /* panels */
+  --surface-2: #01504e;     /* hover / inputs */
+  --surface-3: #046664;     /* selected */
+  --strip: #09827f;         /* panel header strip */
+  --line: #1d6664;          /* hairline inside panels */
+  --line-strong: #2f7c79;
+  --rule: #8a9796;          /* light grey dividers (reference) */
 
-  /* Text (slate scale) */
-  --text: #f8fafc;          /* 17.0:1 on --surface */
-  --text-muted: #cbd5e1;    /* 12.0:1 */
-  --text-faint: #94a3b8;    /* 6.9:1 — smallest text allowed */
-  --text-inverse: #0f172a;
+  /* Text */
+  --text: #f3fbfa;          /* 11.6:1 on --surface */
+  --text-muted: #cfe6e3;    /* 9.3:1 */
+  --text-faint: #a5cbc6;    /* 6.4:1 */
+  --text-inverse: #002d2b;
 
-  /* Interaction: Verdana sage, reserved for links, selection and CTAs */
-  --accent: #10b981;        /* 6.3:1 on --surface */
-  --accent-strong: #34d399;
-  --accent-bg: rgba(16, 185, 129, 0.1);
-  --accent-line: rgba(16, 185, 129, 0.45);
-  --focus: #e2e8f0;         /* focus ring: neutral, distinct from every attention hue */
+  /* Interaction */
+  --accent: #b9f3ea;        /* links: pale aqua, underlined */
+  --accent-strong: #ffffff;
+  --accent-bg: rgba(185, 243, 234, 0.12);
+  --accent-line: rgba(185, 243, 234, 0.5);
+  --focus: #ffffff;
 
-  /* Attention levels: --att-*: line/icon, -bg: fill, -fg: text on fill */
-  --att-normal: #22c55e;    /* Verdana success */
-  --att-normal-bg: rgba(34, 197, 94, 0.1);
-  --att-normal-fg: #86efac;
+  /* Attention levels: --att-*: bar / icon, -bg: tint, -fg: text on dark,
+   * -ink: text on the solid bar */
+  --att-normal: #3ad44c;    /* reference status-bar green */
+  --att-normal-bg: rgba(58, 212, 76, 0.16);
+  --att-normal-fg: #8ff09a;
+  --att-normal-ink: #002d05;
 
-  /* UNKNOWN is deliberately neutral slate + dashed border: never green. */
-  --att-unknown: #94a3b8;
-  --att-unknown-bg: rgba(148, 163, 184, 0.1);
-  --att-unknown-fg: #e2e8f0;
+  /* UNKNOWN: neutral grey + dashed edge, never green. */
+  --att-unknown: #a9b8b6;
+  --att-unknown-bg: rgba(169, 184, 182, 0.16);
+  --att-unknown-fg: #e4ecea;
+  --att-unknown-ink: #102624;
 
-  --att-watch: #eab308;     /* Verdana warning */
-  --att-watch-bg: rgba(234, 179, 8, 0.1);
-  --att-watch-fg: #fde047;
+  --att-watch: #f5cf3a;
+  --att-watch-bg: rgba(245, 207, 58, 0.16);
+  --att-watch-fg: #fde68a;
+  --att-watch-ink: #2f2600;
 
-  --att-alert: #f97316;
-  --att-alert-bg: rgba(249, 115, 22, 0.12);
-  --att-alert-fg: #fdba74;
+  --att-alert: #f59a3a;
+  --att-alert-bg: rgba(245, 154, 58, 0.18);
+  --att-alert-fg: #fed7aa;
+  --att-alert-ink: #331a00;
 
-  --att-critical: #ef4444;  /* Verdana error */
-  --att-critical-bg: #991b1b;   /* solid fill: CRITICAL must shout */
+  --att-critical: #ef4b4b;
+  --att-critical-bg: #b42323;
   --att-critical-fg: #ffffff;
+  --att-critical-ink: #ffffff;
 
-  /* Generic tones (chips, toasts, notes) */
+  /* Generic tones */
   --ok: var(--att-normal);
   --warn: var(--att-watch);
   --danger: var(--att-critical);
-  --danger-bg: rgba(239, 68, 68, 0.1);
-  --danger-fg: #fca5a5;
-  --info: #0ea5e9;          /* Verdana info */
-  --demo: #38bdf8;          /* 'DEMO' threshold marker: info blue, not an attention hue */
-  --demo-bg: rgba(14, 165, 233, 0.1);
+  --danger-bg: rgba(239, 75, 75, 0.16);
+  --danger-fg: #fecaca;
+  --info: #9ad7ff;
+  --demo: #ffe3a3;          /* 'DEMO' threshold marker: pale sand, not an attention hue */
+  --demo-bg: rgba(255, 227, 163, 0.12);
 
-  /* Primary action: Verdana's navy button, inverted for dark (light fill,
-   * navy text). Sage stays for links and selection only. */
-  --primary: #f1f5f9;
+  --primary: #f3fbfa;
   --primary-hover: #ffffff;
-  --primary-fg: #0f172a;
+  --primary-fg: #003533;
 
-  /* Aliases for token names used by the feature tracks. */
+  /* Aliases used by the feature tracks */
   --border: var(--line);
   --border-strong: var(--line-strong);
   --surface-0: var(--bg);
@@ -82,30 +89,30 @@
   --accent-contrast: var(--primary-fg);
   --focus-ring: var(--focus);
 
-  /* HUD layer: flat opaque slate cards over the 3D scene, no blur. */
-  --hud-card: rgba(17, 24, 39, 0.94);
-  --hud-card-hover: #162032;
-  --hud-line: #1e293b;
-  --hud-line-strong: #334155;
-  --scene-top: #131d33;
-  --scene-bottom: #0f172a;
+  /* HUD */
+  --hud-card: var(--surface);
+  --hud-card-hover: var(--surface-2);
+  --hud-line: var(--line);
+  --hud-line-strong: var(--line-strong);
+  --scene-top: #01504e;
+  --scene-bottom: #004341;
 
-  /* Data ink: neutral, so a line never reads as an attention level. */
-  --data: #e2e8f0;
-  --data-soft: rgba(226, 232, 240, 0.12);
+  /* Data ink (charts) */
+  --data: #f3fbfa;
+  --data-soft: rgba(243, 251, 250, 0.14);
 
-  /* Type: Plus Jakarta Sans (headings), DM Sans (body), Fira Code (vitals) */
+  /* Type */
   --font-sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-  --font-display: 'Plus Jakarta Sans', 'DM Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
-  --font-mono: 'Fira Code', ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
-  --fs-xs: 0.75rem;     /* 12 caption */
-  --fs-sm: 0.875rem;    /* 14 body sm */
-  --fs-md: 1rem;        /* 16 body */
-  --fs-lg: 1.25rem;     /* 20 h3 */
-  --fs-xl: 1.5rem;      /* 24 h2 */
-  --fs-2xl: 2rem;       /* 32 h1 */
-  --fs-hud: 2.5rem;     /* 40 display: hero numbers */
-  --fs-hud-sm: 1.75rem;
+  --font-display: 'Oswald', 'DM Sans', 'Arial Narrow', system-ui, sans-serif;
+  --font-mono: 'Fira Code', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 2rem;
+  --fs-hud: 3.5rem;
+  --fs-hud-sm: 2.25rem;
 
   /* Space (8px base) */
   --sp-1: 4px;
@@ -115,15 +122,15 @@
   --sp-5: 24px;
   --sp-6: 32px;
 
-  /* Shape: square corners (status dots only are round) */
+  /* Shape: rounded panels (reference), square inner elements */
   --radius-sm: 0;
   --radius: 0;
-  --radius-lg: 0;
-  --radius-full: 9999px; /* status dots only */
+  --radius-lg: 16px;
+  --radius-full: 9999px;
   --shadow: none;
-  --shadow-pop: 0 8px 32px rgba(2, 6, 23, 0.5);
+  --shadow-pop: 0 8px 32px rgba(0, 20, 20, 0.5);
 
-  /* Motion (zeroed under prefers-reduced-motion) */
+  /* Motion */
   --dur-fast: 100ms;
   --dur: 150ms;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -143,9 +150,8 @@
 
 @media (prefers-contrast: more) {
   :root {
-    --line: #475569;
-    --hud-line: #475569;
-    --text-muted: #e2e8f0;
-    --text-faint: #cbd5e1;
+    --line: #8a9796;
+    --text-muted: #ffffff;
+    --text-faint: #e4ecea;
   }
 }

@@ -339,3 +339,13 @@
 }
 .b3d-regions__demo[aria-pressed='true'] { color: var(--demo, #38bdf8); border-color: var(--demo, #38bdf8); }
 .b3d-bar button { padding: 0 8px; }
+
+/* Narrow scene (mission screen at 1440 px): tighter labels and toolbar. */
+@container (max-width: 560px) {
+  .b3d-marker { gap: 4px; padding: 0 6px 0 4px; font-size: 11px; }
+  .b3d-marker .b3d-icon { display: none; }
+  .b3d-marker-att { font-size: 10px; letter-spacing: 0.02em; }
+  .b3d-slider { display: none; }
+  .b3d-bar button { padding: 0 6px; }
+  .b3d-bar__group + .b3d-bar__group { padding-left: 2px; margin-left: 0; }
+}

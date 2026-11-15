@@ -187,7 +187,7 @@ function Projector({
     const H = size.height;
     v.set(0, 1.0, 0).project(camera);
     const cx = (v.x * 0.5 + 0.5) * W;
-    const gutter = THREE.MathUtils.clamp(W * 0.17, 96, 210);
+    const gutter = THREE.MathUtils.clamp(W * 0.17, 64, 210);
     const cols: Record<'left' | 'right', LabelItem[]> = { left: [], right: [] };
     for (const k of CHIP_ORDER) {
       v.set(...layout.current[k].anchor).project(camera);
