@@ -350,7 +350,7 @@
 .shell-console { margin-left: auto; flex: none; }
 .shell-console + .shell-user { margin-left: var(--sp-2); }
 
-/* Presentation looks (?look=clean | ?look=bare), see main.tsx. */
+/* Presentation looks (default clean; ?look=full | ?look=bare), see main.tsx. */
 [data-look] .shell-demo,
 [data-look] .shell-user { display: none !important; }
 [data-look='bare'] .shell-disclaimer,

@@ -49,13 +49,14 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-// Presentation look, for comparing side by side (local test):
-//   ?look=clean  hides the demo controls in the top bar (scenario picker, RUN,
-//                DETAILS, demo user / sign in);
-//   ?look=bare   also hides the DEMO / SYNTHETIC tags and the prototype banner.
+// Presentation look. The jury link opens in the clean look: the top-bar demo
+// controls (scenario picker, RUN, DETAILS, demo user / sign in) are hidden;
+// DEMO / SYNTHETIC tags and the prototype banner stay.
+//   ?look=full  shows everything (team use: run scenarios, sign in);
+//   ?look=bare  also hides the DEMO / SYNTHETIC tags and the banner.
 {
   const look = new URLSearchParams(window.location.search).get('look');
-  if (look === 'clean' || look === 'bare') document.documentElement.dataset.look = look;
+  if (look !== 'full') document.documentElement.dataset.look = look === 'bare' ? 'bare' : 'clean';
 }
 
 // Jury link: the CO₂ + headache scenario tour starts by itself as soon as the
